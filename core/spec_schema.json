@@ -1,0 +1,194 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://proofkit.com/schemas/spec_v1.json",
+  "title": "ProofKit Powder-Coat Cure Specification v1",
+  "description": "JSON schema for defining powder-coat cure process specifications including target temperature, hold time, and data quality requirements",
+  "type": "object",
+  "required": [
+    "version",
+    "job",
+    "spec",
+    "data_requirements"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "1.0",
+      "description": "Specification version identifier"
+    },
+    "job": {
+      "type": "object",
+      "required": ["job_id"],
+      "additionalProperties": false,
+      "properties": {
+        "job_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "pattern": "^[a-zA-Z0-9_-]+$",
+          "description": "Unique identifier for this cure job"
+        }
+      }
+    },
+    "spec": {
+      "type": "object",
+      "required": [
+        "method",
+        "target_temp_C",
+        "hold_time_s"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": ["PMT", "OVEN_AIR"],
+          "description": "Cure method - PMT (Part Metal Temperature) or OVEN_AIR"
+        },
+        "target_temp_C": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 300,
+          "description": "Target cure temperature in Celsius (must be > 0)"
+        },
+        "hold_time_s": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 7200,
+          "description": "Required hold time at target temperature in seconds (>= 1)"
+        },
+        "temp_band_C": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "min": {
+              "type": "number",
+              "description": "Minimum acceptable temperature in Celsius"
+            },
+            "max": {
+              "type": "number",
+              "description": "Maximum acceptable temperature in Celsius"
+            }
+          },
+          "description": "Optional temperature band constraints"
+        },
+        "sensor_uncertainty_C": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "default": 2.0,
+          "description": "Sensor measurement uncertainty in Celsius (default: 2.0)"
+        }
+      }
+    },
+    "data_requirements": {
+      "type": "object",
+      "required": [
+        "max_sample_period_s",
+        "allowed_gaps_s"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "max_sample_period_s": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 300,
+          "description": "Maximum allowed time between samples in seconds"
+        },
+        "allowed_gaps_s": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 600,
+          "description": "Maximum allowed gap in data in seconds"
+        }
+      }
+    },
+    "sensor_selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["min_of_set", "mean_of_set", "majority_over_threshold"],
+          "default": "min_of_set",
+          "description": "Method for combining multiple sensor readings"
+        },
+        "sensors": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "List of sensor column names to use"
+        },
+        "require_at_least": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Minimum number of sensors required for valid reading"
+        }
+      },
+      "description": "Optional sensor selection and combination logic"
+    },
+    "logic": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "continuous": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether hold time must be continuous (true) or cumulative (false)"
+        },
+        "max_total_dips_s": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Maximum total time below threshold allowed in cumulative mode"
+        }
+      },
+      "description": "Optional logic configuration for hold time calculation"
+    },
+    "preconditions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_ramp_rate_C_per_min": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Maximum allowed temperature ramp rate in Celsius per minute"
+        },
+        "max_time_to_threshold_s": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Maximum time allowed to reach target threshold in seconds"
+        }
+      },
+      "description": "Optional precondition checks for the cure process"
+    },
+    "reporting": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "units": {
+          "type": "string",
+          "enum": ["C", "F"],
+          "default": "C",
+          "description": "Temperature units for reporting (Celsius or Fahrenheit)"
+        },
+        "language": {
+          "type": "string",
+          "default": "en",
+          "pattern": "^[a-z]{2}$",
+          "description": "Language code for report generation (ISO 639-1)"
+        },
+        "timezone": {
+          "type": "string",
+          "default": "UTC",
+          "description": "Timezone for timestamp formatting (IANA timezone name)"
+        }
+      },
+      "description": "Optional reporting preferences"
+    }
+  }
+}

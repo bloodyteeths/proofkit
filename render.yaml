@@ -1,0 +1,67 @@
+# Render.com deployment configuration for ProofKit
+services:
+  - type: web
+    name: proofkit
+    env: docker
+    region: oregon
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    
+    # Auto-deploy configuration
+    autoDeploy: true
+    branch: main
+    
+    # Health check configuration
+    healthCheckPath: /health
+    
+    # Disk mount for persistent storage
+    disk:
+      name: proofkit-storage
+      mountPath: /app/storage
+      sizeGB: 1
+    
+    # Environment variables
+    envVars:
+      - key: RETENTION_DAYS
+        value: "14"
+      - key: MAX_UPLOAD_MB
+        value: "10"
+      - key: BASE_URL
+        fromService:
+          type: web
+          name: proofkit
+          property: host
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: RATE_LIMIT_PER_MIN
+        value: "30"
+      - key: MPLBACKEND
+        value: "Agg"
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: TZ
+        value: "UTC"
+    
+    # Scaling configuration
+    scaling:
+      minInstances: 1
+      maxInstances: 3
+      targetMemoryPercent: 80
+      targetCPUPercent: 80
+    
+    # Build configuration
+    buildCommand: ""
+    startCommand: "gunicorn app:app --bind 0.0.0.0:8080 --worker-class uvicorn.workers.UvicornWorker --workers 2 --worker-connections 1000 --max-requests 1000 --max-requests-jitter 100 --timeout 60 --keep-alive 2 --access-logfile - --error-logfile - --log-level info"
+
+# Database configuration (if needed in the future)
+# databases:
+#   - name: proofkit-db
+#     plan: free
+#     postgresMajorVersion: 15
+
+# Additional services (if needed)
+# - type: redis
+#   name: proofkit-redis
+#   plan: free
+#   maxmemoryPolicy: allkeys-lru

@@ -1,0 +1,14 @@
+{
+  "pass_": false,
+  "job_id": "cure_test_fail_short_hold",
+  "target_temp_C": 180.0,
+  "conservative_threshold_C": 182.0,
+  "actual_hold_time_s": 0.0,
+  "required_hold_time_s": 600,
+  "max_temp_C": 183.85,
+  "min_temp_C": 17.66,
+  "reasons": [
+    "Insufficient continuous hold time: 0s < 600s"
+  ],
+  "warnings": []
+}

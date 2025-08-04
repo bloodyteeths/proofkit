@@ -1,0 +1,14 @@
+{
+  "pass_": true,
+  "job_id": "cure_test_pass",
+  "target_temp_C": 180.0,
+  "conservative_threshold_C": 182.0,
+  "actual_hold_time_s": 1530.0,
+  "required_hold_time_s": 600,
+  "max_temp_C": 186.66,
+  "min_temp_C": 19.46,
+  "reasons": [
+    "Continuous hold time requirement met: 1530s \u2265 600s"
+  ],
+  "warnings": []
+}

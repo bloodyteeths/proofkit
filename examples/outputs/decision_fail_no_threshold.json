@@ -1,0 +1,15 @@
+{
+  "pass_": false,
+  "job_id": "cure_test_fail_no_threshold",
+  "target_temp_C": 180.0,
+  "conservative_threshold_C": 182.0,
+  "actual_hold_time_s": 0.0,
+  "required_hold_time_s": 600,
+  "max_temp_C": 171.31,
+  "min_temp_C": 18.59,
+  "reasons": [
+    "Temperature never reached conservative threshold of 182.0\u00b0C",
+    "Maximum temperature recorded: 171.3\u00b0C"
+  ],
+  "warnings": []
+}

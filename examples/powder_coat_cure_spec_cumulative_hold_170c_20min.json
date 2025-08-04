@@ -1,0 +1,38 @@
+{
+  "version": "1.0",
+  "job": {
+    "job_id": "cumulative_powder_coat_cure_170c"
+  },
+  "spec": {
+    "method": "PMT",
+    "target_temp_C": 170.0,
+    "hold_time_s": 1200,
+    "temp_band_C": {
+      "min": 168.0,
+      "max": 185.0
+    },
+    "sensor_uncertainty_C": 2.5
+  },
+  "data_requirements": {
+    "max_sample_period_s": 30.0,
+    "allowed_gaps_s": 90.0
+  },
+  "sensor_selection": {
+    "mode": "majority_over_threshold",
+    "sensors": ["pmt_sensor_1", "pmt_sensor_2", "pmt_sensor_3"],
+    "require_at_least": 2
+  },
+  "logic": {
+    "continuous": false,
+    "max_total_dips_s": 300
+  },
+  "preconditions": {
+    "max_ramp_rate_C_per_min": 20.0,
+    "max_time_to_threshold_s": 1200
+  },
+  "reporting": {
+    "units": "C",
+    "language": "en",
+    "timezone": "UTC"
+  }
+}

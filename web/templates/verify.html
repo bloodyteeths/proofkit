@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}Verify Results - ProofKit{% endblock %}
+
+{% block content %}
+<section>
+    <h2>Verification Results</h2>
+    <p>Independent verification of evidence bundle: <code>{{ bundle_id }}</code></p>
+    
+    <!-- Verification Status Banner -->
+    <div class="result-banner {{ 'pass' if verification.valid else 'fail' }}">
+        {% if verification.valid %}
+            ✓ VERIFIED - Evidence Bundle is Valid and Untampered
+        {% else %}
+            ✗ VERIFICATION FAILED - Evidence Bundle has Issues
+        {% endif %}
+    </div>
+    
+    <!-- Verification Details -->
+    <div style="margin-top: 2rem;">
+        <h3>Verification Checks</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Check</th>
+                    <th>Status</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Bundle Integrity</td>
+                    <td>{{ "✓ Pass" if verification.integrity_valid else "✗ Fail" }}</td>
+                    <td>{{ verification.integrity_message or "All file hashes match manifest" }}</td>
+                </tr>
+                <tr>
+                    <td>Decision Reproducibility</td>
+                    <td>{{ "✓ Pass" if verification.decision_valid else "✗ Fail" }}</td>
+                    <td>{{ verification.decision_message or "Re-computed decision matches original" }}</td>
+                </tr>
+                <tr>
+                    <td>Manifest Validity</td>
+                    <td>{{ "✓ Pass" if verification.manifest_valid else "✗ Fail" }}</td>
+                    <td>{{ verification.manifest_message or "Manifest format and content valid" }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Original Results (if verification passed) -->
+    {% if verification.valid and verification.decision %}
+    <div style="margin-top: 2rem;">
+        <h3>Original Validation Results</h3>
+        
+        <!-- PASS/FAIL Banner -->
+        <div class="result-banner {{ 'pass' if verification.decision.pass else 'fail' }}" style="font-size: 1.2em;">
+            {% if verification.decision.pass %}
+                ✓ PASS - Temperature Requirements Met
+            {% else %}
+                ✗ FAIL - Temperature Requirements Not Met
+            {% endif %}
+        </div>
+        
+        <!-- Metrics Table -->
+        {% if verification.decision.metrics %}
+        <div class="metrics-table">
+            <h4>Validation Metrics</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Value</th>
+                        <th>Requirement</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Target Temperature</td>
+                        <td>{{ "%.1f°C" | format(verification.decision.metrics.target_temp_C) }}</td>
+                        <td>{{ "%.1f°C" | format(verification.decision.metrics.target_temp_C) }}</td>
+                        <td>✓</td>
+                    </tr>
+                    <tr>
+                        <td>Hold Time Required</td>
+                        <td>{{ verification.decision.metrics.hold_time_s }}s</td>
+                        <td>{{ verification.decision.metrics.hold_time_s }}s</td>
+                        <td>{{ "✓" if verification.decision.metrics.hold_time_achieved_s >= verification.decision.metrics.hold_time_s else "✗" }}</td>
+                    </tr>
+                    <tr>
+                        <td>Hold Time Achieved</td>
+                        <td>{{ verification.decision.metrics.hold_time_achieved_s }}s</td>
+                        <td>≥ {{ verification.decision.metrics.hold_time_s }}s</td>
+                        <td>{{ "✓" if verification.decision.metrics.hold_time_achieved_s >= verification.decision.metrics.hold_time_s else "✗" }}</td>
+                    </tr>
+                    {% if verification.decision.metrics.max_temp_C %}
+                    <tr>
+                        <td>Maximum Temperature</td>
+                        <td>{{ "%.1f°C" | format(verification.decision.metrics.max_temp_C) }}</td>
+                        <td>-</td>
+                        <td>ℹ</td>
+                    </tr>
+                    {% endif %}
+                    {% if verification.decision.metrics.time_to_threshold_s %}
+                    <tr>
+                        <td>Time to Threshold</td>
+                        <td>{{ verification.decision.metrics.time_to_threshold_s }}s</td>
+                        <td>-</td>
+                        <td>ℹ</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+        
+        <!-- Reasons -->
+        {% if verification.decision.reasons %}
+        <div style="margin-top: 1rem;">
+            <h4>{% if verification.decision.pass %}Validation Passed{% else %}Validation Failed{% endif %}</h4>
+            <ul>
+                {% for reason in verification.decision.reasons %}
+                    <li>{{ reason }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        
+        <!-- Warnings -->
+        {% if verification.decision.warnings %}
+        <div style="margin-top: 1rem;">
+            <h4>Warnings</h4>
+            <ul style="color: var(--warning-color);">
+                {% for warning in verification.decision.warnings %}
+                    <li>{{ warning }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+    
+    <!-- Verification Errors (if verification failed) -->
+    {% if not verification.valid %}
+    <div style="margin-top: 2rem;">
+        <h3>Verification Issues</h3>
+        {% if verification.errors %}
+        <ul class="error-message">
+            {% for error in verification.errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+    {% endif %}
+    
+    <!-- Download Original Files -->
+    <div style="margin-top: 2rem;">
+        <h3>Download Original Files</h3>
+        <p>You can download the original files from this evidence bundle:</p>
+        
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <a href="/download/{{ bundle_id }}/pdf" class="primary" role="button">
+                📄 Original Proof PDF
+            </a>
+            <a href="/download/{{ bundle_id }}/zip" class="secondary" role="button">
+                📦 Complete Evidence Bundle
+            </a>
+        </div>
+    </div>
+    
+    <!-- Technical Details -->
+    <details style="margin-top: 2rem;">
+        <summary><strong>Technical Verification Details</strong></summary>
+        <div style="margin-top: 1rem;">
+            <h4>Bundle Information</h4>
+            <table>
+                <tbody>
+                    <tr>
+                        <td><strong>Bundle ID:</strong></td>
+                        <td><code>{{ bundle_id }}</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Root Hash:</strong></td>
+                        <td><code>{{ verification.root_hash or "N/A" }}</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Verification Time:</strong></td>
+                        <td>{{ verification.timestamp or "N/A" }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>ProofKit Version:</strong></td>
+                        <td>{{ verification.version or "0.1.0" }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            {% if verification.file_hashes %}
+            <h4>File Integrity</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>File</th>
+                        <th>Hash Status</th>
+                        <th>SHA-256</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for file_info in verification.file_hashes %}
+                    <tr>
+                        <td><code>{{ file_info.filename }}</code></td>
+                        <td>{{ "✓ Valid" if file_info.valid else "✗ Invalid" }}</td>
+                        <td><code style="font-size: 0.8em;">{{ file_info.hash[:16] }}...</code></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+        </div>
+    </details>
+    
+    <!-- Actions -->
+    <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--muted-border-color);">
+        <a href="/" class="outline" role="button">
+            🏠 Back to Upload
+        </a>
+    </div>
+</section>
+{% endblock %}

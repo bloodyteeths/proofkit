@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section>
+    <h2>Upload Temperature Log</h2>
+    <p>Upload your CSV temperature log file and configure the specification below to generate a proof PDF and evidence bundle.</p>
+    
+    <form id="upload-form" hx-post="/api/compile" hx-encoding="multipart/form-data" hx-target="#results" hx-indicator="#progress">
+        <!-- CSV File Upload -->
+        <div class="upload-area" id="upload-area">
+            <label for="csv_file">
+                <h4>CSV Temperature Log</h4>
+                <p>Click to select or drag and drop your CSV file here</p>
+                <input type="file" id="csv_file" name="csv_file" accept=".csv,text/csv" required style="display: none;">
+                <small>Maximum file size: 10MB</small>
+            </label>
+            <div id="file-info" style="display: none; margin-top: 1rem;">
+                <strong>Selected file:</strong> <span id="file-name"></span>
+                <br>
+                <small>Size: <span id="file-size"></span></small>
+            </div>
+        </div>
+        
+        <!-- Specification JSON -->
+        <div style="margin-top: 2rem;">
+            <label for="spec_json">
+                <h4>Specification (JSON)</h4>
+                <small>Pre-populated with default powder-coat cure specification. Edit as needed.</small>
+            </label>
+            <textarea id="spec_json" name="spec_json" class="spec-textarea" placeholder="Specification JSON..." required>{{ default_spec | safe }}</textarea>
+        </div>
+        
+        <!-- Submit Button -->
+        <div style="margin-top: 2rem;">
+            <button type="submit" class="primary">Generate Proof</button>
+            <button type="button" onclick="resetForm()" style="margin-left: 1rem;">Reset</button>
+        </div>
+    </form>
+    
+    <!-- Progress Indicator -->
+    <div id="progress" class="progress-indicator">
+        <p>Processing your temperature log... This may take a few moments.</p>
+        <progress></progress>
+    </div>
+    
+    <!-- Results will be inserted here by HTMX -->
+    <div id="results"></div>
+</section>
+
+<!-- Example Data Section -->
+<section style="margin-top: 3rem;">
+    <details>
+        <summary><strong>Need example data?</strong></summary>
+        <p>If you don't have a CSV file ready, you can download example files:</p>
+        <ul>
+            <li><a href="/examples/ok_run.csv" download>ok_run.csv</a> - Example passing temperature log</li>
+            <li><a href="/examples/short_hold.csv" download>short_hold.csv</a> - Example failing temperature log (insufficient hold time)</li>
+            <li><a href="/examples/gaps.csv" download>gaps.csv</a> - Example with data gaps</li>
+        </ul>
+        <p><strong>CSV Format Requirements:</strong></p>
+        <ul>
+            <li>First column: timestamp (ISO format or Unix timestamp)</li>
+            <li>Additional columns: temperature readings from sensors</li>
+            <li>Optional metadata lines starting with # at the beginning</li>
+        </ul>
+    </details>
+</section>
+
+<script>
+// Make default spec available to JavaScript for reset functionality
+window.defaultSpec = `{{ default_spec | safe }}`;
+</script>
+{% endblock %}

@@ -1,0 +1,30 @@
+{
+  "version": "1.0",
+  "job": {
+    "job_id": "majority_threshold_test"
+  },
+  "spec": {
+    "method": "PMT",
+    "target_temp_C": 180.0,
+    "hold_time_s": 300,
+    "sensor_uncertainty_C": 2.0
+  },
+  "data_requirements": {
+    "max_sample_period_s": 30.0,
+    "allowed_gaps_s": 60.0
+  },
+  "sensor_selection": {
+    "mode": "majority_over_threshold",
+    "sensors": ["sensor_1", "sensor_2", "sensor_3"],
+    "require_at_least": 2
+  },
+  "logic": {
+    "continuous": true,
+    "max_total_dips_s": 0
+  },
+  "reporting": {
+    "units": "C",
+    "language": "en",
+    "timezone": "UTC"
+  }
+}

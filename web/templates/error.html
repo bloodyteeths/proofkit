@@ -1,0 +1,46 @@
+<!-- Error template for HTMX partial response -->
+<section id="error-section" style="margin-top: 2rem;">
+    <div class="error-message">
+        <h3>❌ Processing Error</h3>
+        <p><strong>{{ error.title or "An error occurred while processing your request." }}</strong></p>
+        
+        {% if error.message %}
+        <p>{{ error.message }}</p>
+        {% endif %}
+        
+        {% if error.details %}
+        <details style="margin-top: 1rem;">
+            <summary><strong>Technical Details</strong></summary>
+            <div style="margin-top: 0.5rem;">
+                {% if error.details is string %}
+                    <p>{{ error.details }}</p>
+                {% else %}
+                    <ul>
+                        {% for detail in error.details %}
+                            <li>{{ detail }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        </details>
+        {% endif %}
+        
+        {% if error.suggestions %}
+        <div style="margin-top: 1rem;">
+            <strong>Suggestions:</strong>
+            <ul>
+                {% for suggestion in error.suggestions %}
+                    <li>{{ suggestion }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Try Again Button -->
+    <div style="margin-top: 2rem;">
+        <button type="button" onclick="document.getElementById('results').innerHTML = ''; document.getElementById('upload-form').style.display = 'block';" class="outline">
+            🔄 Try Again
+        </button>
+    </div>
+</section>

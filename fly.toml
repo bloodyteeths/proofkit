@@ -1,0 +1,117 @@
+# Fly.io deployment configuration for ProofKit
+app = "proofkit"
+primary_region = "ord"
+kill_signal = "SIGINT"
+kill_timeout = "5s"
+
+[build]
+
+[deploy]
+  strategy = "rolling"
+
+[env]
+  # Application environment variables
+  RETENTION_DAYS = "14"
+  MAX_UPLOAD_MB = "10"
+  BASE_URL = "https://proofkit.fly.dev"
+  CORS_ORIGINS = "*"
+  RATE_LIMIT_PER_MIN = "30"
+  MPLBACKEND = "Agg"
+  PYTHONUNBUFFERED = "1"
+  TZ = "UTC"
+
+[experimental]
+  auto_rollback = true
+
+[[mounts]]
+  source = "proofkit_storage"
+  destination = "/app/storage"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+  [[http_service.checks]]
+    interval = "15s"
+    timeout = "10s"
+    grace_period = "5s"
+    method = "GET"
+    path = "/health"
+    protocol = "http"
+    tls_skip_verify = false
+
+    [http_service.checks.headers]
+    Content-Type = "application/json"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 512
+
+[metrics]
+  port = 9091
+  path = "/metrics"
+
+# Process groups for scaling
+[processes]
+  app = "gunicorn app:app --bind 0.0.0.0:8080 --worker-class uvicorn.workers.UvicornWorker --workers 2 --worker-connections 1000 --max-requests 1000 --max-requests-jitter 100 --timeout 60 --keep-alive 2 --access-logfile - --error-logfile - --log-level info"
+
+# Volume configuration for persistent storage
+[[volumes]]
+  # This will create a persistent volume for evidence bundles
+  # Run: fly volumes create proofkit_storage --region ord --size 1
+  source = "proofkit_storage"
+  destination = "/app/storage"
+
+# Service configuration
+[[services]]
+  protocol = "tcp"
+  internal_port = 8080
+  processes = ["app"]
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    force_https = true
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+
+  [[services.tcp_checks]]
+    interval = "15s"
+    timeout = "2s"
+    grace_period = "1s"
+
+  [[services.http_checks]]
+    interval = "10s"
+    timeout = "2s"
+    grace_period = "1s"
+    method = "get"
+    path = "/health"
+    protocol = "http"
+    tls_skip_verify = false
+
+    [services.http_checks.headers]
+    Content-Type = "application/json"
+
+# Auto-scaling configuration
+[scaling]
+  min_machines_running = 1
+  max_machines_running = 3
+
+  [[scaling.metrics]]
+    type = "requests"
+    value = 100
+
+  [[scaling.metrics]]
+    type = "cpu"
+    value = 80
+
+  [[scaling.metrics]]
+    type = "memory"
+    value = 80

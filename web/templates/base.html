@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}ProofKit - Temperature Log Validation{% endblock %}</title>
+    
+    <!-- Pico.css for clean, classless styling -->
+    <link rel="stylesheet" href="/static/css/pico.min.css">
+    
+    <!-- HTMX for progressive enhancement -->
+    <script src="/static/js/htmx.min.js"></script>
+    
+    <!-- Custom styles -->
+    <style>
+        .upload-area {
+            border: 2px dashed var(--muted-border-color);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            text-align: center;
+            transition: border-color 0.3s ease;
+        }
+        .upload-area:hover {
+            border-color: var(--primary);
+        }
+        .upload-area.dragover {
+            border-color: var(--primary);
+            background-color: var(--primary-background);
+        }
+        .spec-textarea {
+            font-family: monospace;
+            font-size: 0.9em;
+            min-height: 300px;
+        }
+        .result-banner.pass {
+            background-color: var(--ins-color);
+            color: white;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.5em;
+        }
+        .result-banner.fail {
+            background-color: var(--del-color);
+            color: white;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.5em;
+        }
+        .metrics-table {
+            margin-top: 1rem;
+        }
+        .download-links {
+            margin-top: 2rem;
+        }
+        .download-links a {
+            margin-right: 1rem;
+        }
+        .progress-indicator {
+            display: none;
+            text-align: center;
+            margin-top: 1rem;
+        }
+        .error-message {
+            background-color: var(--del-color);
+            color: white;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <main class="container">
+        <header>
+            <nav>
+                <ul>
+                    <li><a href="/"><strong>ProofKit</strong></a></li>
+                </ul>
+                <ul>
+                    <li><a href="/">Upload</a></li>
+                    <li><a href="/examples">Examples</a></li>
+                    <li><a href="/docs">API Docs</a></li>
+                </ul>
+            </nav>
+            <h1>ProofKit</h1>
+            <p>Generate inspector-ready proof PDFs from CSV temperature logs</p>
+        </header>
+        
+        {% block content %}{% endblock %}
+        
+        <footer style="margin-top: 3rem; text-align: center; color: var(--muted-color);">
+            <small>ProofKit v0.1 - Temperature Log Validation Tool</small>
+        </footer>
+    </main>
+    
+    <!-- Custom JavaScript -->
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

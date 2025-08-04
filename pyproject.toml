@@ -1,0 +1,184 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "proofkit"
+version = "1.0.0"
+description = "Powder-coat cure process validation and proof generation toolkit"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+    {name = "ProofKit Team"}
+]
+keywords = ["powder-coating", "process-validation", "manufacturing", "quality-control"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Manufacturing",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: System :: Monitoring",
+]
+dependencies = [
+    "fastapi>=0.104.0,<0.105.0",
+    "uvicorn[standard]>=0.24.0,<0.25.0",
+    "gunicorn>=21.2.0,<21.3.0",
+    "pydantic>=2.5.0,<2.6.0",
+    "pandas>=2.1.0,<2.2.0",
+    "numpy>=1.24.3,<1.25.0",
+    "pytz>=2023.3,<2024.0",
+    "matplotlib>=3.7.2,<3.8.0",
+    "reportlab>=4.0.4,<4.1.0",
+    "jsonschema>=4.19.0,<4.20.0",
+    "qrcode[pil]>=7.4.2,<7.5.0",
+    "python-multipart>=0.0.6,<0.1.0",
+    "jinja2>=3.1.2,<3.2.0",
+    "aiofiles>=23.2.1,<24.0.0",
+    "typer>=0.9.0,<0.10.0",
+    "slowapi>=0.1.9,<0.2.0",
+    "python-magic>=0.4.27,<0.5.0",
+    "tzdata>=2023.3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0,<7.5.0",
+    "pytest-cov>=4.1.0,<4.2.0",
+    "mypy>=1.5.0,<1.6.0",
+    "flake8>=6.0.0,<6.1.0",
+    "black>=23.7.0,<24.0.0",
+    "isort>=5.12.0,<5.13.0",
+    "pre-commit>=3.4.0,<3.5.0",
+    "coverage>=7.0.0,<8.0.0",
+]
+
+[project.scripts]
+proofkit = "cli.main:app"
+
+[project.urls]
+Homepage = "https://github.com/proofkit/proofkit"
+Repository = "https://github.com/proofkit/proofkit"
+Documentation = "https://proofkit.readthedocs.io"
+"Bug Tracker" = "https://github.com/proofkit/proofkit/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["core*", "cli*", "web*"]
+exclude = ["tests*", "examples*", "storage*"]
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+  | storage
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+skip_glob = ["storage/*"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+exclude = [
+    "storage/",
+    "examples/",
+    "build/",
+]
+
+[tool.flake8]
+max-line-length = 88
+select = ["E", "W", "F"]
+ignore = [
+    "E203",  # whitespace before ':'
+    "E501",  # line too long (handled by black)
+    "W503",  # line break before binary operator
+]
+exclude = [
+    ".git",
+    "__pycache__",
+    ".venv",
+    "storage",
+    "build",
+    "dist",
+]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --strict-markers --strict-config"
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+]
+filterwarnings = [
+    "error",
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning",
+]
+
+[tool.coverage.run]
+source = ["."]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/conftest.py",
+    "*/storage/*",
+    "*/.venv/*",
+    "*/venv/*",
+    "*/env/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError", 
+    "if 0:",
+    "if __name__ == .__main__.:"
+]
+show_missing = true
+precision = 2
+
+[tool.coverage.html]
+directory = "htmlcov"

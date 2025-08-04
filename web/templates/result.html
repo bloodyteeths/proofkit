@@ -1,0 +1,122 @@
+<!-- Result template for HTMX partial response -->
+<section id="result-section" style="margin-top: 2rem;">
+    <!-- PASS/FAIL Banner -->
+    <div class="result-banner {{ 'pass' if result.pass else 'fail' }}">
+        {% if result.pass %}
+            ✓ PASS - Temperature Requirements Met
+        {% else %}
+            ✗ FAIL - Temperature Requirements Not Met
+        {% endif %}
+    </div>
+    
+    <!-- Metrics Table -->
+    <div class="metrics-table">
+        <h3>Validation Results</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Value</th>
+                    <th>Requirement</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if result.metrics %}
+                    <tr>
+                        <td>Target Temperature</td>
+                        <td>{{ "%.1f°C" | format(result.metrics.target_temp_C) }}</td>
+                        <td>{{ "%.1f°C" | format(result.metrics.target_temp_C) }}</td>
+                        <td>✓</td>
+                    </tr>
+                    <tr>
+                        <td>Hold Time Required</td>
+                        <td>{{ result.metrics.hold_time_s }}s</td>
+                        <td>{{ result.metrics.hold_time_s }}s</td>
+                        <td>{{ "✓" if result.metrics.hold_time_achieved_s >= result.metrics.hold_time_s else "✗" }}</td>
+                    </tr>
+                    <tr>
+                        <td>Hold Time Achieved</td>
+                        <td>{{ result.metrics.hold_time_achieved_s }}s</td>
+                        <td>≥ {{ result.metrics.hold_time_s }}s</td>
+                        <td>{{ "✓" if result.metrics.hold_time_achieved_s >= result.metrics.hold_time_s else "✗" }}</td>
+                    </tr>
+                    {% if result.metrics.max_temp_C %}
+                    <tr>
+                        <td>Maximum Temperature</td>
+                        <td>{{ "%.1f°C" | format(result.metrics.max_temp_C) }}</td>
+                        <td>-</td>
+                        <td>ℹ</td>
+                    </tr>
+                    {% endif %}
+                    {% if result.metrics.time_to_threshold_s %}
+                    <tr>
+                        <td>Time to Threshold</td>
+                        <td>{{ result.metrics.time_to_threshold_s }}s</td>
+                        <td>-</td>
+                        <td>ℹ</td>
+                    </tr>
+                    {% endif %}
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Reasons for Pass/Fail -->
+    {% if result.reasons %}
+    <div style="margin-top: 1rem;">
+        <h4>{% if result.pass %}Validation Passed{% else %}Validation Failed{% endif %}</h4>
+        <ul>
+            {% for reason in result.reasons %}
+                <li>{{ reason }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    
+    <!-- Warnings -->
+    {% if result.warnings %}
+    <div style="margin-top: 1rem;">
+        <h4>Warnings</h4>
+        <ul style="color: var(--warning-color);">
+            {% for warning in result.warnings %}
+                <li>{{ warning }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    
+    <!-- Download Links -->
+    <div class="download-links">
+        <h3>Download Results</h3>
+        <p>Your validation results are ready for download:</p>
+        
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <a href="{{ result.urls.pdf }}" class="primary" role="button">
+                📄 Download Proof PDF
+            </a>
+            <a href="{{ result.urls.zip }}" class="secondary" role="button">
+                📦 Download Evidence Bundle
+            </a>
+            <a href="{{ result.urls.verify }}" class="outline" role="button">
+                🔍 Verify Results
+            </a>
+        </div>
+        
+        <details style="margin-top: 1rem;">
+            <summary><strong>About these files</strong></summary>
+            <ul>
+                <li><strong>Proof PDF:</strong> Inspector-ready document with validation results, charts, and QR code for verification</li>
+                <li><strong>Evidence Bundle:</strong> ZIP file containing all input data, normalized data, decision logs, and integrity manifest</li>
+                <li><strong>Verify Page:</strong> Independent verification of the evidence bundle using cryptographic hashes</li>
+            </ul>
+        </details>
+    </div>
+    
+    <!-- Process Another File -->
+    <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--muted-border-color);">
+        <button type="button" onclick="location.reload()" class="outline">
+            🔄 Process Another File
+        </button>
+    </div>
+</section>
