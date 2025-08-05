@@ -19,7 +19,7 @@ import threading
 import asyncio
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Callable
 
 from core.logging import get_logger
 
@@ -115,7 +115,8 @@ def calculate_directory_size(directory: Path) -> int:
 
 def find_expired_artifacts(
     storage_dir: Path,
-    retention_days: int
+    retention_days: int,
+    now_provider: Optional[Callable[[], datetime]] = None
 ) -> List[Tuple[Path, datetime]]:
     """
     Find artifacts older than retention period.
@@ -123,6 +124,7 @@ def find_expired_artifacts(
     Args:
         storage_dir: Base storage directory to scan
         retention_days: Number of days to retain artifacts
+        now_provider: Optional function that returns current datetime (for testing)
         
     Returns:
         List of (path, creation_time) tuples for expired artifacts
@@ -134,7 +136,9 @@ def find_expired_artifacts(
         ...     print(f"Expired: {path} (created: {created})")
     """
     expired_artifacts: List[Tuple[Path, datetime]] = []
-    cutoff_time = datetime.now(timezone.utc) - timedelta(days=retention_days)
+    # Use provided now_provider or default to datetime.now
+    current_time = now_provider() if now_provider else datetime.now(timezone.utc)
+    cutoff_time = current_time - timedelta(days=retention_days)
     
     if not storage_dir.exists():
         logger.info(f"Storage directory does not exist: {storage_dir}")
@@ -234,7 +238,8 @@ def remove_artifact_directory(artifact_path: Path, dry_run: bool = False) -> boo
 def cleanup_old_artifacts(
     storage_dir: Optional[Path] = None,
     retention_days: Optional[int] = None,
-    dry_run: bool = False
+    dry_run: bool = False,
+    now_provider: Optional[Callable[[], datetime]] = None
 ) -> Dict[str, int]:
     """
     Clean up artifacts older than retention period.
@@ -243,6 +248,7 @@ def cleanup_old_artifacts(
         storage_dir: Storage directory to clean (default: ./storage)
         retention_days: Days to retain artifacts (default: from env)
         dry_run: If True, only log what would be cleaned
+        now_provider: Optional function that returns current datetime (for testing)
         
     Returns:
         Dictionary with cleanup statistics
@@ -269,7 +275,7 @@ def cleanup_old_artifacts(
     )
     
     # Find expired artifacts
-    expired_artifacts = find_expired_artifacts(storage_dir, retention_days)
+    expired_artifacts = find_expired_artifacts(storage_dir, retention_days, now_provider)
     
     # Initialize statistics
     stats = {
@@ -290,7 +296,7 @@ def cleanup_old_artifacts(
             extra={
                 "artifact_path": str(artifact_path),
                 "created_time": created_time.isoformat(),
-                "age_days": (datetime.now(timezone.utc) - created_time).days
+                "age_days": ((now_provider() if now_provider else datetime.now(timezone.utc)) - created_time).days
             }
         )
         
