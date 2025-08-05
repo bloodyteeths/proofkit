@@ -33,6 +33,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+        pip install -r requirements-dev.txt
 
     - name: Check code formatting
       run: |
@@ -52,7 +53,11 @@ jobs:
 
     - name: Test with pytest
       run: |
-        pytest --cov=. --cov-report=xml --cov-report=html --junitxml=pytest-results.xml
+        pytest -n auto --cov=. --cov-report=xml --cov-report=html --junitxml=pytest-results.xml -v
+
+    - name: Check coverage gates
+      run: |
+        python scripts/coverage_gate.py
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v3
@@ -69,6 +74,13 @@ jobs:
           pytest-results.xml
           htmlcov/
           coverage.xml
+
+    - name: Upload coverage HTML
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: coverage-html-${{ matrix.python-version }}
+        path: htmlcov/
 
   docker:
     runs-on: ubuntu-latest
@@ -102,3 +114,10 @@ jobs:
       run: |
         rm -rf /tmp/.buildx-cache
         mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+    - name: Upload Docker image size
+      uses: actions/upload-artifact@v3
+      with:
+        name: docker-image-size
+        path: |
+          docker-image-size.txt
