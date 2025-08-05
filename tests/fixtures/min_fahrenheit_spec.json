@@ -1,0 +1,30 @@
+{
+  "version": "1.0",
+  "job": {
+    "job_id": "min_test_fahrenheit"
+  },
+  "spec": {
+    "method": "PMT",
+    "target_temp_C": 170.0,
+    "hold_time_s": 480,
+    "sensor_uncertainty_C": 2.0
+  },
+  "data_requirements": {
+    "max_sample_period_s": 60.0,
+    "allowed_gaps_s": 120.0
+  },
+  "sensor_selection": {
+    "mode": "min_of_set",
+    "sensors": ["temp_C"],
+    "require_at_least": 1
+  },
+  "logic": {
+    "continuous": true,
+    "max_total_dips_s": 0
+  },
+  "reporting": {
+    "units": "C",
+    "language": "en",
+    "timezone": "UTC"
+  }
+}
