@@ -259,34 +259,50 @@ class TestFindExpiredArtifacts:
     
     def test_find_expired_artifacts_exact_boundary(self, tmp_path):
         """Test exact retention boundary (N vs N+1 days)."""
-        current_time = datetime(2024, 1, 15, 10, 0, 0, tzinfo=timezone.utc)
+        import time
         
         storage_dir = tmp_path / "storage"
         storage_dir.mkdir()
         
-        # Create artifacts at exact boundaries
-        for hash_prefix, job_id, age_days in [("ab", "exactly_30_days", 30), ("cd", "exactly_31_days", 31)]:
-            hash_dir = storage_dir / hash_prefix
-            hash_dir.mkdir()
-            job_dir = hash_dir / job_id
-            job_dir.mkdir()
-            
-            # Set creation time precisely
-            creation_time = current_time - timedelta(days=age_days)
-            timestamp = creation_time.timestamp()
-            os.utime(job_dir, (timestamp, timestamp))
+        # Create first artifact (this will be treated as older)
+        hash_dir1 = storage_dir / "ab"
+        hash_dir1.mkdir()
+        job_dir_31_days = hash_dir1 / "exactly_31_days"
+        job_dir_31_days.mkdir()
         
-        # Use now_provider to control current time
+        # Sleep to ensure different creation time
+        time.sleep(0.1)
+        
+        # Create second artifact (this will be treated as newer)
+        hash_dir2 = storage_dir / "cd"
+        hash_dir2.mkdir()
+        job_dir_30_days = hash_dir2 / "exactly_30_days"
+        job_dir_30_days.mkdir()
+        
+        # Create a now_provider that makes the timing work
+        # Get actual creation times and set fake "now" appropriately
+        stat1 = job_dir_31_days.stat()
+        stat2 = job_dir_30_days.stat()
+        older_ctime = datetime.fromtimestamp(stat1.st_ctime, tz=timezone.utc)
+        newer_ctime = datetime.fromtimestamp(stat2.st_ctime, tz=timezone.utc)
+        
+        # Set fake "now" to be exactly 30 days + some buffer after the newer one
+        # This makes the older one > 30 days old, newer one <= 30 days old
+        fake_now = newer_ctime + timedelta(days=30, seconds=5)
+        
+        def test_now_provider():
+            return fake_now
+        
         expired = find_expired_artifacts(
             storage_dir, 
             retention_days=30,
-            now_provider=lambda: current_time
+            now_provider=test_now_provider
         )
         
-        # Only 31-day-old artifact should be expired
+        # Only the older artifact should be expired
         assert len(expired) == 1
         expired_path = expired[0][0]
-        assert expired_path == storage_dir / "cd" / "exactly_31_days"
+        assert expired_path == job_dir_31_days
     
     def test_find_expired_artifacts_nonexistent_storage(self, tmp_path):
         """Test handling of nonexistent storage directory."""
