@@ -69,9 +69,9 @@ class CoverageGate:
         
         # Define thresholds as per requirements
         self.thresholds = [
-            CoverageThreshold(r"^core/decide\.py$", 92.0, "core/decide.py"),
-            CoverageThreshold(r"^core/cleanup\.py$", 90.0, "cleanup module"),
-            CoverageThreshold(r"^core/logging\.py$", 90.0, "logging module"),
+            CoverageThreshold(r"^decide\.py$", 92.0, "core/decide.py"),
+            CoverageThreshold(r"^cleanup\.py$", 90.0, "cleanup module"), 
+            CoverageThreshold(r"^logging\.py$", 90.0, "logging module"),
         ]
         
         self.total_threshold = 92.0
@@ -141,6 +141,11 @@ class CoverageGate:
         """Check all coverage thresholds and return results"""
         failures = []
         
+        # Validate coverage data exists
+        if not self.file_coverage:
+            failures.append("No coverage data available - ensure tests have been run with coverage collection enabled")
+            return False, failures
+        
         # Check total coverage
         if self.total_coverage < self.total_threshold:
             failures.append(
@@ -155,7 +160,12 @@ class CoverageGate:
             ]
             
             if not matching_files:
-                failures.append(f"No files found matching pattern '{threshold.pattern}' for {threshold.description}")
+                # Check if pattern might need adjustment (common issue)
+                similar_files = [f for f in self.file_coverage.keys() if threshold.pattern.replace(r'\.py$', '.py') in f or threshold.pattern.replace(r'^', '').replace(r'\.py$', '.py') in f]
+                if similar_files:
+                    failures.append(f"No files found matching pattern '{threshold.pattern}' for {threshold.description}. Similar files found: {', '.join(similar_files[:3])}")
+                else:
+                    failures.append(f"No files found matching pattern '{threshold.pattern}' for {threshold.description}")
                 continue
             
             for filename in matching_files:
@@ -214,6 +224,14 @@ class CoverageGate:
         print(f"- Total coverage: >= {self.total_threshold}%")
         for threshold in self.thresholds:
             print(f"- {threshold.description}: >= {threshold.min_coverage}%")
+        
+        # Print coverage increment information if this is a PR with the label
+        if os.getenv('GITHUB_EVENT_NAME') == 'pull_request':
+            print("\n💡 Coverage Increment Mode:")
+            print("   - If this PR has the 'coverage-increment' label, coverage gate failures")
+            print("     will not block the PR merge (continue-on-error: true)")  
+            print("   - This allows gradual coverage improvements while maintaining CI flow")
+            print("   - Coverage gates remain strict on main branch pushes")
     
     def run(self) -> int:
         """Run coverage gate check and return exit code"""
@@ -235,6 +253,11 @@ class CoverageGate:
                     print(f"  - {failure}")
                 return 1
                 
+        except FileNotFoundError:
+            print(f"Error: Coverage file '{self.coverage_file}' not found.", file=sys.stderr)
+            print("Run tests with coverage collection enabled first:", file=sys.stderr)
+            print("  python3 -m pytest tests/ --cov=core --cov-report=xml", file=sys.stderr)
+            return 1
         except Exception as e:
             print(f"Error: {e}", file=sys.stderr)
             return 1

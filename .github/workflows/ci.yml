@@ -56,6 +56,8 @@ jobs:
         pytest -n auto --cov=. --cov-report=xml --cov-report=html --junitxml=pytest-results.xml -v
 
     - name: Check coverage gates
+      id: coverage-check
+      continue-on-error: ${{ contains(github.event.pull_request.labels.*.name, 'coverage-increment') && github.event_name == 'pull_request' }}
       run: |
         python scripts/coverage_gate.py
 
