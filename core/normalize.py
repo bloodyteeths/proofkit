@@ -20,7 +20,7 @@ Example usage:
 
 import pandas as pd
 import numpy as np
-from typing import Dict, Tuple, Optional, List, Any
+from typing import Dict, Tuple, Optional, List, Any, Union, Callable
 from datetime import datetime, timezone
 import pytz
 import re
@@ -89,6 +89,43 @@ def load_csv_with_metadata(csv_path: str) -> Tuple[pd.DataFrame, Dict[str, str]]
         raise ValueError("CSV file contains no data rows")
     
     return df, metadata
+
+
+def detect_timestamp_format(df: pd.DataFrame) -> Tuple[str, str]:
+    """
+    Detect timestamp format and column in the DataFrame.
+    
+    Args:
+        df: Input DataFrame
+        
+    Returns:
+        Tuple of (format_type, column_name) where format_type is 'iso' or 'unix'
+        
+    Raises:
+        ValueError: If no timestamp column is found
+    """
+    # Try to find timestamp column
+    timestamp_col = detect_timestamp_column(df)
+    
+    # Sample first few values to determine format
+    sample_values = df[timestamp_col].dropna().head(5)
+    
+    # Check if it's Unix timestamp (numeric)
+    if pd.api.types.is_numeric_dtype(df[timestamp_col]):
+        # Check if values are in Unix timestamp range (roughly 1970-2100)
+        sample_numeric = sample_values.astype(float)
+        if (sample_numeric >= 0).all() and (sample_numeric <= 4102444800).all():  # Unix timestamp range
+            return "unix", timestamp_col
+    
+    # Try to parse as ISO datetime
+    try:
+        pd.to_datetime(sample_values)
+        return "iso", timestamp_col
+    except:
+        pass
+    
+    # Default to ISO if we can't determine
+    return "iso", timestamp_col
 
 
 def detect_timestamp_column(df: pd.DataFrame) -> str:
@@ -204,7 +241,31 @@ def detect_temperature_columns(df: pd.DataFrame) -> List[str]:
     return temp_columns
 
 
-def convert_fahrenheit_to_celsius(df: pd.DataFrame, temp_columns: List[str]) -> pd.DataFrame:
+def convert_fahrenheit_to_celsius(temps: Union[pd.Series, pd.DataFrame, float, List[str]]) -> Union[pd.Series, pd.DataFrame, float]:
+    """
+    Convert Fahrenheit temperature values to Celsius.
+    
+    Args:
+        temps: Temperature values - can be Series, DataFrame with temp columns, or scalar
+        
+    Returns:
+        Temperature values converted to Celsius
+    """
+    if isinstance(temps, pd.Series):
+        # Convert Series F to C: (F - 32) * 5/9
+        return (temps - 32) * 5 / 9
+    elif isinstance(temps, (float, int)):
+        # Convert scalar F to C
+        return (temps - 32) * 5 / 9
+    elif isinstance(temps, pd.DataFrame):
+        # For backward compatibility - detect temp columns and convert
+        temp_columns = detect_temperature_columns(temps)
+        return _convert_fahrenheit_to_celsius_df(temps, temp_columns)
+    else:
+        raise ValueError(f"Unsupported type for temperature conversion: {type(temps)}")
+
+
+def _convert_fahrenheit_to_celsius_df(df: pd.DataFrame, temp_columns: List[str]) -> pd.DataFrame:
     """
     Convert Fahrenheit temperature columns to Celsius.
     
@@ -230,6 +291,25 @@ def convert_fahrenheit_to_celsius(df: pd.DataFrame, temp_columns: List[str]) -> 
                 df = df.rename(columns={col: new_name})
     
     return df
+
+
+def validate_data_quality(df: pd.DataFrame, timestamp_col: str,
+                      max_sample_period_s: float, allowed_gaps_s: float) -> List[str]:
+    """
+    Validate data quality and return list of issues found.
+    
+    This is an alias for check_data_quality for backward compatibility.
+    
+    Args:
+        df: Input DataFrame with timestamps
+        timestamp_col: Name of timestamp column
+        max_sample_period_s: Maximum allowed sampling period
+        allowed_gaps_s: Maximum allowed gap duration
+        
+    Returns:
+        List of quality issue descriptions
+    """
+    return check_data_quality(df, timestamp_col, max_sample_period_s, allowed_gaps_s)
 
 
 def check_data_quality(df: pd.DataFrame, timestamp_col: str,
@@ -326,7 +406,9 @@ def normalize_temperature_data(df: pd.DataFrame,
                              target_step_s: float = 30.0,
                              allowed_gaps_s: float = 60.0,
                              max_sample_period_s: float = 300.0,
-                             source_timezone: Optional[str] = None) -> pd.DataFrame:
+                             source_timezone: Optional[str] = None,
+                             tz_resolver: Optional[Callable[[str], str]] = None,
+                             unit_resolver: Optional[Callable[[str], str]] = None) -> pd.DataFrame:
     """
     Normalize temperature data according to ProofKit requirements.
     
@@ -343,6 +425,8 @@ def normalize_temperature_data(df: pd.DataFrame,
         allowed_gaps_s: Maximum allowed gap duration
         max_sample_period_s: Maximum allowed sampling period
         source_timezone: Source timezone (if None, auto-detect)
+        tz_resolver: Optional callable to resolve timezone names (default: None)
+        unit_resolver: Optional callable to resolve temperature units (default: None)
         
     Returns:
         Normalized DataFrame
@@ -357,7 +441,10 @@ def normalize_temperature_data(df: pd.DataFrame,
     timestamp_col = detect_timestamp_column(df)
     
     # Parse and normalize timestamps to UTC
-    utc_timestamps = parse_timestamps(df, timestamp_col, source_timezone)
+    resolved_timezone = source_timezone
+    if tz_resolver and source_timezone:
+        resolved_timezone = tz_resolver(source_timezone)
+    utc_timestamps = parse_timestamps(df, timestamp_col, resolved_timezone)
     df = df.copy()
     df[timestamp_col] = utc_timestamps
     
@@ -369,7 +456,19 @@ def normalize_temperature_data(df: pd.DataFrame,
     if not temp_columns:
         raise NormalizationError("No temperature columns detected in CSV data")
     
-    df = convert_fahrenheit_to_celsius(df, temp_columns)
+    # Apply unit resolver if provided
+    if unit_resolver:
+        resolved_temp_columns = []
+        for col in temp_columns:
+            resolved_unit = unit_resolver(col)
+            if resolved_unit.lower() in ['f', 'fahrenheit']:
+                resolved_temp_columns.append(col)
+            # Add to list regardless for processing
+            resolved_temp_columns.append(col)
+        # Remove duplicates while preserving order
+        temp_columns = list(dict.fromkeys(resolved_temp_columns))
+    
+    df = _convert_fahrenheit_to_celsius_df(df, temp_columns)
     
     # Check data quality
     quality_issues = check_data_quality(df, timestamp_col, max_sample_period_s, allowed_gaps_s)
