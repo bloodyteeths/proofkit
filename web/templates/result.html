@@ -31,15 +31,15 @@
                     </tr>
                     <tr>
                         <td>Hold Time Required</td>
-                        <td>{{ result.metrics.hold_time_s }}s</td>
-                        <td>{{ result.metrics.hold_time_s }}s</td>
-                        <td>{{ "✓" if result.metrics.hold_time_achieved_s >= result.metrics.hold_time_s else "✗" }}</td>
+                        <td>{{ result.metrics.required_hold_time_s }}s</td>
+                        <td>{{ result.metrics.required_hold_time_s }}s</td>
+                        <td>{{ "✓" if result.metrics.actual_hold_time_s >= result.metrics.required_hold_time_s else "✗" }}</td>
                     </tr>
                     <tr>
                         <td>Hold Time Achieved</td>
-                        <td>{{ result.metrics.hold_time_achieved_s }}s</td>
-                        <td>≥ {{ result.metrics.hold_time_s }}s</td>
-                        <td>{{ "✓" if result.metrics.hold_time_achieved_s >= result.metrics.hold_time_s else "✗" }}</td>
+                        <td>{{ result.metrics.actual_hold_time_s }}s</td>
+                        <td>≥ {{ result.metrics.required_hold_time_s }}s</td>
+                        <td>{{ "✓" if result.metrics.actual_hold_time_s >= result.metrics.required_hold_time_s else "✗" }}</td>
                     </tr>
                     {% if result.metrics.max_temp_C %}
                     <tr>

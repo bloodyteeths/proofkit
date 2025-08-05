@@ -83,15 +83,15 @@
                     </tr>
                     <tr>
                         <td>Hold Time Required</td>
-                        <td>{{ verification.decision.metrics.hold_time_s }}s</td>
-                        <td>{{ verification.decision.metrics.hold_time_s }}s</td>
-                        <td>{{ "✓" if verification.decision.metrics.hold_time_achieved_s >= verification.decision.metrics.hold_time_s else "✗" }}</td>
+                        <td>{{ verification.decision.metrics.required_hold_time_s }}s</td>
+                        <td>{{ verification.decision.metrics.required_hold_time_s }}s</td>
+                        <td>{{ "✓" if verification.decision.metrics.actual_hold_time_s >= verification.decision.metrics.required_hold_time_s else "✗" }}</td>
                     </tr>
                     <tr>
                         <td>Hold Time Achieved</td>
-                        <td>{{ verification.decision.metrics.hold_time_achieved_s }}s</td>
-                        <td>≥ {{ verification.decision.metrics.hold_time_s }}s</td>
-                        <td>{{ "✓" if verification.decision.metrics.hold_time_achieved_s >= verification.decision.metrics.hold_time_s else "✗" }}</td>
+                        <td>{{ verification.decision.metrics.actual_hold_time_s }}s</td>
+                        <td>≥ {{ verification.decision.metrics.required_hold_time_s }}s</td>
+                        <td>{{ "✓" if verification.decision.metrics.actual_hold_time_s >= verification.decision.metrics.required_hold_time_s else "✗" }}</td>
                     </tr>
                     {% if verification.decision.metrics.max_temp_C %}
                     <tr>
