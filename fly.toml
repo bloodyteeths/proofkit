@@ -8,7 +8,6 @@ kill_timeout = "5s"
 
 [deploy]
   strategy = "rolling"
-  release_command = "sh -c 'crontab -l 2>/dev/null | grep -q \"0 2 \\* \\* \\* /app/scripts/backup_to_s3.sh\" || (crontab -l 2>/dev/null; echo \"0 2 * * * /app/scripts/backup_to_s3.sh >> /app/logs/cron.log 2>&1\") | crontab - && crontab -l 2>/dev/null | grep -q \"0 2 \\* \\* \\* cd /app && python -c\" || (crontab -l 2>/dev/null; echo \"0 2 * * * cd /app && python -c \\\"from core.cleanup import cleanup_old_artifacts; cleanup_old_artifacts()\\\" >> /app/logs/cleanup.log 2>&1\") | crontab -'"
 
 [env]
   # Application environment variables

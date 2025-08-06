@@ -22,17 +22,20 @@ import shutil
 import logging
 import threading
 import magic
+import secrets
+import re
 from pathlib import Path
 from typing import Dict, Any, Optional
 import mimetypes
 from datetime import datetime, timezone
 from io import StringIO
 
-from fastapi import FastAPI, Request, Form, File, UploadFile, HTTPException, Depends
+from fastapi import FastAPI, Request, Form, File, UploadFile, HTTPException, Depends, Response
 from fastapi.responses import JSONResponse, HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -45,6 +48,7 @@ matplotlib.use('Agg')
 
 # Import core modules
 from core.models import SpecV1, DecisionResult
+from core.scheduler import start_background_tasks, stop_background_tasks
 from core.normalize import normalize_temperature_data, load_csv_with_metadata, NormalizationError
 from core.decide import make_decision, DecisionError
 from core.plot import generate_proof_plot, PlotError
@@ -52,6 +56,11 @@ from core.render_pdf import generate_proof_pdf
 from core.pack import create_evidence_bundle, PackingError
 from core.logging import setup_logging, get_logger, RequestLoggingMiddleware
 from core.cleanup import schedule_cleanup
+from core.validation import create_validation_pack, get_validation_pack_info
+
+# Import auth modules
+from auth.magic import auth_handler, AuthMiddleware, get_current_user, require_auth, require_qa
+from auth.models import UserRole
 
 # Base directory for the application
 BASE_DIR = Path(__file__).resolve().parent
@@ -59,6 +68,24 @@ BASE_DIR = Path(__file__).resolve().parent
 # Template and static file setup
 templates = Jinja2Templates(directory=str(BASE_DIR / "web" / "templates"))
 static_dir = BASE_DIR / "web" / "static"
+
+# Add custom Jinja2 filters
+def strftime_filter(value, format_str="%Y"):
+    """Format datetime or 'now' string with strftime."""
+    if value == "now":
+        value = datetime.now(timezone.utc)
+    elif isinstance(value, str):
+        value = datetime.fromisoformat(value)
+    return value.strftime(format_str)
+
+templates.env.filters["strftime"] = strftime_filter
+
+# Add global function to get nonce from request
+def get_nonce(request):
+    """Get CSP nonce from request state."""
+    return getattr(request.state, 'nonce', '')
+
+templates.env.globals["get_nonce"] = get_nonce
 
 # Storage configuration
 STORAGE_DIR = BASE_DIR / "storage"
@@ -74,10 +101,90 @@ logger = get_logger(__name__)
 # Rate limiter configuration
 limiter = Limiter(key_func=get_remote_address)
 
+def get_rate_limit_decorator():
+    """
+    Get rate limit decorator, with option to disable for testing.
+    
+    Returns:
+        Decorator function for rate limiting
+        
+    Example:
+        @get_rate_limit_decorator()
+        async def my_endpoint():
+            pass
+    """
+    # Check if rate limiting is disabled for testing
+    if os.environ.get("PK_TEST_DISABLE_RATELIMIT", "").lower() in ["1", "true"]:
+        # Return a no-op decorator when rate limiting is disabled
+        def no_limit_decorator(func):
+            return func
+        return no_limit_decorator
+    else:
+        # Return normal rate limit decorator
+        return limiter.limit(f"{RATE_LIMIT_PER_MIN}/minute")
+
 # Environment configuration
 CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "*").split(",")
 RATE_LIMIT_PER_MIN = int(os.environ.get("RATE_LIMIT_PER_MIN", "10"))
 MAX_UPLOAD_SIZE = int(os.environ.get("MAX_UPLOAD_SIZE_MB", "10")) * 1024 * 1024
+
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """
+    Middleware to add security headers to all HTTP responses.
+    
+    Implements comprehensive security headers including:
+    - Strict Transport Security (HSTS)
+    - Content type protection
+    - Referrer policy
+    - Permissions policy
+    - Content Security Policy (CSP) with nonce support
+    
+    Example:
+        app.add_middleware(SecurityHeadersMiddleware)
+    """
+    
+    async def dispatch(self, request: Request, call_next):
+        """
+        Process request and add security headers to response.
+        
+        Args:
+            request: Incoming HTTP request
+            call_next: Next middleware/handler in chain
+            
+        Returns:
+            Response with security headers added
+        """
+        # Generate a nonce for this request
+        nonce = secrets.token_urlsafe(16)
+        request.state.nonce = nonce
+        
+        response = await call_next(request)
+        
+        # Strict Transport Security - force HTTPS for 1 year including subdomains
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
+        
+        # Prevent MIME type sniffing attacks
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        
+        # Control referrer information sent when navigating away
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        
+        # Restrict access to browser APIs that could be misused
+        response.headers["Permissions-Policy"] = "geolocation=(), camera=(), microphone=()"
+        
+        # Content Security Policy - Allow inline scripts with nonce, unsafe-inline for event handlers
+        # Note: unsafe-inline for scripts is needed for onclick handlers, but nonce provides better security for script blocks
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "img-src 'self' data: https:; "
+            "font-src 'self' data:; "
+            "style-src 'self' 'unsafe-inline'; "
+            f"script-src 'self' 'nonce-{nonce}' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com; "
+            "connect-src 'self' https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com;"
+        )
+        
+        return response
 
 
 def create_app() -> FastAPI:
@@ -91,13 +198,74 @@ def create_app() -> FastAPI:
         >>> app = create_app()
         >>> # App is ready to use with uvicorn
     """
+    
+    # Define OpenAPI tags for better organization
+    tags_metadata = [
+        {
+            "name": "powder",
+            "description": "Powder coat curing operations and specifications"
+        },
+        {
+            "name": "haccp",
+            "description": "HACCP cooling curve analysis and compliance"
+        },
+        {
+            "name": "autoclave",
+            "description": "Autoclave sterilization processes and validation"
+        },
+        {
+            "name": "sterile",
+            "description": "Sterile processing and medical device validation"
+        },
+        {
+            "name": "concrete",
+            "description": "Concrete curing and ASTM C31 compliance"
+        },
+        {
+            "name": "coldchain",
+            "description": "Cold chain storage and temperature monitoring"
+        },
+        {
+            "name": "compile",
+            "description": "CSV compilation and proof generation operations"
+        },
+        {
+            "name": "presets",
+            "description": "Industry-specific preset specifications"
+        },
+        {
+            "name": "auth",
+            "description": "Authentication and authorization operations"
+        },
+        {
+            "name": "validation",
+            "description": "Validation pack generation and management"
+        },
+        {
+            "name": "verify",
+            "description": "Evidence bundle verification and integrity checks"
+        },
+        {
+            "name": "download",
+            "description": "File download operations for proofs and evidence"
+        },
+        {
+            "name": "health",
+            "description": "System health and status endpoints"
+        }
+    ]
+    
     app = FastAPI(
         title="ProofKit",
         description="Generate inspector-ready proof PDFs from CSV temperature logs",
         version="0.1.0",
-        docs_url="/docs",
-        redoc_url="/redoc"
+        docs_url="/api-docs",
+        redoc_url="/redoc",
+        openapi_tags=tags_metadata
     )
+    
+    # Add security headers middleware (should be first to apply to all responses)
+    app.add_middleware(SecurityHeadersMiddleware)
     
     # Configure CORS
     app.add_middleware(
@@ -111,6 +279,9 @@ def create_app() -> FastAPI:
     
     # Add request logging middleware
     app.add_middleware(RequestLoggingMiddleware)
+    
+    # Add authentication middleware
+    app.add_middleware(AuthMiddleware, auth_handler=auth_handler)
     
     # Add rate limiting
     app.state.limiter = limiter
@@ -137,14 +308,67 @@ def create_app() -> FastAPI:
     return app
 
 
-def get_default_spec() -> str:
+def get_industry_presets() -> Dict[str, Dict[str, Any]]:
     """
-    Load the default specification JSON from examples.
+    Load all available industry presets.
+    
+    Returns:
+        Dict mapping industry names to their preset data
+    """
+    presets = {}
+    
+    # Available preset files
+    preset_files = {
+        "powder": "powder_coat_cure_spec_standard_180c_10min.json",  # Use existing example
+        "haccp": "haccp_v1.json",
+        "autoclave": "autoclave_v1.json", 
+        "sterile": "sterile_v1.json",
+        "concrete": "concrete_v1.json",
+        "coldchain": "coldchain_v1.json"
+    }
+    
+    spec_library_dir = BASE_DIR / "core" / "spec_library"
+    
+    for industry, filename in preset_files.items():
+        try:
+            if industry == "powder":
+                # Use existing example file
+                preset_path = BASE_DIR / "examples" / filename
+            else:
+                preset_path = spec_library_dir / filename
+                
+            if preset_path.exists():
+                with open(preset_path, 'r') as f:
+                    preset_data = json.load(f)
+                presets[industry] = preset_data
+            else:
+                logger.warning(f"Preset file not found: {preset_path}")
+        except Exception as e:
+            logger.error(f"Failed to load preset {industry}: {e}")
+    
+    return presets
+
+
+def get_default_spec(industry: Optional[str] = None) -> str:
+    """
+    Load the default specification JSON from examples or industry preset.
+    
+    Args:
+        industry: Industry preset to load (optional)
     
     Returns:
         str: Default specification as formatted JSON string
     """
     try:
+        if industry:
+            # Load industry preset
+            presets = get_industry_presets()
+            if industry in presets:
+                return json.dumps(presets[industry], indent=2)
+            else:
+                logger.warning(f"Industry preset '{industry}' not found")
+        
+        # Load default spec from examples
         spec_path = BASE_DIR / "examples" / "spec_example.json"
         with open(spec_path, 'r') as f:
             spec_data = json.load(f)
@@ -153,6 +377,7 @@ def get_default_spec() -> str:
         # Fallback default spec
         fallback_spec = {
             "version": "1.0",
+            "industry": "powder",
             "job": {"job_id": "batch_001"},
             "spec": {
                 "method": "PMT",
@@ -336,7 +561,7 @@ def save_file_to_storage(content: bytes, job_dir: Path, filename: str) -> Path:
 
 
 def process_csv_and_spec(csv_content: bytes, spec_data: Dict[str, Any], 
-                         job_dir: Path, job_id: str) -> Dict[str, Any]:
+                         job_dir: Path, job_id: str, creator=None) -> Dict[str, Any]:
     """
     Process CSV and specification through the complete ProofKit pipeline.
     
@@ -496,6 +721,27 @@ def process_csv_and_spec(csv_content: bytes, spec_data: Dict[str, Any],
     
     logger.info(f"Processing completed successfully for job {job_id}")
     
+    # Save job metadata
+    job_metadata = {
+        "specification": spec_data,
+        "decision": decision_dict,
+        "verification_hash": verification_hash,
+        "files": {
+            "raw_csv": "raw_data.csv",
+            "spec_json": "specification.json",
+            "normalized_csv": "normalized_data.csv",
+            "decision_json": "decision.json",
+            "plot_png": "plot.png",
+            "proof_pdf": "proof.pdf",
+            "evidence_zip": "evidence.zip"
+        },
+        "creator": {
+            "email": creator.email if creator else None,
+            "role": creator.role.value if creator else None
+        } if creator else None
+    }
+    save_job_metadata(job_dir, job_id, job_metadata)
+    
     # Return results
     return {
         "id": job_id,
@@ -523,7 +769,7 @@ def process_csv_and_spec(csv_content: bytes, spec_data: Dict[str, Any],
 app = create_app()
 
 
-@app.get("/health")
+@app.get("/health", tags=["health"])
 async def health_check() -> JSONResponse:
     """
     Health check endpoint for monitoring and load balancer readiness.
@@ -543,29 +789,112 @@ async def health_check() -> JSONResponse:
     return JSONResponse(content=health_data, status_code=200)
 
 
-@app.get("/", response_class=HTMLResponse)
-async def index_page(request: Request) -> HTMLResponse:
+@app.get("/", response_class=HTMLResponse, tags=["compile"])
+async def marketing_page(request: Request) -> HTMLResponse:
     """
-    Main upload page with form for CSV file and specification JSON.
+    Marketing homepage with product information and call-to-action.
+    
+    Returns:
+        HTMLResponse: Rendered marketing template
+        
+    Example:
+        Browser GET / returns marketing landing page
+    """
+    return templates.TemplateResponse(
+        "modern_home.html",
+        {
+            "request": request
+        }
+    )
+
+
+@app.get("/app", response_class=HTMLResponse, tags=["compile"])
+async def app_page(
+    request: Request,
+    industry: Optional[str] = None
+) -> HTMLResponse:
+    """
+    Main application page with form for CSV file and specification JSON.
+    
+    Args:
+        industry: Optional industry preset to load
     
     Returns:
         HTMLResponse: Rendered index template with default specification
         
     Example:
-        Browser GET / returns upload form with pre-populated spec JSON
+        Browser GET /app returns upload form with pre-populated spec JSON
+        Browser GET /app?industry=haccp returns form with HACCP preset
     """
-    default_spec = get_default_spec()
+    default_spec = get_default_spec(industry)
+    presets = get_industry_presets()
+    
     return templates.TemplateResponse(
         "index.html",
         {
             "request": request,
-            "default_spec": default_spec
+            "default_spec": default_spec,
+            "presets": presets,
+            "selected_industry": industry
         }
     )
 
 
-@app.post("/api/compile", response_class=HTMLResponse)
-@limiter.limit(f"{RATE_LIMIT_PER_MIN}/minute")
+@app.get("/api/presets", tags=["presets"])
+async def get_presets() -> JSONResponse:
+    """
+    Get all available industry presets.
+    
+    Returns:
+        JSONResponse: Dictionary of industry presets
+        
+    Example:
+        GET /api/presets returns {"powder": {...}, "haccp": {...}, ...}
+    """
+    try:
+        presets = get_industry_presets()
+        return JSONResponse(content=presets)
+    except Exception as e:
+        logger.error(f"Failed to load presets: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": "Failed to load presets", "message": str(e)}
+        )
+
+
+@app.get("/api/presets/{industry}", tags=["presets"])
+async def get_industry_preset(industry: str) -> JSONResponse:
+    """
+    Get a specific industry preset.
+    
+    Args:
+        industry: Industry name (powder, haccp, autoclave, sterile, concrete, coldchain)
+    
+    Returns:
+        JSONResponse: Industry preset data
+        
+    Example:
+        GET /api/presets/haccp returns HACCP specification
+    """
+    try:
+        presets = get_industry_presets()
+        if industry not in presets:
+            return JSONResponse(
+                status_code=404,
+                content={"error": "Industry preset not found", "industry": industry}
+            )
+        
+        return JSONResponse(content=presets[industry])
+    except Exception as e:
+        logger.error(f"Failed to load preset {industry}: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": "Failed to load preset", "message": str(e)}
+        )
+
+
+@app.post("/api/compile", response_class=HTMLResponse, tags=["compile"])
+@get_rate_limit_decorator()
 async def compile_csv_html(
     request: Request,
     csv_file: UploadFile = File(...),
@@ -624,16 +953,32 @@ async def compile_csv_html(
             job_dir = create_job_storage_path(job_id)
             logger.info(f"[{request_id}] Created storage path: {job_dir}")
         
+        # Get current user for approval status and job creator
+        current_user = get_current_user(request)
+        
         # Process through complete pipeline
         try:
-            result = process_csv_and_spec(csv_content, spec_data, job_dir, job_id)
+            result = process_csv_and_spec(csv_content, spec_data, job_dir, job_id, creator=current_user)
             logger.info(f"[{request_id}] Processing completed: {'PASS' if result['pass'] else 'FAIL'}")
+            
+            # Get current user for approval status
+            current_user = get_current_user(request)
+            
+            # Check approval status
+            meta_path = job_dir / "meta.json"
+            approved = False
+            if meta_path.exists():
+                with open(meta_path, 'r') as f:
+                    job_meta = json.load(f)
+                    approved = job_meta.get("approved", False)
             
             return templates.TemplateResponse(
                 "result.html",
                 {
                     "request": request,
-                    "result": result
+                    "result": result,
+                    "user": current_user,
+                    "approved": approved
                 }
             )
             
@@ -684,8 +1029,8 @@ async def compile_csv_html(
         )
 
 
-@app.post("/api/compile/json")
-@limiter.limit(f"{RATE_LIMIT_PER_MIN}/minute")
+@app.post("/api/compile/json", tags=["compile"])
+@get_rate_limit_decorator()
 async def compile_csv_json(
     request: Request,
     csv_file: UploadFile = File(...),
@@ -745,9 +1090,12 @@ async def compile_csv_json(
             job_dir = create_job_storage_path(job_id)
             logger.info(f"[{request_id}] Created storage path: {job_dir}")
         
+        # Get current user for approval status and job creator
+        current_user = get_current_user(request)
+        
         # Process through complete pipeline
         try:
-            result = process_csv_and_spec(csv_content, spec_data, job_dir, job_id)
+            result = process_csv_and_spec(csv_content, spec_data, job_dir, job_id, creator=current_user)
             logger.info(f"[{request_id}] Processing completed: {'PASS' if result['pass'] else 'FAIL'}")
             
             return JSONResponse(
@@ -809,7 +1157,7 @@ async def compile_csv_json(
         )
 
 
-@app.get("/verify/{bundle_id}", response_class=HTMLResponse)
+@app.get("/verify/{bundle_id}", response_class=HTMLResponse, tags=["verify"])
 async def verify_bundle(request: Request, bundle_id: str) -> HTMLResponse:
     """
     Verify an evidence bundle and display results.
@@ -944,7 +1292,7 @@ async def verify_bundle(request: Request, bundle_id: str) -> HTMLResponse:
         )
 
 
-@app.get("/download/{bundle_id}/{file_type}")
+@app.get("/download/{bundle_id}/{file_type}", tags=["download"])
 async def download_file(bundle_id: str, file_type: str, request: Request) -> FileResponse:
     """
     Download files from an evidence bundle.
@@ -1029,7 +1377,7 @@ async def download_file(bundle_id: str, file_type: str, request: Request) -> Fil
         )
 
 
-@app.get("/examples", response_class=HTMLResponse)
+@app.get("/examples", response_class=HTMLResponse, tags=["compile"])
 async def examples_page(request: Request) -> HTMLResponse:
     """
     Examples showcase page with downloadable CSV files and JSON specifications.
@@ -1046,7 +1394,56 @@ async def examples_page(request: Request) -> HTMLResponse:
     )
 
 
-@app.get("/examples/{filename}")
+
+
+
+
+@app.get("/industries/{industry}", response_class=HTMLResponse, tags=["compile"])
+async def industry_page(request: Request, industry: str) -> HTMLResponse:
+    """
+    Industry-specific landing page.
+    
+    Args:
+        request: FastAPI request object
+        industry: Industry identifier (powder-coating, autoclave, etc.)
+    
+    Returns:
+        HTMLResponse: Industry-specific page
+    """
+    # Map of valid industries to their template files
+    valid_industries = {
+        "powder-coating": "industries/powder-coating.html",
+        "autoclave": "industries/autoclave.html",
+        "concrete": "industries/concrete.html",
+        "cold-chain": "industries/cold-chain.html",
+        "eto": "industries/eto.html",
+        "haccp": "industries/haccp.html"
+    }
+    
+    if industry not in valid_industries:
+        raise HTTPException(status_code=404, detail="Industry not found")
+    
+    return templates.TemplateResponse(
+        valid_industries[industry],
+        {"request": request}
+    )
+
+
+@app.get("/nav_demo", response_class=HTMLResponse, tags=["compile"])
+async def nav_demo_page(request: Request) -> HTMLResponse:
+    """
+    Navigation demo page for testing active state detection.
+    
+    Returns:
+        HTMLResponse: Demo page showing navigation macro functionality
+    """
+    return templates.TemplateResponse(
+        "nav_demo.html",
+        {"request": request}
+    )
+
+
+@app.get("/examples/{filename}", tags=["compile"])
 async def serve_example_file(filename: str) -> FileResponse:
     """
     Serve example files for users to download and test.
@@ -1081,6 +1478,838 @@ async def serve_example_file(filename: str) -> FileResponse:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error serving file: {str(e)}")
+
+
+# Industry-specific routes
+@app.get("/powder-coat", response_class=HTMLResponse, tags=["powder"])
+async def powder_coat_page(request: Request) -> HTMLResponse:
+    """
+    Powder coating cure validation page with powder-specific preset.
+    
+    Returns:
+        HTMLResponse: Powder coating page with PMT temperature validation preset
+        
+    Example:
+        Browser GET /powder-coat returns powder coating form with 180°C cure preset
+    """
+    presets = get_industry_presets()
+    powder_preset_json = json.dumps(presets.get("powder", {}), indent=2) if "powder" in presets else get_default_spec("powder")
+    
+    return templates.TemplateResponse(
+        "industry/powder.html",
+        {
+            "request": request,
+            "industry": "powder",
+            "preset_json": powder_preset_json,
+            "presets": presets
+        }
+    )
+
+
+@app.get("/haccp", response_class=HTMLResponse, tags=["haccp"])
+async def haccp_page(request: Request) -> HTMLResponse:
+    """
+    HACCP compliance temperature validation page with HACCP-specific preset.
+    
+    Returns:
+        HTMLResponse: HACCP page with food safety temperature monitoring preset
+        
+    Example:
+        Browser GET /haccp returns HACCP form with cooling validation preset
+    """
+    presets = get_industry_presets()
+    haccp_preset_json = json.dumps(presets.get("haccp", {}), indent=2) if "haccp" in presets else get_default_spec("haccp")
+    
+    return templates.TemplateResponse(
+        "industry/haccp.html",
+        {
+            "request": request,
+            "industry": "haccp",
+            "preset_json": haccp_preset_json,
+            "presets": presets
+        }
+    )
+
+
+@app.get("/autoclave", response_class=HTMLResponse, tags=["autoclave"])
+async def autoclave_page(request: Request) -> HTMLResponse:
+    """
+    Autoclave sterilization validation page with autoclave-specific preset.
+    
+    Returns:
+        HTMLResponse: Autoclave page with sterilization cycle validation preset
+        
+    Example:
+        Browser GET /autoclave returns autoclave form with 121°C sterilization preset
+    """
+    presets = get_industry_presets()
+    autoclave_preset_json = json.dumps(presets.get("autoclave", {}), indent=2) if "autoclave" in presets else get_default_spec("autoclave")
+    
+    return templates.TemplateResponse(
+        "industry/autoclave.html",
+        {
+            "request": request,
+            "industry": "autoclave",
+            "preset_json": autoclave_preset_json,
+            "presets": presets
+        }
+    )
+
+
+@app.get("/sterile", response_class=HTMLResponse, tags=["sterile"])
+async def sterile_page(request: Request) -> HTMLResponse:
+    """
+    Sterile processing validation page with sterile-specific preset.
+    
+    Returns:
+        HTMLResponse: Sterile page with sterile processing validation preset
+        
+    Example:
+        Browser GET /sterile returns sterile form with cleanroom validation preset
+    """
+    presets = get_industry_presets()
+    sterile_preset_json = json.dumps(presets.get("sterile", {}), indent=2) if "sterile" in presets else get_default_spec("sterile")
+    
+    return templates.TemplateResponse(
+        "industry/sterile.html",
+        {
+            "request": request,
+            "industry": "sterile",
+            "preset_json": sterile_preset_json,
+            "presets": presets
+        }
+    )
+
+
+@app.get("/concrete", response_class=HTMLResponse, tags=["concrete"])
+async def concrete_page(request: Request) -> HTMLResponse:
+    """
+    Concrete curing validation page with concrete-specific preset.
+    
+    Returns:
+        HTMLResponse: Concrete page with concrete curing temperature validation preset
+        
+    Example:
+        Browser GET /concrete returns concrete form with curing validation preset
+    """
+    presets = get_industry_presets()
+    concrete_preset_json = json.dumps(presets.get("concrete", {}), indent=2) if "concrete" in presets else get_default_spec("concrete")
+    
+    return templates.TemplateResponse(
+        "industry/concrete.html",
+        {
+            "request": request,
+            "industry": "concrete",
+            "preset_json": concrete_preset_json,
+            "presets": presets
+        }
+    )
+
+
+@app.get("/cold-chain", response_class=HTMLResponse, tags=["coldchain"])
+async def cold_chain_page(request: Request) -> HTMLResponse:
+    """
+    Cold chain validation page with cold chain-specific preset.
+    
+    Returns:
+        HTMLResponse: Cold chain page with pharmaceutical cold storage validation preset
+        
+    Example:
+        Browser GET /cold-chain returns cold chain form with 2-8°C storage preset
+    """
+    presets = get_industry_presets()
+    coldchain_preset_json = json.dumps(presets.get("coldchain", {}), indent=2) if "coldchain" in presets else get_default_spec("coldchain")
+    
+    return templates.TemplateResponse(
+        "industry/coldchain.html",
+        {
+            "request": request,
+            "industry": "coldchain",
+            "preset_json": coldchain_preset_json,
+            "presets": presets
+        }
+    )
+
+
+@app.get("/trust", response_class=HTMLResponse, tags=["compile"])
+async def trust_page(request: Request) -> HTMLResponse:
+    """
+    Trust and security information page explaining ProofKit's verification mechanisms.
+    
+    Returns:
+        HTMLResponse: Trust page with security features and verification explanation
+        
+    Example:
+        Browser GET /trust returns trust page with cryptographic verification details
+    """
+    return templates.TemplateResponse(
+        "trust.html",
+        {"request": request}
+    )
+
+
+# Blog routes
+@app.get("/blog", response_class=HTMLResponse, tags=["blog"])
+async def blog_index(request: Request) -> HTMLResponse:
+    """
+    Blog index page showing all available blog posts.
+    
+    Returns:
+        HTMLResponse: Blog index with list of all posts
+    """
+    # Get all blog posts from marketing/blog directory
+    blog_dir = Path("marketing/blog")
+    blog_posts = []
+    
+    if blog_dir.exists():
+        for blog_file in blog_dir.glob("*.md"):
+            # Read first few lines to get title and metadata
+            try:
+                with open(blog_file, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                    lines = content.split('\n')
+                    title = lines[0].replace('# ', '') if lines else blog_file.stem
+                    
+                    # Extract description from content (first paragraph after title)
+                    description = ""
+                    for line in lines[1:]:
+                        if line.strip() and not line.startswith('*'):
+                            description = line.strip()[:200] + "..."
+                            break
+                    
+                    blog_posts.append({
+                        'slug': blog_file.stem,
+                        'title': title,
+                        'description': description,
+                        'filename': blog_file.name
+                    })
+            except Exception as e:
+                logging.warning(f"Could not parse blog file {blog_file}: {e}")
+    
+    return templates.TemplateResponse(
+        "blog/index.html",
+        {"request": request, "blog_posts": blog_posts}
+    )
+
+
+@app.get("/blog/{slug}", response_class=HTMLResponse, tags=["blog"])
+async def blog_post(request: Request, slug: str) -> HTMLResponse:
+    """
+    Individual blog post page.
+    
+    Args:
+        slug: Blog post slug (filename without .md extension)
+        
+    Returns:
+        HTMLResponse: Individual blog post content
+    """
+    blog_file = Path(f"marketing/blog/{slug}.md")
+    
+    if not blog_file.exists():
+        raise HTTPException(status_code=404, detail="Blog post not found")
+    
+    try:
+        with open(blog_file, 'r', encoding='utf-8') as f:
+            content = f.read()
+            
+        # Simple markdown parsing - extract title and content
+        lines = content.split('\n')
+        title = lines[0].replace('# ', '') if lines else slug.replace('-', ' ').title()
+        
+        # Simple markdown to HTML conversion with proper escaping
+        def markdown_to_html(md_text):
+            """Basic markdown to HTML conversion with Jinja2 safety"""
+            lines = md_text.split('\n')
+            html_lines = []
+            in_code_block = False
+            
+            for line in lines:
+                # Handle code blocks
+                if line.strip().startswith('```'):
+                    in_code_block = not in_code_block
+                    continue
+                    
+                if in_code_block:
+                    html_lines.append(f'<code>{line}</code>')
+                    continue
+                
+                # Handle headers
+                if line.startswith('### '):
+                    html_lines.append(f'<h3>{line[4:]}</h3>')
+                elif line.startswith('## '):
+                    html_lines.append(f'<h2>{line[3:]}</h2>')
+                elif line.startswith('# '):
+                    html_lines.append(f'<h1>{line[2:]}</h1>')
+                # Handle bullet points
+                elif line.strip().startswith('- '):
+                    content = line.strip()[2:]
+                    # Handle bold text in bullet points
+                    content = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', content)
+                    html_lines.append(f'<li>{content}</li>')
+                # Handle empty lines
+                elif line.strip() == '':
+                    html_lines.append('<br>')
+                # Handle regular paragraphs
+                else:
+                    # Handle bold text
+                    line = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', line)
+                    if line.strip():
+                        html_lines.append(f'<p>{line}</p>')
+            
+            # Wrap consecutive li elements in ul
+            result = []
+            in_list = False
+            for line in html_lines:
+                if line.startswith('<li>'):
+                    if not in_list:
+                        result.append('<ul>')
+                        in_list = True
+                    result.append(line)
+                else:
+                    if in_list:
+                        result.append('</ul>')
+                        in_list = False
+                    result.append(line)
+            
+            if in_list:
+                result.append('</ul>')
+            
+            return '\n'.join(result)
+        
+        html_content = markdown_to_html(content)
+        
+        return templates.TemplateResponse(
+            "blog/post.html",
+            {
+                "request": request, 
+                "title": title,
+                "content": html_content,
+                "slug": slug,
+                "date": "Recently Published",  # Add default date
+                "reading_time": 5  # Add default reading time
+            }
+        )
+        
+    except Exception as e:
+        logging.error(f"Error reading blog post {slug}: {e}")
+        raise HTTPException(status_code=500, detail="Error loading blog post")
+
+
+@app.get("/docs", response_class=HTMLResponse, tags=["docs"])
+async def docs_page(request: Request) -> HTMLResponse:
+    """
+    Documentation page with API documentation and usage guides.
+    
+    Returns:
+        HTMLResponse: Documentation page
+    """
+    return templates.TemplateResponse(
+        "docs.html",
+        {"request": request}
+    )
+
+
+@app.get("/sitemap.xml", tags=["seo"])
+async def sitemap():
+    """
+    Serve sitemap.xml for search engine indexing.
+    
+    Returns:
+        FileResponse: XML sitemap file
+    """
+    sitemap_path = Path("marketing/sitemap.xml")
+    if sitemap_path.exists():
+        return FileResponse(
+            sitemap_path,
+            media_type="application/xml",
+            filename="sitemap.xml"
+        )
+    else:
+        raise HTTPException(status_code=404, detail="Sitemap not found")
+
+
+@app.get("/robots.txt", tags=["seo"])
+async def robots_txt():
+    """
+    Serve robots.txt for search engine crawling directives.
+    
+    Returns:
+        FileResponse: robots.txt file
+    """
+    robots_path = static_dir / "robots.txt"
+    if robots_path.exists():
+        return FileResponse(
+            robots_path,
+            media_type="text/plain",
+            filename="robots.txt"
+        )
+    else:
+        raise HTTPException(status_code=404, detail="Robots.txt not found")
+
+
+@app.get("/.well-known/security.txt", tags=["seo"])
+async def security_txt():
+    """
+    Serve security.txt for responsible security disclosure (RFC 9116).
+    
+    Returns:
+        FileResponse: security.txt file
+    """
+    security_path = BASE_DIR / ".well-known" / "security.txt"
+    if security_path.exists():
+        return FileResponse(
+            security_path,
+            media_type="text/plain",
+            filename="security.txt"
+        )
+    else:
+        raise HTTPException(status_code=404, detail="Security.txt not found")
+
+
+# Authentication routes
+@app.get("/auth/login", response_class=HTMLResponse, tags=["auth"])
+async def login_page(request: Request) -> HTMLResponse:
+    """
+    Login page for magic link authentication.
+    
+    Returns:
+        HTMLResponse: Login form for email and role selection
+    """
+    return templates.TemplateResponse(
+        "auth/login.html",
+        {"request": request}
+    )
+
+
+@app.post("/auth/request-link", tags=["auth"])
+async def request_magic_link(request: Request, email: str = Form(...), role: str = Form(...)) -> JSONResponse:
+    """
+    Request a magic link for authentication.
+    
+    Args:
+        request: FastAPI request object
+        email: User email address
+        role: User role (op or qa)
+    
+    Returns:
+        JSONResponse: Success message or error
+    """
+    try:
+        # Validate role
+        if role not in ["op", "qa"]:
+            raise HTTPException(status_code=400, detail="Invalid role. Must be 'op' or 'qa'")
+        
+        user_role = UserRole(role)
+        
+        # Generate magic link
+        magic_token = auth_handler.generate_magic_link(email, user_role)
+        
+        # Send email
+        success = auth_handler.send_magic_link_email(email, magic_token, user_role)
+        
+        if success:
+            response_data = {
+                "message": f"Magic link sent to {email}",
+                "expires_in": 15 * 60  # 15 minutes
+            }
+            
+            # In development mode, include the actual link
+            if os.environ.get("EMAIL_DEV_MODE", "true").lower() == "true":
+                dev_link = auth_handler.get_dev_link(email)
+                if dev_link:
+                    response_data["dev_link"] = dev_link
+                    response_data["message"] = f"Magic link generated for {email} (Development Mode)"
+            
+            return JSONResponse(response_data)
+        else:
+            raise HTTPException(status_code=500, detail="Failed to send magic link email")
+            
+    except Exception as e:
+        logger.error(f"Magic link request failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/auth/verify", tags=["auth"])
+async def verify_magic_link(request: Request, token: str) -> HTMLResponse:
+    """
+    Verify magic link and authenticate user.
+    
+    Args:
+        request: FastAPI request object
+        token: Magic link token
+    
+    Returns:
+        HTMLResponse: Redirect to dashboard or error page
+    """
+    try:
+        # Validate magic link
+        link_data = auth_handler.validate_magic_link(token)
+        
+        if not link_data:
+            return templates.TemplateResponse(
+                "auth/error.html",
+                {
+                    "request": request,
+                    "error": "Invalid or expired magic link"
+                }
+            )
+        
+        # Create JWT token
+        jwt_token = auth_handler.create_jwt_token(link_data["email"], UserRole(link_data["role"]))
+        
+        # Create response with cookie
+        response = templates.TemplateResponse(
+            "auth/success.html",
+            {
+                "request": request,
+                "email": link_data["email"],
+                "role": link_data["role"]
+            }
+        )
+        
+        # Set secure cookie
+        response.set_cookie(
+            key="auth_token",
+            value=jwt_token,
+            max_age=24 * 60 * 60,  # 24 hours
+            httponly=True,
+            secure=os.environ.get("ENVIRONMENT") == "production",
+            samesite="lax"
+        )
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"Magic link verification failed: {e}")
+        return templates.TemplateResponse(
+            "auth/error.html",
+            {
+                "request": request,
+                "error": "Authentication failed"
+            }
+        )
+
+
+@app.post("/auth/logout", tags=["auth"])
+async def logout(request: Request) -> JSONResponse:
+    """
+    Logout user by clearing authentication cookie.
+    
+    Returns:
+        JSONResponse: Success message
+    """
+    response = JSONResponse({"message": "Logged out successfully"})
+    response.delete_cookie("auth_token")
+    return response
+
+
+# QA Approval routes
+@app.get("/approve/{job_id}", tags=["auth"])
+async def approve_job_page(request: Request, job_id: str) -> HTMLResponse:
+    """
+    QA approval page for a specific job.
+    
+    Args:
+        request: FastAPI request object
+        job_id: Job identifier
+    
+    Returns:
+        HTMLResponse: Approval page with job details
+    """
+    # Require QA role
+    user = require_qa(request)
+    
+    try:
+        # Load job metadata
+        job_dir = create_job_storage_path(job_id)
+        meta_path = job_dir / "meta.json"
+        
+        if not meta_path.exists():
+            raise HTTPException(status_code=404, detail="Job not found")
+        
+        with open(meta_path, 'r') as f:
+            job_meta = json.load(f)
+        
+        # Load decision data
+        decision_path = job_dir / "decision.json"
+        if decision_path.exists():
+            with open(decision_path, 'r') as f:
+                decision_data = json.load(f)
+        else:
+            decision_data = None
+        
+        return templates.TemplateResponse(
+            "auth/approve.html",
+            {
+                "request": request,
+                "job_id": job_id,
+                "job_meta": job_meta,
+                "decision": decision_data,
+                "user": user
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to load job {job_id} for approval: {e}")
+        raise HTTPException(status_code=500, detail="Failed to load job details")
+
+
+@app.post("/approve/{job_id}", tags=["auth"])
+async def approve_job(request: Request, job_id: str) -> JSONResponse:
+    """
+    Approve a job (QA only).
+    
+    Args:
+        request: FastAPI request object
+        job_id: Job identifier
+    
+    Returns:
+        JSONResponse: Success message
+    """
+    # Require QA role
+    user = require_qa(request)
+    
+    try:
+        # Load job metadata
+        job_dir = create_job_storage_path(job_id)
+        meta_path = job_dir / "meta.json"
+        
+        if not meta_path.exists():
+            raise HTTPException(status_code=404, detail="Job not found")
+        
+        with open(meta_path, 'r') as f:
+            job_meta = json.load(f)
+        
+        # Check if already approved
+        if job_meta.get("approved", False):
+            return JSONResponse({"message": "Job already approved"})
+        
+        # Update metadata with approval
+        job_meta["approved"] = True
+        job_meta["approved_by"] = user.email
+        job_meta["approved_at"] = datetime.now(timezone.utc).isoformat()
+        
+        # Save updated metadata
+        with open(meta_path, 'w') as f:
+            json.dump(job_meta, f, indent=2)
+        
+        # Regenerate PDF without "DRAFT" watermark
+        try:
+            from core.render_pdf import generate_proof_pdf
+            decision_path = job_dir / "decision.json"
+            spec_path = job_dir / "specification.json"
+            plot_path = job_dir / "plot.png"
+            normalized_csv_path = job_dir / "normalized.csv"
+            
+            if all(p.exists() for p in [decision_path, spec_path, plot_path, normalized_csv_path]):
+                with open(decision_path, 'r') as f:
+                    decision_data = json.load(f)
+                with open(spec_path, 'r') as f:
+                    spec_data = json.load(f)
+                
+                # Generate verification hash
+                verification_hash = hashlib.sha256(
+                    f"{job_id}{decision_data['pass']}{decision_data['actual_hold_time_s']}".encode()
+                ).hexdigest()
+                
+                # Regenerate PDF without draft watermark
+                pdf_path = job_dir / "proof.pdf"
+                generate_proof_pdf(
+                    spec=spec_data,
+                    decision=decision_data,
+                    plot_path=str(plot_path),
+                    normalized_csv_path=str(normalized_csv_path),
+                    verification_hash=verification_hash,
+                    output_path=str(pdf_path),
+                    is_draft=False  # No draft watermark
+                )
+                
+                logger.info(f"Job {job_id} approved by {user.email} and PDF regenerated")
+            else:
+                logger.warning(f"Missing files for PDF regeneration in job {job_id}")
+                
+        except Exception as e:
+            logger.error(f"Failed to regenerate PDF for approved job {job_id}: {e}")
+            # Don't fail the approval if PDF regeneration fails
+        
+        return JSONResponse({
+            "message": f"Job {job_id} approved successfully",
+            "approved_by": user.email,
+            "approved_at": job_meta["approved_at"]
+        })
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to approve job {job_id}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to approve job")
+
+
+def save_job_metadata(job_dir: Path, job_id: str, metadata: Dict[str, Any]) -> None:
+    """
+    Save job metadata to storage.
+    
+    Args:
+        job_dir: Job directory path
+        job_id: Job identifier
+        metadata: Metadata dictionary
+    """
+    meta_path = job_dir / "meta.json"
+    metadata["job_id"] = job_id
+    metadata["created_at"] = datetime.now(timezone.utc).isoformat()
+    metadata["approved"] = False  # Default to not approved
+    
+    with open(meta_path, 'w') as f:
+        json.dump(metadata, f, indent=2)
+
+
+@app.get("/my-jobs", response_class=HTMLResponse, tags=["auth"])
+async def my_jobs_page(request: Request) -> HTMLResponse:
+    """
+    Show jobs for the current user (OP: jobs submitted, QA: jobs awaiting approval).
+    """
+    user = get_current_user(request)
+    if not user:
+        return templates.TemplateResponse("auth/error.html", {"request": request, "error": "Authentication required"})
+    # Scan storage for jobs
+    jobs = []
+    for root, dirs, files in os.walk(str(STORAGE_DIR)):
+        if "meta.json" in files:
+            meta_path = os.path.join(root, "meta.json")
+            try:
+                with open(meta_path, "r") as f:
+                    meta = json.load(f)
+                job_id = meta.get("job_id")
+                creator = meta.get("creator", {})
+                approved = meta.get("approved", False)
+                created_at = meta.get("created_at")
+                approved_at = meta.get("approved_at")
+                # OP: jobs they submitted; QA: jobs not yet approved
+                if (user.role == UserRole.OPERATOR and creator.get("email") == user.email) or (user.role == UserRole.QA and not approved):
+                    jobs.append({
+                        "job_id": job_id,
+                        "created_at": created_at,
+                        "approved": approved,
+                        "approved_at": approved_at,
+                        "creator": creator,
+                        "meta": meta
+                    })
+            except Exception:
+                continue
+    # Sort jobs by created_at desc
+    jobs.sort(key=lambda j: j["created_at"] or "", reverse=True)
+    return templates.TemplateResponse("my_jobs.html", {"request": request, "user": user, "jobs": jobs})
+
+
+@app.get("/api/validation-pack/{job_id}", tags=["validation"])
+async def get_validation_pack(job_id: str, request: Request) -> JSONResponse:
+    """
+    Generate and return a validation pack ZIP file for a job.
+    
+    Args:
+        job_id: Job identifier
+        request: FastAPI request object
+    
+    Returns:
+        JSONResponse with validation pack information or error
+    """
+    try:
+        # Load job metadata
+        job_dir = create_job_storage_path(job_id)
+        meta_path = job_dir / "meta.json"
+        
+        if not meta_path.exists():
+            raise HTTPException(status_code=404, detail="Job not found")
+        
+        with open(meta_path, 'r') as f:
+            job_meta = json.load(f)
+        
+        # Generate validation pack
+        validation_pack_path = job_dir / "validation_pack.zip"
+        
+        if not validation_pack_path.exists():
+            success = create_validation_pack(job_id, job_meta, validation_pack_path)
+            if not success:
+                raise HTTPException(status_code=500, detail="Failed to create validation pack")
+        
+        # Get validation pack info
+        pack_info = get_validation_pack_info(job_id, job_meta)
+        
+        # Return download URL and info
+        return JSONResponse({
+            "job_id": job_id,
+            "download_url": f"/download/{job_id}/validation-pack",
+            "pack_info": pack_info,
+            "message": "Validation pack ready for download"
+        })
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to generate validation pack for job {job_id}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate validation pack")
+
+
+@app.get("/download/{job_id}/validation-pack", tags=["validation"])
+async def download_validation_pack(job_id: str, request: Request) -> FileResponse:
+    """
+    Download the validation pack ZIP file for a job.
+    
+    Args:
+        job_id: Job identifier
+        request: FastAPI request object
+    
+    Returns:
+        FileResponse with the validation pack ZIP file
+    """
+    try:
+        # Load job metadata
+        job_dir = create_job_storage_path(job_id)
+        meta_path = job_dir / "meta.json"
+        validation_pack_path = job_dir / "validation_pack.zip"
+        
+        if not meta_path.exists():
+            raise HTTPException(status_code=404, detail="Job not found")
+        
+        # Generate validation pack if it doesn't exist
+        if not validation_pack_path.exists():
+            with open(meta_path, 'r') as f:
+                job_meta = json.load(f)
+            
+            success = create_validation_pack(job_id, job_meta, validation_pack_path)
+            if not success:
+                raise HTTPException(status_code=500, detail="Failed to create validation pack")
+        
+        # Return the ZIP file
+        return FileResponse(
+            path=validation_pack_path,
+            filename=f"validation_pack_{job_id}.zip",
+            media_type="application/zip"
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to download validation pack for job {job_id}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to download validation pack")
+
+
+# Event handlers for background tasks
+@app.on_event("startup")
+async def startup_event():
+    """Start background scheduler on application startup."""
+    logger.info("Starting ProofKit application")
+    start_background_tasks()
+    logger.info("Background tasks started")
+
+@app.on_event("shutdown") 
+async def shutdown_event():
+    """Stop background scheduler on application shutdown."""
+    logger.info("Shutting down ProofKit application")
+    stop_background_tasks()
+    logger.info("Background tasks stopped")
 
 
 if __name__ == "__main__":
