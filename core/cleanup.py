@@ -314,6 +314,11 @@ def cleanup_old_artifacts(
     # Convert bytes to MB
     stats["freed_mb"] = round(stats["freed_bytes"] / (1024 * 1024), 2)
     
+    # Log statsd format metrics
+    logger.info(f"cleanup_removed:{stats['removed']}|c")
+    if not dry_run and stats['freed_mb'] > 0:
+        logger.info(f"cleanup_freed_mb:{stats['freed_mb']}|g")
+    
     logger.info(
         f"Artifact cleanup completed",
         extra={

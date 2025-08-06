@@ -1,0 +1,365 @@
+name: Smoke Tests
+
+on:
+  # Run every 15 minutes during business hours (UTC)
+  schedule:
+    - cron: '*/15 8-20 * * 1-5'  # Every 15 minutes, Mon-Fri, 8am-8pm UTC
+    - cron: '0 */2 * * 0,6'      # Every 2 hours on weekends
+  
+  # Manual trigger
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+        - production
+        - staging
+      
+  # Run on deployment
+  deployment_status:
+
+env:
+  PRODUCTION_URL: https://proofkit-prod.fly.dev
+  STAGING_URL: https://proofkit-staging.fly.dev
+
+jobs:
+  smoke-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    strategy:
+      matrix:
+        environment: 
+          - ${{ github.event.inputs.environment || 'production' }}
+    
+    steps:
+    - name: Set Environment URL
+      run: |
+        if [ "${{ matrix.environment }}" = "staging" ]; then
+          echo "BASE_URL=${{ env.STAGING_URL }}" >> $GITHUB_ENV
+          echo "ENV_NAME=staging" >> $GITHUB_ENV
+        else
+          echo "BASE_URL=${{ env.PRODUCTION_URL }}" >> $GITHUB_ENV  
+          echo "ENV_NAME=production" >> $GITHUB_ENV
+        fi
+    
+    - name: Health Check Test
+      id: health-check
+      run: |
+        echo "Testing health endpoint..."
+        
+        # Health check with timeout and retry
+        response=$(curl -s -w "%{http_code}|%{time_total}" \
+          --max-time 10 \
+          --retry 2 \
+          --retry-delay 5 \
+          "$BASE_URL/health" || echo "000|0")
+        
+        http_code=$(echo "$response" | cut -d'|' -f1)
+        response_time=$(echo "$response" | cut -d'|' -f2)
+        body=$(echo "$response" | cut -d'|' -f3-)
+        
+        echo "HTTP Code: $http_code"
+        echo "Response Time: ${response_time}s"
+        echo "Response Body: $body"
+        
+        # Check status code
+        if [ "$http_code" != "200" ]; then
+          echo "❌ Health check failed with status $http_code"
+          exit 1
+        fi
+        
+        # Check response time (under 5 seconds)
+        if (( $(echo "$response_time > 5" | bc -l) )); then
+          echo "⚠️ Health check slow: ${response_time}s"
+          exit 1
+        fi
+        
+        # Check for expected JSON structure
+        if ! echo "$body" | jq -e '.status == "healthy" and .service == "proofkit"' > /dev/null 2>&1; then
+          echo "❌ Health check response format invalid"
+          echo "Expected: {\"status\": \"healthy\", \"service\": \"proofkit\", ...}"
+          echo "Actual: $body"
+          exit 1
+        fi
+        
+        echo "✅ Health check passed"
+        echo "health_status=✅ PASS" >> $GITHUB_OUTPUT
+
+    - name: API Presets Test
+      id: api-test
+      run: |
+        echo "Testing API presets endpoint..."
+        
+        # API presets check
+        response=$(curl -s -w "%{http_code}|%{time_total}" \
+          --max-time 15 \
+          --retry 2 \
+          --retry-delay 5 \
+          -H "Accept: application/json" \
+          "$BASE_URL/api/presets" || echo "000|0")
+        
+        http_code=$(echo "$response" | cut -d'|' -f1)
+        response_time=$(echo "$response" | cut -d'|' -f2)
+        body=$(echo "$response" | cut -d'|' -f3-)
+        
+        echo "HTTP Code: $http_code"
+        echo "Response Time: ${response_time}s"
+        
+        # Check status code
+        if [ "$http_code" != "200" ]; then
+          echo "❌ API presets failed with status $http_code"
+          exit 1
+        fi
+        
+        # Check response time (under 10 seconds)
+        if (( $(echo "$response_time > 10" | bc -l) )); then
+          echo "⚠️ API presets slow: ${response_time}s"
+          exit 1
+        fi
+        
+        # Check for expected preset industries
+        expected_presets=("powder" "haccp" "autoclave" "sterile" "concrete" "coldchain")
+        for preset in "${expected_presets[@]}"; do
+          if ! echo "$body" | jq -e "has(\"$preset\")" > /dev/null 2>&1; then
+            echo "⚠️ Missing preset: $preset"
+          fi
+        done
+        
+        # Check if we have at least 3 presets
+        preset_count=$(echo "$body" | jq 'keys | length' 2>/dev/null || echo 0)
+        if [ "$preset_count" -lt 3 ]; then
+          echo "❌ Insufficient presets available: $preset_count"
+          exit 1
+        fi
+        
+        echo "✅ API presets test passed ($preset_count presets available)"
+        echo "api_status=✅ PASS" >> $GITHUB_OUTPUT
+
+    - name: Home Page Test
+      id: home-test
+      run: |
+        echo "Testing home page availability..."
+        
+        # Home page check
+        response=$(curl -s -w "%{http_code}|%{time_total}" \
+          --max-time 30 \
+          --retry 2 \
+          --retry-delay 5 \
+          -H "User-Agent: ProofKit-Smoke-Test/1.0" \
+          "$BASE_URL/" || echo "000|0")
+        
+        http_code=$(echo "$response" | cut -d'|' -f1)
+        response_time=$(echo "$response" | cut -d'|' -f2)
+        body=$(echo "$response" | cut -d'|' -f3-)
+        
+        echo "HTTP Code: $http_code"
+        echo "Response Time: ${response_time}s"
+        
+        # Check status code
+        if [ "$http_code" != "200" ]; then
+          echo "❌ Home page failed with status $http_code"
+          exit 1
+        fi
+        
+        # Check response time (under 15 seconds)
+        if (( $(echo "$response_time > 15" | bc -l) )); then
+          echo "⚠️ Home page slow: ${response_time}s"
+          exit 1
+        fi
+        
+        # Check for key content elements
+        if ! echo "$body" | grep -qi "proofkit"; then
+          echo "❌ Home page missing ProofKit branding"
+          exit 1
+        fi
+        
+        # Check for basic HTML structure
+        if ! echo "$body" | grep -qi "</html>"; then
+          echo "❌ Home page incomplete HTML"
+          exit 1
+        fi
+        
+        echo "✅ Home page test passed"
+        echo "home_status=✅ PASS" >> $GITHUB_OUTPUT
+
+    - name: Application Page Test
+      id: app-test
+      run: |
+        echo "Testing application page..."
+        
+        # Application page check
+        response=$(curl -s -w "%{http_code}|%{time_total}" \
+          --max-time 30 \
+          --retry 2 \
+          --retry-delay 5 \
+          "$BASE_URL/app" || echo "000|0")
+        
+        http_code=$(echo "$response" | cut -d'|' -f1)
+        response_time=$(echo "$response" | cut -d'|' -f2)
+        body=$(echo "$response" | cut -d'|' -f3-)
+        
+        echo "HTTP Code: $http_code"
+        echo "Response Time: ${response_time}s"
+        
+        # Check status code
+        if [ "$http_code" != "200" ]; then
+          echo "❌ Application page failed with status $http_code"
+          exit 1
+        fi
+        
+        # Check for form elements
+        if ! echo "$body" | grep -qi "csv.*file"; then
+          echo "⚠️ Application page missing CSV upload form"
+        fi
+        
+        if ! echo "$body" | grep -qi "specification"; then
+          echo "⚠️ Application page missing specification form"
+        fi
+        
+        echo "✅ Application page test passed"
+        echo "app_status=✅ PASS" >> $GITHUB_OUTPUT
+
+    - name: Performance Baseline Test
+      id: perf-test
+      run: |
+        echo "Testing performance baselines..."
+        
+        # Quick performance test of key endpoints
+        endpoints=(
+          "/health"
+          "/api/presets" 
+          "/"
+        )
+        
+        total_time=0
+        for endpoint in "${endpoints[@]}"; do
+          echo "Testing $endpoint..."
+          response_time=$(curl -s -w "%{time_total}" \
+            --max-time 10 \
+            -o /dev/null \
+            "$BASE_URL$endpoint" || echo "10")
+          
+          echo "$endpoint: ${response_time}s"
+          total_time=$(echo "$total_time + $response_time" | bc -l)
+        done
+        
+        avg_time=$(echo "scale=3; $total_time / ${#endpoints[@]}" | bc -l)
+        echo "Average response time: ${avg_time}s"
+        
+        # Performance threshold check
+        if (( $(echo "$avg_time > 3" | bc -l) )); then
+          echo "⚠️ Performance degraded - average response time: ${avg_time}s"
+          echo "perf_status=⚠️ SLOW" >> $GITHUB_OUTPUT
+        else
+          echo "✅ Performance within acceptable limits"
+          echo "perf_status=✅ PASS" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Security Headers Test
+      id: security-test
+      run: |
+        echo "Testing security headers..."
+        
+        # Check security headers
+        headers=$(curl -s -D - -o /dev/null \
+          --max-time 10 \
+          "$BASE_URL/" || echo "")
+        
+        expected_headers=(
+          "strict-transport-security"
+          "x-content-type-options"
+          "referrer-policy"
+          "permissions-policy"
+        )
+        
+        missing_headers=()
+        for header in "${expected_headers[@]}"; do
+          if ! echo "$headers" | grep -qi "$header"; then
+            missing_headers+=("$header")
+          fi
+        done
+        
+        if [ ${#missing_headers[@]} -eq 0 ]; then
+          echo "✅ All security headers present"
+          echo "security_status=✅ PASS" >> $GITHUB_OUTPUT
+        else
+          echo "⚠️ Missing security headers: ${missing_headers[*]}"
+          echo "security_status=⚠️ PARTIAL" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Generate Test Report
+      if: always()
+      run: |
+        echo "# ProofKit Smoke Test Report - ${{ env.ENV_NAME }}" >> test_report.md
+        echo "" >> test_report.md
+        echo "**Environment**: ${{ env.ENV_NAME }}" >> test_report.md
+        echo "**URL**: ${{ env.BASE_URL }}" >> test_report.md
+        echo "**Date**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> test_report.md
+        echo "**Workflow**: ${{ github.workflow }}" >> test_report.md
+        echo "" >> test_report.md
+        echo "## Test Results" >> test_report.md
+        echo "" >> test_report.md
+        echo "| Test | Status |" >> test_report.md
+        echo "|------|--------|" >> test_report.md
+        echo "| Health Check | ${{ steps.health-check.outputs.health_status || '❌ FAIL' }} |" >> test_report.md
+        echo "| API Presets | ${{ steps.api-test.outputs.api_status || '❌ FAIL' }} |" >> test_report.md
+        echo "| Home Page | ${{ steps.home-test.outputs.home_status || '❌ FAIL' }} |" >> test_report.md
+        echo "| Application Page | ${{ steps.app-test.outputs.app_status || '❌ FAIL' }} |" >> test_report.md
+        echo "| Performance | ${{ steps.perf-test.outputs.perf_status || '❌ FAIL' }} |" >> test_report.md
+        echo "| Security Headers | ${{ steps.security-test.outputs.security_status || '❌ FAIL' }} |" >> test_report.md
+        echo "" >> test_report.md
+        
+        # Add details if any tests failed
+        if [[ "${{ job.status }}" != "success" ]]; then
+          echo "## ⚠️ Issues Detected" >> test_report.md
+          echo "" >> test_report.md
+          echo "One or more smoke tests failed. Check the workflow logs for details." >> test_report.md
+          echo "" >> test_report.md
+          echo "**Troubleshooting Steps:**" >> test_report.md
+          echo "1. Check Fly.io application status: \`flyctl status --app proofkit-prod\`" >> test_report.md
+          echo "2. Review application logs: \`flyctl logs --app proofkit-prod\`" >> test_report.md
+          echo "3. Verify DNS resolution and SSL certificates" >> test_report.md
+          echo "4. Check for recent deployments that may have introduced issues" >> test_report.md
+        fi
+
+    - name: Upload Test Report
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: smoke-test-report-${{ env.ENV_NAME }}-${{ github.run_number }}
+        path: test_report.md
+        retention-days: 30
+
+    - name: Notify on Failure
+      if: failure()
+      run: |
+        echo "🚨 Smoke tests failed for ${{ env.ENV_NAME }} environment"
+        echo "URL: ${{ env.BASE_URL }}"
+        echo "Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        
+        # In a real deployment, this could send to Slack, Discord, or other notification services
+        # For now, it will create a visible failure in the Actions tab
+        exit 1
+
+  summary:
+    runs-on: ubuntu-latest
+    needs: smoke-tests
+    if: always()
+    
+    steps:
+    - name: Test Summary
+      run: |
+        echo "## Smoke Test Summary"
+        echo "Environment: ${{ github.event.inputs.environment || 'production' }}"
+        echo "Status: ${{ needs.smoke-tests.result }}"
+        echo "Timestamp: $(date -u)"
+        
+        if [ "${{ needs.smoke-tests.result }}" = "success" ]; then
+          echo "✅ All smoke tests passed successfully"
+        else
+          echo "❌ Some smoke tests failed - check logs for details"
+        fi

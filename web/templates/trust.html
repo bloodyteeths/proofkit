@@ -1,0 +1,183 @@
+{% extends "modern_base.html" %}
+
+{% block title %}Trust & Security - ProofKit{% endblock %}
+{% block description %}ProofKit's comprehensive security features including cryptographic verification, tamper-evident evidence bundles, and compliance certifications.{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-container">
+        <div class="hero-grid">
+            <div>
+                <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(255, 255, 255, 0.2); padding: 0.5rem 1rem; border-radius: 2rem; margin-bottom: 1.5rem;">
+                    <span style="font-size: 1.5rem;">🔒</span>
+                    <span style="font-weight: 600;">Trust & Security</span>
+                </div>
+                <h1>
+                    Built for<br>
+                    <span class="highlight">Trust</span>
+                </h1>
+                <p>
+                    ProofKit generates cryptographically verifiable evidence packages that stand up to regulatory scrutiny. 
+                    Every PDF comes with tamper-evident proofs and compliance features.
+                </p>
+                <div class="hero-actions">
+                    <a href="/app" class="btn btn-primary">
+                        Try ProofKit →
+                    </a>
+                    <a href="/docs" class="btn btn-secondary">
+                        View Documentation
+                    </a>
+                </div>
+            </div>
+            <div class="card glass">
+                <div style="background: white; border-radius: 0.5rem; padding: 1.5rem; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                        <span style="font-size: 2rem;">🛡️</span>
+                        <span style="font-weight: 600; color: #1a1a1a;">Security Features</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1rem;">
+                        <div style="text-align: center; padding: 0.75rem; background: #f0f9ff; border-radius: 0.5rem;">
+                            <div style="font-size: 0.75rem; color: #0369a1; text-transform: uppercase; letter-spacing: 0.05em;">Encryption</div>
+                            <div style="font-size: 1.25rem; font-weight: bold; color: #1a1a1a;">SHA-256</div>
+                        </div>
+                        <div style="text-align: center; padding: 0.75rem; background: #f0f9ff; border-radius: 0.5rem;">
+                            <div style="font-size: 0.75rem; color: #0369a1; text-transform: uppercase; letter-spacing: 0.05em;">Format</div>
+                            <div style="font-size: 1.25rem; font-weight: bold; color: #1a1a1a;">PDF/A-3</div>
+                        </div>
+                    </div>
+                    <div style="padding: 0.75rem; background: #dbeafe; border-radius: 0.5rem; text-align: center;">
+                        <span style="color: #1e40af; font-weight: bold; font-size: 0.875rem;">🔒 CRYPTOGRAPHICALLY SECURED</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Security Features -->
+<section class="section">
+    <div class="section-container">
+        <div class="section-header">
+            <h2>Security Features</h2>
+            <p class="section-subtitle">Enterprise-grade security for regulatory compliance</p>
+        </div>
+        
+        <div class="grid-3">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                </div>
+                <h3>Tamper-Evident Evidence</h3>
+                <p>SHA-256 fingerprints for every file with Merkle tree root hash providing single verification point.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.5-1.5a8.38 8.38 0 01-.9 1.7A10.05 10.05 0 0122 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2a9.99 9.99 0 018 4"></path>
+                    </svg>
+                </div>
+                <h3>PDF/A-3 Long-Term Storage</h3>
+                <p>Every report is PDF/A-3 compliant for decades of accessibility and legal validity.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                </div>
+                <h3>RFC 3161 Timestamps</h3>
+                <p>Cryptographic timestamps from accredited TSAs provide irrefutable proof of validation time.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Compliance -->
+<section class="section" style="background: #f7fafc;">
+    <div class="section-container">
+        <div class="section-header">
+            <h2>Compliance Standards</h2>
+            <p class="section-subtitle">Meeting regulatory requirements across industries</p>
+        </div>
+        
+        <div class="grid-3">
+            <div class="card">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🏥</div>
+                <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: #1a1a1a;">FDA 21 CFR Part 11</h3>
+                <p style="color: #718096; line-height: 1.6; margin-bottom: 1rem;">Electronic records and signatures for pharmaceutical and medical device validation.</p>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <span style="background: #dcfce7; color: #16a34a; padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 0.75rem;">Electronic Records</span>
+                    <span style="background: #dcfce7; color: #16a34a; padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 0.75rem;">Digital Signatures</span>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🏭</div>
+                <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: #1a1a1a;">ISO 13485</h3>
+                <p style="color: #718096; line-height: 1.6; margin-bottom: 1rem;">Quality management systems for medical devices with comprehensive documentation.</p>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <span style="background: #e0e7ff; color: #4338ca; padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 0.75rem;">Quality Management</span>
+                    <span style="background: #e0e7ff; color: #4338ca; padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 0.75rem;">Medical Devices</span>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🔐</div>
+                <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: #1a1a1a;">SOC 2 Type II</h3>
+                <p style="color: #718096; line-height: 1.6; margin-bottom: 1rem;">Security and availability controls with independent audit verification.</p>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <span style="background: #fef3c7; color: #92400e; padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 0.75rem;">Q1 2026</span>
+                    <span style="background: #fef3c7; color: #92400e; padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 0.75rem;">In Progress</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Verification Process -->
+<section class="section">
+    <div class="section-container">
+        <div class="section-header">
+            <h2>How Verification Works</h2>
+            <p class="section-subtitle">Simple steps to verify the authenticity of any ProofKit certificate</p>
+        </div>
+        
+        <div class="grid-2" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 3rem; align-items: center;">
+            <div>
+                <div style="background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0;">
+                    <h3 style="color: #1a1a1a; margin-bottom: 1.5rem; font-size: 1.5rem;">Quick QR Verification</h3>
+                    <ol style="color: #374151; line-height: 1.8; margin-left: 1.5rem;">
+                        <li style="margin-bottom: 0.75rem;"><strong>Scan QR code</strong> on any ProofKit certificate</li>
+                        <li style="margin-bottom: 0.75rem;"><strong>Instant verification</strong> via our secure verification portal</li>
+                        <li style="margin-bottom: 0.75rem;"><strong>View certificate details</strong> including timestamps and hash verification</li>
+                        <li><strong>Download evidence bundle</strong> for complete audit trail</li>
+                    </ol>
+                </div>
+            </div>
+            <div>
+                <div style="background: #f8fafc; padding: 2rem; border-radius: 1rem; text-align: center;">
+                    <div style="font-size: 4rem; margin-bottom: 1rem;">📱</div>
+                    <h4 style="color: #374151; margin-bottom: 1rem;">Instant Verification</h4>
+                    <p style="color: #6b7280; line-height: 1.6;">Every certificate includes a QR code for immediate cryptographic verification</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="hero">
+    <div class="section-container" style="text-align: center;">
+        <h2 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; color: white;">Ready to Build Trust?</h2>
+        <p style="font-size: 1.25rem; opacity: 0.9; margin-bottom: 2rem; color: white;">Experience ProofKit's security features with your temperature data</p>
+        <a href="/app" class="btn" style="background: white; color: #667eea; font-size: 1.125rem; padding: 1rem 2rem;">
+            Try ProofKit Now →
+        </a>
+    </div>
+</section>
+{% endblock %}

@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Optional
 import sys
 import logging
+import json
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
@@ -263,6 +264,146 @@ def extract(
     except Exception as e:
         typer.echo(f"Failed to extract evidence bundle: {e}", err=True)
         logger.exception("Evidence bundle extraction failed")
+        raise typer.Exit(1)
+
+
+@app.command()
+def presets(
+    list_all: bool = typer.Option(False, "--list", "-l", help="List all available industry presets"),
+    industry: Optional[str] = typer.Option(None, "--industry", "-i", help="Show preset for specific industry"),
+    output: Optional[Path] = typer.Option(None, "--output", "-o", help="Save preset to file")
+) -> None:
+    """
+    Manage industry specification presets.
+    
+    Lists available industry presets or exports a specific preset to a file.
+    Supported industries: powder, haccp, autoclave, sterile, concrete, coldchain
+    """
+    try:
+        # Get the script directory to find spec_library
+        script_dir = Path(__file__).parent.parent
+        spec_library_dir = script_dir / "core" / "spec_library"
+        
+        if not spec_library_dir.exists():
+            typer.echo("Spec library directory not found", err=True)
+            raise typer.Exit(1)
+            
+        # Available presets
+        preset_files = {
+            "powder": "powder_coat_cure_spec_standard_180c_10min.json",  # Use existing example
+            "haccp": "haccp_v1.json",
+            "autoclave": "autoclave_v1.json", 
+            "sterile": "sterile_v1.json",
+            "concrete": "concrete_v1.json",
+            "coldchain": "coldchain_v1.json"
+        }
+        
+        if list_all:
+            typer.echo("Available industry presets:")
+            for industry_name, filename in preset_files.items():
+                preset_path = spec_library_dir / filename
+                if industry_name == "powder":
+                    # Use existing example file
+                    preset_path = script_dir / "examples" / filename
+                status = "✓" if preset_path.exists() else "✗"
+                typer.echo(f"  {status} {industry_name:12} - {filename}")
+            return
+            
+        if industry:
+            if industry not in preset_files:
+                typer.echo(f"Unknown industry '{industry}'. Available: {', '.join(preset_files.keys())}", err=True)
+                raise typer.Exit(1)
+                
+            preset_filename = preset_files[industry]
+            if industry == "powder":
+                preset_path = script_dir / "examples" / preset_filename
+            else:
+                preset_path = spec_library_dir / preset_filename
+                
+            if not preset_path.exists():
+                typer.echo(f"Preset file not found: {preset_path}", err=True)
+                raise typer.Exit(1)
+                
+            # Load and display preset
+            with open(preset_path, 'r') as f:
+                preset_data = json.load(f)
+                
+            if output:
+                # Save to output file
+                with open(output, 'w') as f:
+                    json.dump(preset_data, f, indent=2)
+                typer.echo(f"Preset saved to: {output}")
+            else:
+                # Display preset
+                typer.echo(f"Industry preset: {industry}")
+                typer.echo(json.dumps(preset_data, indent=2))
+        else:
+            typer.echo("Use --list to see all presets or --industry <name> to view a specific preset")
+            
+    except Exception as e:
+        typer.echo(f"Failed to manage presets: {e}", err=True)
+        logger.exception("Preset management failed")
+        raise typer.Exit(1)
+
+
+@app.command()
+def cleanup(
+    storage_dir: Optional[Path] = typer.Option(None, "--storage-dir", help="Storage directory to clean (default: ./storage)"),
+    retention_days: Optional[int] = typer.Option(None, "--retention-days", help="Days to retain artifacts (default: from RETENTION_DAYS env)"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Show what would be cleaned without removing files"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed cleanup progress")
+) -> None:
+    """
+    Clean up old artifacts based on retention policy.
+    
+    Removes artifacts older than the retention period. Uses RETENTION_DAYS 
+    environment variable by default. Includes statsd format metrics logging.
+    """
+    try:
+        # Import cleanup module
+        sys.path.insert(0, str(Path(__file__).parent.parent))
+        from core.cleanup import cleanup_old_artifacts, get_retention_days
+        
+        # Use defaults if not specified
+        if retention_days is None:
+            retention_days = get_retention_days()
+            
+        if storage_dir is None:
+            storage_dir = Path("./storage")
+            
+        typer.echo(f"{'DRY RUN: ' if dry_run else ''}Starting artifact cleanup")
+        typer.echo(f"Storage directory: {storage_dir}")
+        typer.echo(f"Retention period: {retention_days} days")
+        
+        if not storage_dir.exists():
+            typer.echo(f"Storage directory does not exist: {storage_dir}")
+            return
+            
+        # Run cleanup
+        stats = cleanup_old_artifacts(
+            storage_dir=storage_dir,
+            retention_days=retention_days,
+            dry_run=dry_run
+        )
+        
+        # Display results
+        typer.echo(f"\nCleanup Statistics:")
+        typer.echo(f"  Artifacts scanned: {stats['scanned']}")
+        typer.echo(f"  Expired artifacts: {stats['expired']}")
+        typer.echo(f"  {'Would remove' if dry_run else 'Removed'}: {stats['removed']}")
+        typer.echo(f"  Failed: {stats['failed']}")
+        
+        if not dry_run and stats['freed_mb'] > 0:
+            typer.echo(f"  Storage freed: {stats['freed_mb']} MB")
+            
+        if stats['removed'] > 0:
+            typer.echo(f"\n✓ Cleanup {'would complete' if dry_run else 'completed'} successfully")
+        else:
+            typer.echo(f"\n✓ No artifacts to clean up")
+        
+    except Exception as e:
+        typer.echo(f"Failed to clean up artifacts: {e}", err=True)
+        logger.exception("Artifact cleanup failed")
         raise typer.Exit(1)
 
 
