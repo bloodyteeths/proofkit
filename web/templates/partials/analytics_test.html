@@ -1,0 +1,131 @@
+<!-- Analytics Integration Test Page -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ProofKit Analytics Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 2rem; }
+        .test-section { margin: 2rem 0; padding: 1rem; border: 1px solid #ccc; }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        button { margin: 0.5rem; padding: 0.5rem 1rem; }
+        #output { background: #f8f9fa; padding: 1rem; height: 200px; overflow-y: auto; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <h1>ProofKit Analytics Integration Test</h1>
+    
+    <div class="test-section">
+        <h2>Cookie Consent Status</h2>
+        <p>Current consent: <strong id="consent-status">Unknown</strong></p>
+        <button onclick="acceptAllCookies()">Accept Analytics</button>
+        <button onclick="acceptEssentialOnly()">Essential Only</button>
+        <button onclick="resetCookieConsent()">Reset Consent</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>Analytics Test Functions</h2>
+        <button onclick="testUploadEvent()">Test Upload Event</button>
+        <button onclick="testCompileEvent()">Test Compile OK Event</button>
+        <button onclick="testSignupEvent()">Test Signup Event</button>
+        <button onclick="testPurchaseEvent()">Test Purchase Event</button>
+        <button onclick="testPageView()">Test Page View</button>
+        <button onclick="testEngagement()">Test Engagement</button>
+        <button onclick="testError()">Test Error Event</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>GA4 Status</h2>
+        <p>GA4 Loaded: <strong id="ga4-status">No</strong></p>
+        <p>gtag Available: <strong id="gtag-status">No</strong></p>
+        <p>DataLayer Length: <strong id="datalayer-length">0</strong></p>
+    </div>
+    
+    <div class="test-section">
+        <h2>Console Output</h2>
+        <div id="output"></div>
+        <button onclick="clearOutput()">Clear Output</button>
+    </div>
+
+    <!-- Include the analytics partial -->
+    {% include 'partials/analytics.html' %}
+    
+    <script>
+        // Override console.log to show in page
+        const originalLog = console.log;
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            const output = document.getElementById('output');
+            output.innerHTML += new Date().toLocaleTimeString() + ': ' + args.join(' ') + '\n';
+            output.scrollTop = output.scrollHeight;
+        };
+        
+        // Test functions
+        function testUploadEvent() {
+            trackUploadEvent('text/csv', 1024000, 'powder_coat');
+        }
+        
+        function testCompileEvent() {
+            trackCompileOkEvent('powder_coat', 'pass', 2500);
+        }
+        
+        function testSignupEvent() {
+            trackSignupEvent('organic', 'test_campaign');
+        }
+        
+        function testPurchaseEvent() {
+            trackPurchaseEvent('professional', 99, 'USD');
+        }
+        
+        function testPageView() {
+            trackPageView('Test Page', 'powder_coat');
+        }
+        
+        function testEngagement() {
+            trackEngagement('test_click', 'test_button', 1);
+        }
+        
+        function testError() {
+            trackError('test_error', 'This is a test error message', '/test');
+        }
+        
+        function clearOutput() {
+            document.getElementById('output').innerHTML = '';
+        }
+        
+        function updateStatus() {
+            // Update consent status
+            const consent = localStorage.getItem('cookie_consent') || 'none';
+            document.getElementById('consent-status').textContent = consent;
+            
+            // Update GA4 status
+            document.getElementById('ga4-status').textContent = window.ga4Loaded ? 'Yes' : 'No';
+            document.getElementById('gtag-status').textContent = window.gtag ? 'Yes' : 'No';
+            document.getElementById('datalayer-length').textContent = window.dataLayer ? window.dataLayer.length : '0';
+        }
+        
+        // Update status every second
+        setInterval(updateStatus, 1000);
+        updateStatus();
+        
+        // Test automatic event tracking
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Analytics test page loaded');
+            console.log('Testing cookie consent integration...');
+            
+            // Simulate file input for testing
+            const testFileInput = document.createElement('input');
+            testFileInput.type = 'file';
+            testFileInput.id = 'csv_file';
+            testFileInput.style.display = 'none';
+            document.body.appendChild(testFileInput);
+            
+            // Test form for HTMX simulation
+            const testForm = document.createElement('form');
+            testForm.id = 'upload-form';
+            testForm.style.display = 'none';
+            document.body.appendChild(testForm);
+        });
+    </script>
+</body>
+</html>

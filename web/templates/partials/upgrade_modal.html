@@ -1,0 +1,836 @@
+<!-- Upgrade Modal Partial -->
+<!-- 
+    This is a comprehensive upgrade modal that can be included in any page.
+    It handles various upgrade scenarios and integrates with Stripe checkout.
+    
+    Usage: {% include "partials/upgrade_modal.html" %}
+-->
+
+<div id="upgrade-modal-container" class="upgrade-modal-container" style="display: none;" role="dialog" aria-labelledby="upgrade-modal-title" aria-describedby="upgrade-modal-description">
+    <div class="modal-backdrop" onclick="closeUpgradeModal()" aria-hidden="true"></div>
+    
+    <div class="upgrade-modal-content">
+        <!-- Modal Header -->
+        <div class="modal-header">
+            <h2 id="upgrade-modal-title" class="modal-title">Upgrade Required</h2>
+            <button 
+                type="button" 
+                class="modal-close-button" 
+                onclick="closeUpgradeModal()" 
+                aria-label="Close upgrade modal">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        
+        <!-- Modal Body -->
+        <div class="modal-body">
+            <div id="upgrade-modal-description" class="upgrade-content">
+                
+                <!-- Quota Exceeded Scenario -->
+                <div id="quota-exceeded-section" class="upgrade-scenario" style="display: none;">
+                    <div class="scenario-icon">⚡</div>
+                    <h3 id="quota-title">Usage Limit Reached</h3>
+                    <p id="quota-description">You've reached your plan limits. Choose how to continue:</p>
+                    
+                    <div class="upgrade-options">
+                        <!-- Single Certificate Purchase -->
+                        <div class="upgrade-option" id="single-cert-card" style="display: none;">
+                            <div class="option-header">
+                                <h4>Buy Single Certificate</h4>
+                                <div class="option-price">
+                                    <span class="price-amount" id="single-cert-price">€7</span>
+                                    <span class="price-period">one-time</span>
+                                </div>
+                            </div>
+                            <div class="option-features">
+                                <ul>
+                                    <li>✓ Get 1 certificate immediately</li>
+                                    <li>✓ No monthly commitment</li>
+                                    <li>✓ Same professional quality</li>
+                                </ul>
+                            </div>
+                            <button 
+                                class="upgrade-button secondary" 
+                                onclick="buySingleCertificate()"
+                                data-action="buy-single">
+                                Buy Now
+                            </button>
+                        </div>
+                        
+                        <!-- Plan Upgrade -->
+                        <div class="upgrade-option recommended" id="plan-upgrade-card">
+                            <div class="recommended-badge">Best Value</div>
+                            <div class="option-header">
+                                <h4 id="recommended-plan-name">Starter Plan</h4>
+                                <div class="option-price">
+                                    <span class="price-amount" id="recommended-plan-price">€14</span>
+                                    <span class="price-period">per month</span>
+                                </div>
+                            </div>
+                            <div class="option-features">
+                                <ul id="recommended-plan-features">
+                                    <li>✓ 10 certificates per month</li>
+                                    <li>✓ Priority processing</li>
+                                    <li>✓ Email support</li>
+                                    <li>✓ No watermarks</li>
+                                </ul>
+                            </div>
+                            <button 
+                                class="upgrade-button primary" 
+                                onclick="upgradeToRecommendedPlan()"
+                                data-action="upgrade-plan">
+                                <span class="button-text">Upgrade Now</span>
+                                <span class="button-loading" style="display: none;">
+                                    <svg class="spinner" width="16" height="16" viewBox="0 0 24 24">
+                                        <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="4" opacity="0.3"/>
+                                        <path d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" fill="currentColor"/>
+                                    </svg>
+                                    Processing...
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <a href="/pricing" class="view-all-plans-link" onclick="closeUpgradeModal()">
+                            View all plans and features →
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Plan Comparison Scenario -->
+                <div id="plan-comparison-section" class="upgrade-scenario" style="display: none;">
+                    <div class="scenario-icon">🚀</div>
+                    <h3>Upgrade Your Plan</h3>
+                    <p>Get more certificates and advanced features with a higher tier plan.</p>
+                    
+                    <div class="plans-comparison">
+                        <!-- Plans will be dynamically populated -->
+                    </div>
+                </div>
+                
+                <!-- Feature Locked Scenario -->
+                <div id="feature-locked-section" class="upgrade-scenario" style="display: none;">
+                    <div class="scenario-icon">🔒</div>
+                    <h3 id="feature-title">Premium Feature</h3>
+                    <p id="feature-description">This feature requires a higher plan.</p>
+                    
+                    <div class="feature-benefits">
+                        <h4>What you'll get:</h4>
+                        <ul id="feature-benefits-list">
+                            <!-- Benefits will be populated dynamically -->
+                        </ul>
+                    </div>
+                    
+                    <div class="feature-upgrade-options">
+                        <button class="upgrade-button primary large" onclick="upgradeForFeature()">
+                            <span id="feature-upgrade-text">Upgrade to Pro - €59/month</span>
+                        </button>
+                        <a href="/pricing" class="secondary-link">Compare all plans</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upgrade Modal Styles -->
+<style>
+.upgrade-modal-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+}
+
+.upgrade-modal-content {
+    position: relative;
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    max-width: 700px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideIn 0.3s ease-out;
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2rem 2rem 1rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.modal-title {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.modal-close-button {
+    background: none;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-close-button:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+.modal-body {
+    padding: 1rem 2rem 2rem;
+}
+
+.upgrade-content {
+    text-align: center;
+}
+
+.scenario-icon {
+    font-size: 3.5rem;
+    margin-bottom: 1.5rem;
+    opacity: 0.8;
+}
+
+.upgrade-content h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 1rem 0;
+}
+
+.upgrade-content > p {
+    font-size: 1.125rem;
+    color: #64748b;
+    margin: 0 0 2rem 0;
+    line-height: 1.6;
+}
+
+/* Upgrade Options */
+.upgrade-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 640px) {
+    .upgrade-options {
+        grid-template-columns: 1fr;
+    }
+}
+
+.upgrade-option {
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 1rem;
+    padding: 2rem 1.5rem;
+    text-align: left;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.upgrade-option:hover {
+    border-color: #cbd5e0;
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.upgrade-option.recommended {
+    border-color: #667eea;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    transform: scale(1.05);
+}
+
+.upgrade-option.recommended:hover {
+    transform: scale(1.05) translateY(-4px);
+}
+
+.recommended-badge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 0.375rem 1rem;
+    border-radius: 1.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.option-header {
+    margin-bottom: 1.5rem;
+}
+
+.option-header h4 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0 0 0.75rem 0;
+}
+
+.option-price {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.price-amount {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: #667eea;
+}
+
+.price-period {
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+.option-features {
+    margin-bottom: 2rem;
+}
+
+.option-features ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.option-features li {
+    padding: 0.375rem 0;
+    color: #475569;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Buttons */
+.upgrade-button {
+    width: 100%;
+    padding: 0.875rem 1.5rem;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.upgrade-button.primary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    box-shadow: 0 4px 14px rgba(102, 126, 234, 0.3);
+}
+
+.upgrade-button.primary:hover {
+    background: linear-gradient(135deg, #5a67d8, #6b46c1);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.upgrade-button.secondary {
+    background: white;
+    color: #667eea;
+    border: 2px solid #667eea;
+}
+
+.upgrade-button.secondary:hover {
+    background: #667eea;
+    color: white;
+}
+
+.upgrade-button.large {
+    padding: 1.25rem 2rem;
+    font-size: 1rem;
+}
+
+.upgrade-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.button-loading {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Modal Footer */
+.modal-footer {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #f1f5f9;
+}
+
+.view-all-plans-link {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: color 0.2s ease;
+}
+
+.view-all-plans-link:hover {
+    color: #5a67d8;
+    text-decoration: underline;
+}
+
+/* Feature Benefits */
+.feature-benefits {
+    text-align: left;
+    background: #f8fafc;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin: 2rem 0;
+}
+
+.feature-benefits h4 {
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.feature-benefits ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.feature-benefits li {
+    padding: 0.5rem 0;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.feature-benefits li:before {
+    content: "✨";
+    font-size: 1rem;
+}
+
+.feature-upgrade-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+}
+
+.secondary-link {
+    color: #64748b;
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: color 0.2s ease;
+}
+
+.secondary-link:hover {
+    color: #1e293b;
+    text-decoration: underline;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from { 
+        transform: scale(0.9) translateY(20px); 
+        opacity: 0; 
+    }
+    to { 
+        transform: scale(1) translateY(0); 
+        opacity: 1; 
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .upgrade-modal-content {
+        width: 95%;
+        margin: 1rem;
+    }
+    
+    .modal-header {
+        padding: 1.5rem 1.5rem 1rem;
+    }
+    
+    .modal-body {
+        padding: 1rem 1.5rem 1.5rem;
+    }
+    
+    .modal-title {
+        font-size: 1.5rem;
+    }
+    
+    .upgrade-option {
+        padding: 1.5rem 1rem;
+    }
+    
+    .price-amount {
+        font-size: 2rem;
+    }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    .upgrade-option {
+        border-width: 3px;
+    }
+    
+    .upgrade-button.primary {
+        background: #0066cc;
+    }
+    
+    .upgrade-button.secondary {
+        border-width: 3px;
+    }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .upgrade-modal-container,
+    .upgrade-modal-content,
+    .upgrade-option,
+    .upgrade-button {
+        animation: none;
+        transition: none;
+    }
+}
+</style>
+
+<!-- Upgrade Modal JavaScript -->
+<script>
+// Global variables for upgrade modal state
+let currentUpgradeContext = null;
+let recommendedPlan = 'starter';
+
+/**
+ * Show the upgrade modal with specific context
+ * @param {Object} context - The upgrade context
+ * @param {string} context.type - 'quota_exceeded', 'feature_locked', 'plan_comparison'
+ * @param {Object} context.data - Context-specific data
+ */
+function showUpgradeModal(context) {
+    currentUpgradeContext = context;
+    const modal = document.getElementById('upgrade-modal-container');
+    
+    // Hide all scenarios first
+    document.querySelectorAll('.upgrade-scenario').forEach(section => {
+        section.style.display = 'none';
+    });
+    
+    // Configure modal based on context
+    switch (context.type) {
+        case 'quota_exceeded':
+            setupQuotaExceededModal(context.data);
+            break;
+        case 'feature_locked':
+            setupFeatureLockedModal(context.data);
+            break;
+        case 'plan_comparison':
+            setupPlanComparisonModal(context.data);
+            break;
+        default:
+            setupDefaultUpgradeModal();
+    }
+    
+    // Show modal
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    
+    // Focus management
+    modal.querySelector('.modal-close-button').focus();
+    
+    // Track modal shown event
+    trackUpgradeEvent('upgrade_modal_shown', {
+        context_type: context.type,
+        current_plan: context.data?.current_plan || 'unknown'
+    });
+}
+
+function setupQuotaExceededModal(data) {
+    const section = document.getElementById('quota-exceeded-section');
+    const titleEl = document.getElementById('quota-title');
+    const descEl = document.getElementById('quota-description');
+    const singleCertCard = document.getElementById('single-cert-card');
+    const singleCertPrice = document.getElementById('single-cert-price');
+    
+    // Update content based on quota error
+    if (data.error_code === 'FREE_TIER_EXCEEDED') {
+        titleEl.textContent = 'Free Trial Complete';
+        descEl.textContent = `You've used all ${data.limit || 3} free certificates. Continue with:`;
+        recommendedPlan = 'starter';
+        
+        // Show single certificate option
+        singleCertCard.style.display = 'block';
+        singleCertPrice.textContent = `€${data.single_cert_price || 7}`;
+        
+        // Configure recommended plan
+        updateRecommendedPlan('Starter Plan', '€14', [
+            '10 certificates per month',
+            'Priority processing',
+            'Email support',
+            'Professional PDFs'
+        ]);
+        
+    } else if (data.error_code === 'MONTHLY_QUOTA_EXCEEDED') {
+        titleEl.textContent = 'Monthly Limit Reached';
+        descEl.textContent = `You've used all ${data.monthly_limit} certificates this month. Options:`;
+        
+        // Show single certificate option
+        singleCertCard.style.display = 'block';
+        singleCertPrice.textContent = `€${data.single_cert_price || 7}`;
+        
+        // Recommend next tier
+        recommendedPlan = getNextPlanTier(data.current_plan);
+        updateRecommendedPlanForUpgrade(data.current_plan);
+    }
+    
+    section.style.display = 'block';
+}
+
+function setupFeatureLockedModal(data) {
+    const section = document.getElementById('feature-locked-section');
+    const titleEl = document.getElementById('feature-title');
+    const descEl = document.getElementById('feature-description');
+    const benefitsList = document.getElementById('feature-benefits-list');
+    const upgradeText = document.getElementById('feature-upgrade-text');
+    
+    titleEl.textContent = data.feature_name || 'Premium Feature';
+    descEl.textContent = data.description || 'This feature requires a higher plan.';
+    
+    // Populate benefits
+    benefitsList.innerHTML = (data.benefits || []).map(benefit => 
+        `<li>${benefit}</li>`
+    ).join('');
+    
+    // Set upgrade button text
+    const requiredPlan = data.required_plan || 'pro';
+    const planPrice = getPlanPrice(requiredPlan);
+    upgradeText.textContent = `Upgrade to ${requiredPlan.charAt(0).toUpperCase() + requiredPlan.slice(1)} - €${planPrice}/month`;
+    
+    recommendedPlan = requiredPlan;
+    section.style.display = 'block';
+}
+
+function setupPlanComparisonModal(data) {
+    const section = document.getElementById('plan-comparison-section');
+    // Implementation for plan comparison would go here
+    section.style.display = 'block';
+}
+
+function setupDefaultUpgradeModal() {
+    // Default to quota exceeded with starter plan recommendation
+    setupQuotaExceededModal({
+        error_code: 'GENERAL_UPGRADE',
+        current_plan: 'free'
+    });
+}
+
+function updateRecommendedPlan(name, price, features) {
+    document.getElementById('recommended-plan-name').textContent = name;
+    document.getElementById('recommended-plan-price').textContent = price;
+    
+    const featuresList = document.getElementById('recommended-plan-features');
+    featuresList.innerHTML = features.map(feature => `<li>✓ ${feature}</li>`).join('');
+}
+
+function updateRecommendedPlanForUpgrade(currentPlan) {
+    const planConfigs = {
+        'free': { name: 'Starter Plan', price: '€14', features: ['10 certificates/month', 'Priority support', 'Professional PDFs'] },
+        'starter': { name: 'Pro Plan', price: '€59', features: ['75 certificates/month', 'Advanced features', 'Custom branding'] },
+        'pro': { name: 'Business Plan', price: '€199', features: ['300 certificates/month', 'Team collaboration', 'Phone support'] }
+    };
+    
+    const config = planConfigs[currentPlan] || planConfigs['free'];
+    updateRecommendedPlan(config.name, config.price, config.features);
+}
+
+function getNextPlanTier(currentPlan) {
+    const tiers = ['free', 'starter', 'pro', 'business', 'enterprise'];
+    const currentIndex = tiers.indexOf(currentPlan);
+    return tiers[currentIndex + 1] || 'business';
+}
+
+function getPlanPrice(plan) {
+    const prices = {
+        'starter': 14,
+        'pro': 59,
+        'business': 199,
+        'enterprise': 499
+    };
+    return prices[plan] || 14;
+}
+
+async function buySingleCertificate() {
+    const button = document.querySelector('[data-action="buy-single"]');
+    setButtonLoading(button, true);
+    
+    try {
+        const response = await fetch('/api/buy-single', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                certificate_count: 1,
+                success_url: `${window.location.origin}/dashboard?purchase=success`,
+                cancel_url: window.location.href
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            trackUpgradeEvent('single_cert_purchase_initiated');
+            window.location.href = data.checkout_url;
+        } else {
+            throw new Error('Purchase failed');
+        }
+    } catch (error) {
+        console.error('Single certificate purchase error:', error);
+        alert('Purchase failed. Please try again.');
+        setButtonLoading(button, false);
+    }
+}
+
+async function upgradeToRecommendedPlan() {
+    const button = document.querySelector('[data-action="upgrade-plan"]');
+    setButtonLoading(button, true);
+    
+    try {
+        const response = await fetch(`/api/upgrade/${recommendedPlan}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                success_url: `${window.location.origin}/dashboard?upgrade=success&plan=${recommendedPlan}`,
+                cancel_url: window.location.href
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            trackUpgradeEvent('plan_upgrade_initiated', { target_plan: recommendedPlan });
+            window.location.href = data.checkout_url;
+        } else if (response.status === 401) {
+            window.location.href = `/auth/login?redirect=${encodeURIComponent(window.location.href)}`;
+        } else {
+            throw new Error('Upgrade failed');
+        }
+    } catch (error) {
+        console.error('Plan upgrade error:', error);
+        alert('Upgrade failed. Please try again.');
+        setButtonLoading(button, false);
+    }
+}
+
+async function upgradeForFeature() {
+    await upgradeToRecommendedPlan();
+}
+
+function setButtonLoading(button, loading) {
+    if (!button) return;
+    
+    const textEl = button.querySelector('.button-text');
+    const loadingEl = button.querySelector('.button-loading');
+    
+    if (loading) {
+        textEl.style.display = 'none';
+        loadingEl.style.display = 'flex';
+        button.disabled = true;
+    } else {
+        textEl.style.display = 'block';
+        loadingEl.style.display = 'none';
+        button.disabled = false;
+    }
+}
+
+function closeUpgradeModal() {
+    const modal = document.getElementById('upgrade-modal-container');
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+    currentUpgradeContext = null;
+    
+    trackUpgradeEvent('upgrade_modal_closed');
+}
+
+function trackUpgradeEvent(eventName, parameters = {}) {
+    // Google Analytics
+    if (typeof gtag !== 'undefined') {
+        gtag('event', eventName, {
+            event_category: 'upgrade',
+            ...parameters
+        });
+    }
+    
+    // Console logging for development
+    console.log('Upgrade Event:', eventName, parameters);
+}
+
+// Event listeners
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        closeUpgradeModal();
+    }
+});
+
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal-backdrop')) {
+        closeUpgradeModal();
+    }
+});
+
+// Expose functions globally
+window.showUpgradeModal = showUpgradeModal;
+window.closeUpgradeModal = closeUpgradeModal;
+window.buySingleCertificate = buySingleCertificate;
+window.upgradeToRecommendedPlan = upgradeToRecommendedPlan;
+</script>

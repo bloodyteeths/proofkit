@@ -154,6 +154,45 @@
     </div>
     {% endif %}
     
+    <!-- Free Tier Upgrade Prompt -->
+    {% if user and user.plan == 'free' %}
+    <div class="free-tier-upgrade-notice" style="margin-top: 2rem; padding: 1.5rem; background: linear-gradient(135deg, #f7fafc, #edf2f7); border-left: 4px solid #667eea; border-radius: 0.5rem;">
+        <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+            <div style="font-size: 1.5rem; margin-right: 0.75rem;">🚀</div>
+            <h4 style="margin: 0; color: #1a202c;">Remove the Trial Watermark</h4>
+        </div>
+        <p style="margin-bottom: 1.5rem; color: #4a5568; line-height: 1.6;">
+            This certificate includes a trial watermark. Upgrade to any paid plan to generate production-ready certificates without watermarks for your compliance documentation.
+        </p>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+            <a href="/pricing" class="upgrade-button" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 0.75rem 1.5rem; border-radius: 0.5rem; text-decoration: none; font-weight: 600; transition: all 0.3s ease;">
+                View Upgrade Options
+            </a>
+            <div style="font-size: 0.875rem; color: #718096;">
+                Starting at <strong>€14/month</strong> • No watermarks • Professional PDFs
+            </div>
+        </div>
+    </div>
+    {% elif not user %}
+    <div class="anonymous-user-notice" style="margin-top: 2rem; padding: 1.5rem; background: #f8f9ff; border: 1px solid #e2e8f0; border-radius: 0.5rem;">
+        <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+            <div style="font-size: 1.5rem; margin-right: 0.75rem;">🔐</div>
+            <h4 style="margin: 0; color: #1a202c;">Secure Your Certificates</h4>
+        </div>
+        <p style="margin-bottom: 1.5rem; color: #4a5568; line-height: 1.6;">
+            Create a free ProofKit account to generate your own certificates, track your validation history, and access advanced features.
+        </p>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+            <a href="/auth/login" class="signup-button" style="background: #667eea; color: white; padding: 0.75rem 1.5rem; border-radius: 0.5rem; text-decoration: none; font-weight: 600;">
+                Sign Up Free
+            </a>
+            <div style="font-size: 0.875rem; color: #718096;">
+                Get <strong>2 free certificates</strong> • No credit card required
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
     <!-- Download Original Files -->
     <div style="margin-top: 2rem;">
         <h3>Download Original Files</h3>

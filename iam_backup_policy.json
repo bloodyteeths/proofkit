@@ -1,0 +1,138 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "ProofKitS3BucketManagement",
+            "Effect": "Allow",
+            "Action": [
+                "s3:CreateBucket",
+                "s3:ListBucket",
+                "s3:ListAllMyBuckets",
+                "s3:GetBucketLocation",
+                "s3:PutLifecycleConfiguration",
+                "s3:GetLifecycleConfiguration",
+                "s3:PutBucketVersioning",
+                "s3:GetBucketVersioning"
+            ],
+            "Resource": [
+                "arn:aws:s3:::proofkit-backups",
+                "arn:aws:s3:::proofkit-backups-*",
+                "arn:aws:s3:::*"
+            ]
+        },
+        {
+            "Sid": "ProofKitS3ObjectOperations", 
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject",
+                "s3:PutObjectAcl",
+                "s3:GetObject",
+                "s3:GetObjectAcl",
+                "s3:DeleteObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::proofkit-backups/*",
+                "arn:aws:s3:::proofkit-backups-*/*"
+            ]
+        },
+        {
+            "Sid": "ProofKitDynamoDBManagement",
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:CreateTable",
+                "dynamodb:DescribeTable",
+                "dynamodb:UpdateTimeToLive",
+                "dynamodb:ListTables",
+                "dynamodb:TagResource",
+                "dynamodb:BatchGetItem",
+                "dynamodb:BatchWriteItem",
+                "dynamodb:DeleteItem",
+                "dynamodb:GetItem",
+                "dynamodb:PutItem",
+                "dynamodb:Query",
+                "dynamodb:Scan",
+                "dynamodb:UpdateItem"
+            ],
+            "Resource": [
+                "arn:aws:dynamodb:*:*:table/proofkit_cache",
+                "arn:aws:dynamodb:*:*:table/proofkit_cache/*"
+            ]
+        },
+        {
+            "Sid": "ProofKitRDSManagement",
+            "Effect": "Allow",
+            "Action": [
+                "rds:CreateDBInstance",
+                "rds:CreateDBSubnetGroup",
+                "rds:DescribeDBInstances",
+                "rds:DescribeDBSubnetGroups",
+                "rds:ListTagsForResource",
+                "rds:AddTagsToResource",
+                "rds:ModifyDBInstance",
+                "rds:DescribeDBSnapshots",
+                "rds:CreateDBSnapshot"
+            ],
+            "Resource": [
+                "arn:aws:rds:*:*:db:proofkit-postgres",
+                "arn:aws:rds:*:*:subgrp:proofkit-subnet-group",
+                "arn:aws:rds:*:*:snapshot:*"
+            ]
+        },
+        {
+            "Sid": "ProofKitVPCManagement",
+            "Effect": "Allow",
+            "Action": [
+                "ec2:CreateSecurityGroup",
+                "ec2:DescribeSecurityGroups",
+                "ec2:AuthorizeSecurityGroupIngress",
+                "ec2:DescribeVpcs",
+                "ec2:DescribeSubnets",
+                "ec2:DescribeAvailabilityZones",
+                "ec2:CreateTags"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "ProofKitIAMManagement",
+            "Effect": "Allow",
+            "Action": [
+                "iam:CreateUser",
+                "iam:GetUser",
+                "iam:ListAccessKeys",
+                "iam:CreateAccessKey",
+                "iam:DeleteAccessKey",
+                "iam:PutUserPolicy",
+                "iam:GetUserPolicy",
+                "iam:DeleteUserPolicy",
+                "iam:ListUserPolicies"
+            ],
+            "Resource": [
+                "arn:aws:iam::*:user/proofkit-app",
+                "arn:aws:iam::*:user/proofkit-backup"
+            ]
+        },
+        {
+            "Sid": "ProofKitServiceLinkedRole",
+            "Effect": "Allow",
+            "Action": [
+                "iam:CreateServiceLinkedRole",
+                "iam:AttachRolePolicy",
+                "iam:PutRolePolicy"
+            ],
+            "Resource": "arn:aws:iam::*:role/aws-service-role/rds.amazonaws.com/AWSServiceRoleForRDS",
+            "Condition": {
+                "StringLike": {
+                    "iam:AWSServiceName": "rds.amazonaws.com"
+                }
+            }
+        },
+        {
+            "Sid": "ProofKitGeneralPermissions",
+            "Effect": "Allow",
+            "Action": [
+                "sts:GetCallerIdentity"
+            ],
+            "Resource": "*"
+        }
+    ]
+}

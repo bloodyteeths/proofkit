@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block title %}Privacy Policy - ProofKit{% endblock %}
+
+{% block content %}
+<article style="max-width: 800px; margin: 0 auto; padding: 2rem; background: white; border-radius: 1rem; box-shadow: var(--card-shadow);">
+    <header style="margin-bottom: 2rem;">
+        <h1 style="color: #4c51bf; margin-bottom: 0.5rem;">Privacy Policy</h1>
+        <p style="color: #6b7280; font-size: 0.95rem;">Last updated: {{ "now" | strftime("%B %d, %Y") }}</p>
+    </header>
+
+    <section style="margin-bottom: 2rem;">
+        <h2 style="color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem;">Data Controller</h2>
+        <p style="line-height: 1.6;">
+            ProofKit ("we," "our," or "us") operates as the data controller for temperature log validation services. 
+            We are committed to protecting your privacy and complying with applicable data protection laws, including the EU General Data Protection Regulation (GDPR).
+        </p>
+        <div style="background: #f3f4f6; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem;">
+            <strong>Contact:</strong> For data protection inquiries, contact us at <a href="mailto:privacy@proofkit.net" style="color: #4c51bf;">privacy@proofkit.net</a>
+        </div>
+    </section>
+
+    <section style="margin-bottom: 2rem;">
+        <h2 style="color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem;">Information We Collect</h2>
+        
+        <h3 style="color: #4b5563; margin-top: 1.5rem;">Temperature Log Data</h3>
+        <p style="line-height: 1.6;">
+            When you upload CSV files for validation, we temporarily process:
+        </p>
+        <ul style="margin-left: 1.5rem; line-height: 1.6;">
+            <li>Temperature measurements and timestamps</li>
+            <li>Job specifications and validation parameters</li>
+            <li>Derived metrics for compliance reporting</li>
+        </ul>
+
+        <h3 style="color: #4b5563; margin-top: 1.5rem;">Analytics Information</h3>
+        <p style="line-height: 1.6;">
+            With your consent, we collect anonymous usage analytics through Google Analytics 4:
+        </p>
+        <ul style="margin-left: 1.5rem; line-height: 1.6;">
+            <li>Page views and session duration</li>
+            <li>File upload statistics (anonymized)</li>
+            <li>Geographic region (country level only)</li>
+            <li>Browser and device information</li>
+        </ul>
+
+        <h3 style="color: #4b5563; margin-top: 1.5rem;">Technical Information</h3>
+        <p style="line-height: 1.6;">
+            We automatically collect essential technical data:
+        </p>
+        <ul style="margin-left: 1.5rem; line-height: 1.6;">
+            <li>IP address (for security and fraud prevention)</li>
+            <li>Request timestamps and response times</li>
+            <li>Error logs and system performance metrics</li>
+        </ul>
+    </section>
+
+    <section style="margin-bottom: 2rem;">
+        <h2 style="color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem;">Legal Basis for Processing</h2>
+        <div style="display: grid; gap: 1rem;">
+            <div style="background: #fef3c7; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid #f59e0b;">
+                <strong>Legitimate Interest:</strong> Processing temperature data to provide validation services and generate compliance certificates.
+            </div>
+            <div style="background: #dbeafe; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid #3b82f6;">
+                <strong>Consent:</strong> Analytics tracking and non-essential cookies (you can withdraw consent anytime).
+            </div>
+            <div style="background: #d1fae5; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid #10b981;">
+                <strong>Legal Compliance:</strong> Maintaining security logs and preventing fraudulent use.
+            </div>
+        </div>
+    </section>
+
+    <section style="margin-bottom: 2rem;">
+        <h2 style="color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem;">Data Retention</h2>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="background: #f9fafb;">
+                    <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #e5e7eb;">Data Type</th>
+                    <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #e5e7eb;">Retention Period</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #f3f4f6;">Uploaded CSV files</td>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #f3f4f6;">Deleted immediately after processing</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #f3f4f6;">Generated certificates</td>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #f3f4f6;">30 days (for verification purposes)</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #f3f4f6;">Analytics data</td>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #f3f4f6;">26 months (Google Analytics default)</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.75rem;">Security logs</td>
+                    <td style="padding: 0.75rem;">90 days</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section style="margin-bottom: 2rem;">
+        <h2 style="color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem;">Your Rights (GDPR)</h2>
+        <p style="line-height: 1.6; margin-bottom: 1rem;">
+            Under GDPR, you have the following rights regarding your personal data:
+        </p>
+        <div style="display: grid; gap: 0.75rem;">
+            <div style="display: flex; align-items: start; gap: 0.75rem;">
+                <span style="background: #4c51bf; color: white; border-radius: 50%; width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; flex-shrink: 0;">1</span>
+                <div><strong>Access:</strong> Request copies of your personal data</div>
+            </div>
+            <div style="display: flex; align-items: start; gap: 0.75rem;">
+                <span style="background: #4c51bf; color: white; border-radius: 50%; width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; flex-shrink: 0;">2</span>
+                <div><strong>Rectification:</strong> Correct inaccurate or incomplete data</div>
+            </div>
+            <div style="display: flex; align-items: start; gap: 0.75rem;">
+                <span style="background: #4c51bf; color: white; border-radius: 50%; width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; flex-shrink: 0;">3</span>
+                <div><strong>Erasure:</strong> Request deletion of your personal data</div>
+            </div>
+            <div style="display: flex; align-items: start; gap: 0.75rem;">
+                <span style="background: #4c51bf; color: white; border-radius: 50%; width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; flex-shrink: 0;">4</span>
+                <div><strong>Portability:</strong> Receive your data in a portable format</div>
+            </div>
+            <div style="display: flex; align-items: start; gap: 0.75rem;">
+                <span style="background: #4c51bf; color: white; border-radius: 50%; width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; flex-shrink: 0;">5</span>
+                <div><strong>Object:</strong> Object to processing based on legitimate interests</div>
+            </div>
+            <div style="display: flex; align-items: start; gap: 0.75rem;">
+                <span style="background: #4c51bf; color: white; border-radius: 50%; width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; flex-shrink: 0;">6</span>
+                <div><strong>Withdraw Consent:</strong> Revoke consent for analytics tracking</div>
+            </div>
+        </div>
+        <p style="line-height: 1.6; margin-top: 1rem; background: #f0f9ff; padding: 1rem; border-radius: 0.5rem;">
+            To exercise these rights, contact us at <a href="mailto:privacy@proofkit.net" style="color: #0369a1;">privacy@proofkit.net</a>. 
+            We will respond within 30 days.
+        </p>
+    </section>
+
+    <section style="margin-bottom: 2rem;">
+        <h2 style="color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem;">Cookies and Tracking</h2>
+        <p style="line-height: 1.6;">
+            We use cookies and similar technologies to improve your experience:
+        </p>
+        
+        <h3 style="color: #4b5563; margin-top: 1.5rem;">Essential Cookies</h3>
+        <p style="line-height: 1.6;">
+            Required for basic site functionality (always active):
+        </p>
+        <ul style="margin-left: 1.5rem; line-height: 1.6;">
+            <li><code>cookie_consent</code> - Remembers your cookie preferences</li>
+            <li><code>csrf_token</code> - Security protection against cross-site attacks</li>
+        </ul>
+
+        <h3 style="color: #4b5563; margin-top: 1.5rem;">Analytics Cookies</h3>
+        <p style="line-height: 1.6;">
+            Help us understand how visitors use our site (requires consent):
+        </p>
+        <ul style="margin-left: 1.5rem; line-height: 1.6;">
+            <li><code>_ga</code> - Google Analytics user identifier</li>
+            <li><code>_ga_*</code> - Google Analytics session information</li>
+        </ul>
+        
+        <div style="background: #fffbeb; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem; border-left: 4px solid #f59e0b;">
+            <strong>Cookie Control:</strong> You can manage your cookie preferences using our <button onclick="showCookieConsent()" style="background: none; border: none; color: #d97706; text-decoration: underline; cursor: pointer; padding: 0;">cookie settings</button> or through your browser settings.
+        </div>
+    </section>
+
+    <section style="margin-bottom: 2rem;">
+        <h2 style="color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem;">Data Security</h2>
+        <p style="line-height: 1.6;">
+            We implement appropriate technical and organizational measures to protect your data:
+        </p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1rem;">
+            <div style="background: #f0fdf4; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid #22c55e;">
+                <strong>Encryption:</strong> HTTPS/TLS encryption for all data transmission
+            </div>
+            <div style="background: #fef2f2; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid #ef4444;">
+                <strong>Access Control:</strong> Strict authentication and authorization
+            </div>
+            <div style="background: #f0f9ff; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid #3b82f6;">
+                <strong>Monitoring:</strong> Continuous security monitoring and alerts
+            </div>
+            <div style="background: #fefce8; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid #eab308;">
+                <strong>Minimal Storage:</strong> Data deleted immediately after processing
+            </div>
+        </div>
+    </section>
+
+    <section style="margin-bottom: 2rem;">
+        <h2 style="color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem;">International Transfers</h2>
+        <p style="line-height: 1.6;">
+            Your data may be processed in servers located outside the European Economic Area (EEA). 
+            When this occurs, we ensure adequate protection through:
+        </p>
+        <ul style="margin-left: 1.5rem; line-height: 1.6;">
+            <li>European Commission adequacy decisions</li>
+            <li>Standard Contractual Clauses (SCCs)</li>
+            <li>Certification schemes and codes of conduct</li>
+        </ul>
+    </section>
+
+    <section style="margin-bottom: 2rem;">
+        <h2 style="color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem;">Changes to This Policy</h2>
+        <p style="line-height: 1.6;">
+            We may update this privacy policy from time to time. Significant changes will be posted on this page 
+            with an updated "Last Modified" date. Continued use of our service after changes constitutes acceptance 
+            of the updated policy.
+        </p>
+    </section>
+
+    <footer style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #e5e7eb; text-align: center;">
+        <p style="color: #6b7280; margin-bottom: 1rem;">
+            Questions about our privacy practices? We're here to help.
+        </p>
+        <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+            <a href="mailto:privacy@proofkit.net" 
+               style="background: #4c51bf; color: white; padding: 0.75rem 1.5rem; border-radius: 0.5rem; text-decoration: none; font-weight: 500; transition: all 0.3s ease;"
+               onmouseover="this.style.background='#3730a3'"
+               onmouseout="this.style.background='#4c51bf'">
+                Email Privacy Team
+            </a>
+            <a href="/legal/terms" 
+               style="background: #f3f4f6; color: #374151; padding: 0.75rem 1.5rem; border-radius: 0.5rem; text-decoration: none; font-weight: 500; transition: all 0.3s ease;"
+               onmouseover="this.style.background='#e5e7eb'"
+               onmouseout="this.style.background='#f3f4f6'">
+                Terms of Service
+            </a>
+        </div>
+    </footer>
+</article>
+{% endblock %}

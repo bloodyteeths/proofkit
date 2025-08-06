@@ -1,0 +1,16 @@
+# Golden hash for ProofKit powder coating plot generation
+# Generated from min_powder.csv fixture with min_powder_spec.json
+# Using matplotlib Agg backend with PROOFKIT_TEST=1 environment
+# 
+# This hash represents the expected SHA-256 of a deterministic plot PNG
+# generated for powder coating cure validation with standard test data.
+#
+# Test data: 20 rows of temperature data ranging from 168-174°C
+# Target: 170°C, Conservative threshold: 172°C
+# Expected result: PASS with sufficient hold time
+#
+# Hash generated on: 2025-08-05
+# Test environment: matplotlib Agg backend, antialiasing disabled
+# Plot dimensions: 12x8 inches at 100 DPI
+#
+9e13a7f6b5b0845649f0ed01f9811a868138e574474007c8c90a83a5a98b96b6

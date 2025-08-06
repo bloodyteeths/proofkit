@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}QA Approval - Job {{ job_id }} - ProofKit{% endblock %}
+
+{% block content %}
+<main class="container">
+    <article>
+        <header>
+            <h1>🔍 QA Approval Review</h1>
+            <p>Job ID: <code>{{ job_id }}</code></p>
+            <p>Reviewing as: <strong>{{ user.email }}</strong> ({{ user.role.upper() }})</p>
+        </header>
+
+        {% if job_meta %}
+        <div class="job-info">
+            <h3>📋 Job Information</h3>
+            <table>
+                <tr>
+                    <td><strong>Created:</strong></td>
+                    <td>{{ job_meta.created_at }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Submitted By:</strong></td>
+                    <td>
+                        {% if job_meta.creator %}
+                            {{ job_meta.creator.email }} ({{ job_meta.creator.role|upper }})
+                        {% else %}
+                            <em>Unknown</em>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Status:</strong></td>
+                    <td>
+                        {% if job_meta.approved %}
+                            <span class="success">✅ Approved</span>
+                        {% else %}
+                            <span class="warning">⏳ Pending Approval</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% if job_meta.approved %}
+                <tr>
+                    <td><strong>Approved By:</strong></td>
+                    <td>{{ job_meta.approved_by }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Approved At:</strong></td>
+                    <td>{{ job_meta.approved_at }}</td>
+                </tr>
+                {% endif %}
+            </table>
+        </div>
+        {% endif %}
+
+        {% if decision %}
+        <div class="decision-review">
+            <h3>📊 Validation Results</h3>
+            <div class="result-banner {{ 'pass' if decision.pass else 'fail' }}">
+                {% if decision.pass %}
+                    ✅ PASS - Temperature Requirements Met
+                {% else %}
+                    ❌ FAIL - Temperature Requirements Not Met
+                {% endif %}
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Value</th>
+                        <th>Requirement</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Target Temperature</td>
+                        <td>{{ "%.1f°C" | format(decision.target_temp_C) }}</td>
+                        <td>{{ "%.1f°C" | format(decision.target_temp_C) }}</td>
+                        <td>✓</td>
+                    </tr>
+                    <tr>
+                        <td>Hold Time Required</td>
+                        <td>{{ decision.required_hold_time_s }}s</td>
+                        <td>{{ decision.required_hold_time_s }}s</td>
+                        <td>{{ "✓" if decision.actual_hold_time_s >= decision.required_hold_time_s else "✗" }}</td>
+                    </tr>
+                    <tr>
+                        <td>Hold Time Achieved</td>
+                        <td>{{ decision.actual_hold_time_s }}s</td>
+                        <td>≥ {{ decision.required_hold_time_s }}s</td>
+                        <td>{{ "✓" if decision.actual_hold_time_s >= decision.required_hold_time_s else "✗" }}</td>
+                    </tr>
+                    {% if decision.max_temp_C %}
+                    <tr>
+                        <td>Maximum Temperature</td>
+                        <td>{{ "%.1f°C" | format(decision.max_temp_C) }}</td>
+                        <td>-</td>
+                        <td>ℹ</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+
+            {% if decision.reasons %}
+            <div style="margin-top: 1rem;">
+                <h4>{% if decision.pass %}Validation Passed{% else %}Validation Failed{% endif %}</h4>
+                <ul>
+                    {% for reason in decision.reasons %}
+                        <li>{{ reason }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            {% if decision.warnings %}
+            <div style="margin-top: 1rem;">
+                <h4>Warnings</h4>
+                <ul style="color: var(--warning-color);">
+                    {% for warning in decision.warnings %}
+                        <li>{{ warning }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="approval-actions">
+            <h3>🔒 Approval Actions</h3>
+            
+            {% if not job_meta.approved %}
+            <div class="approval-form">
+                <p><strong>Review the validation results above and approve if satisfactory.</strong></p>
+                
+                <form method="POST" action="/approve/{{ job_id }}" id="approval-form">
+                    <fieldset>
+                        <label for="approval-notes">
+                            Approval Notes (Optional)
+                            <textarea id="approval-notes" name="notes" rows="3" 
+                                      placeholder="Add any notes about this approval..."></textarea>
+                        </label>
+                        
+                        <button type="submit" class="primary">
+                            ✅ Approve Job
+                        </button>
+                    </fieldset>
+                </form>
+            </div>
+            {% else %}
+            <div class="already-approved">
+                <p><strong>✅ This job has already been approved.</strong></p>
+                <p>Approved by: {{ job_meta.approved_by }}</p>
+                <p>Approved at: {{ job_meta.approved_at }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="download-links">
+            <h3>📥 Download Files</h3>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <a href="/download/{{ job_id }}/pdf" class="primary" role="button">
+                    📄 Download Proof PDF
+                </a>
+                <a href="/download/{{ job_id }}/zip" class="secondary" role="button">
+                    📦 Download Evidence Bundle
+                </a>
+                <a href="/verify/{{ job_id }}" class="outline" role="button">
+                    🔍 Verify Results
+                </a>
+            </div>
+        </div>
+
+        <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--muted-border-color);">
+            <a href="/" class="outline" role="button">
+                🏠 Back to Home
+            </a>
+        </div>
+    </article>
+</main>
+
+<script>
+document.getElementById('approval-form')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const form = e.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    
+    // Disable form and show loading
+    submitBtn.disabled = true;
+    submitBtn.textContent = '⏳ Approving...';
+    
+    try {
+        const formData = new FormData(form);
+        const response = await fetch('/approve/{{ job_id }}', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            // Show success and reload page
+            alert('✅ Job approved successfully!');
+            window.location.reload();
+        } else {
+            throw new Error(result.detail || 'Failed to approve job');
+        }
+    } catch (error) {
+        alert('❌ Error: ' + error.message);
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '✅ Approve Job';
+    }
+});
+</script>
+{% endblock %} 

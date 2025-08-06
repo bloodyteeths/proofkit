@@ -1,0 +1,36 @@
+# HACCP Compile Demo GIF
+
+This file is a placeholder for the HACCP compile demo GIF.
+
+## To create the actual GIF:
+
+1. Record a screen capture showing:
+   - Upload of HACCP cooling curve CSV data
+   - Selection of HACCP spec (FDA Food Code or Restaurant)
+   - Compilation process
+   - Display of results with PASS/FAIL status
+   - Download of proof certificate and evidence bundle
+
+2. Use tools like:
+   - ScreenToGif (Windows)
+   - LICEcap (macOS/Windows)
+   - Peek (Linux)
+   - OBS Studio with GIF plugin
+
+3. Recommended settings:
+   - Resolution: 1280x720 or 1920x1080
+   - Frame rate: 10-15 fps
+   - Duration: 30-60 seconds
+   - File size: < 5MB
+
+4. Demo should showcase:
+   - Clean, professional UI
+   - Fast compilation (< 3 seconds)
+   - Clear PASS/FAIL results
+   - Download options for PDF and ZIP
+   - Verification capabilities
+
+## Current Status:
+- Placeholder file created
+- Badge links configured in README
+- Ready for actual GIF creation 

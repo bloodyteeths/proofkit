@@ -1,0 +1,14 @@
+{
+  "pass": true,
+  "actual_hold_time_s": 540,
+  "required_hold_time_s": 480,
+  "max_temp_C": 175.3,
+  "min_temp_C": 171.2,
+  "conservative_threshold_C": 172.0,
+  "reasons": [
+    "Temperature maintained above conservative threshold for required duration",
+    "Actual hold time exceeded requirement by 12.5%",
+    "All sensor readings within acceptable range"
+  ],
+  "verification_hash": "a7f3d2e8b9c1f4a6e5d8c3b2a1f0e9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2"
+}

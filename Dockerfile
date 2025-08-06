@@ -39,8 +39,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     fonts-dejavu \
     tzdata \
     curl \
+    unzip \
+    libmagic1 \
+    libmagic-dev \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
+
+# Install AWS CLI v2
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
+    && unzip awscliv2.zip \
+    && ./aws/install \
+    && rm -rf awscliv2.zip aws
 
 # Create non-root user
 RUN useradd --create-home --shell /bin/bash proofkit
@@ -57,27 +66,20 @@ COPY --chown=proofkit:proofkit . .
 # Create storage directory with proper permissions
 RUN mkdir -p storage && chown -R proofkit:proofkit storage
 
-# Register DejaVu Sans font for ReportLab (production PDF generation)
-RUN python -c "
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-import os
-font_path = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'
-if os.path.exists(font_path):
-    try:
-        pdfmetrics.registerFont(TTFont('DejaVuSans', font_path))
-        print('DejaVu Sans font registered successfully')
-    except Exception as e:
-        print(f'Font registration failed: {e}')
-else:
-    print('DejaVu Sans font not found at expected path')
-"
-
 # Switch to non-root user
 USER proofkit
 
 # Ensure local packages are in PATH
 ENV PATH="/home/proofkit/.local/bin:$PATH"
+
+# Register DejaVu Sans font for ReportLab (production PDF generation)
+RUN python -c "\
+from reportlab.pdfbase import pdfmetrics; \
+from reportlab.pdfbase.ttfonts import TTFont; \
+import os; \
+font_path = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'; \
+print('Registering DejaVu Sans font...'); \
+pdfmetrics.registerFont(TTFont('DejaVuSans', font_path)) if os.path.exists(font_path) else print('Font not found')"
 
 # Expose application port
 EXPOSE 8080

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}ProofKit - Industrial Temperature Validation{% endblock %}</title>
+  <meta name="description" content="{% block description %}Automated temperature validation and compliance documentation for industrial processes{% endblock %}">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/static/logo.svg">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/static/proofkit.css">
+  
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-756618Z0XS"></script>
+  <script{% if get_nonce(request) %} nonce="{{ get_nonce(request) }}"{% endif %}>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    
+    // Check cookie consent before configuring GA4
+    const cookieConsent = localStorage.getItem('cookie_consent');
+    const analyticsConsent = cookieConsent === 'analytics' ? 'granted' : 'denied';
+    
+    // Set default consent state
+    gtag('consent', 'default', {
+      'analytics_storage': analyticsConsent,
+      'ad_storage': 'denied'
+    });
+
+    gtag('config', 'G-756618Z0XS');
+  </script>
+
+  <!-- HTMX for progressive enhancement -->
+  <script src="/static/js/htmx.min.js"></script>
+
+  {% block head %}{% endblock %}
+</head>
+<body class="min-h-screen flex flex-col">
+  <!-- Navigation -->
+  {% include 'components/nav.html' %}
+
+  <!-- Main Content -->
+  <main class="flex-1">
+    {% block hero %}{% endblock %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  {% include 'components/footer.html' %}
+
+  <!-- Cookie Banner -->
+  <div id="cookie-banner" class="fixed bottom-0 left-0 right-0 p-4 bg-gray-900 dark:bg-black border-t border-gray-800 transform translate-y-full transition-transform duration-300 z-40">
+    <div class="container-wide flex flex-col md:flex-row items-center justify-between gap-4">
+      <p class="text-sm text-gray-300">
+        We use cookies to enhance your experience and for analytics. By continuing to visit this site you agree to our use of cookies.
+      </p>
+      <div class="flex gap-3">
+        <button id="accept-cookies-btn" class="btn-primary btn-sm">Accept All</button>
+        <button id="decline-cookies-btn" class="btn-ghost btn-sm text-gray-300">Necessary Only</button>
+      </div>
+    </div>
+  </div>
+
+  <script{% if get_nonce(request) %} nonce="{{ get_nonce(request) }}"{% endif %}>
+    // Cookie functions
+    function acceptCookies() {
+      localStorage.setItem('cookie_consent', 'analytics');
+      localStorage.setItem('cookiesAccepted', 'all');
+      
+      // Hide banner
+      const banner = document.getElementById('cookie-banner');
+      if (banner) {
+        banner.classList.add('translate-y-full');
+      }
+      
+      // Enable GA4 tracking if available
+      if (window.gtag) {
+        gtag('consent', 'update', {
+          'analytics_storage': 'granted',
+          'ad_storage': 'denied'
+        });
+      }
+      
+      // Trigger analytics consent update if function exists
+      if (typeof updateAnalyticsConsent === 'function') {
+        updateAnalyticsConsent(true);
+      }
+    }
+    
+    function declineCookies() {
+      localStorage.setItem('cookie_consent', 'essential');
+      localStorage.setItem('cookiesAccepted', 'necessary');
+      
+      // Hide banner
+      const banner = document.getElementById('cookie-banner');
+      if (banner) {
+        banner.classList.add('translate-y-full');
+      }
+      
+      // Disable GA4 tracking if available
+      if (window.gtag) {
+        gtag('consent', 'update', {
+          'analytics_storage': 'denied',
+          'ad_storage': 'denied'
+        });
+      }
+      
+      // Trigger analytics consent update if function exists
+      if (typeof updateAnalyticsConsent === 'function') {
+        updateAnalyticsConsent(false);
+      }
+    }
+    
+    // Cookie banner logic
+    document.addEventListener('DOMContentLoaded', function() {
+      // Cookie button handlers
+      var acceptBtn = document.getElementById('accept-cookies-btn');
+      if (acceptBtn) {
+        acceptBtn.addEventListener('click', function() {
+          acceptCookies();
+        });
+      }
+      
+      var declineBtn = document.getElementById('decline-cookies-btn');
+      if (declineBtn) {
+        declineBtn.addEventListener('click', function() {
+          declineCookies();
+        });
+      }
+      
+      // Check if user has already made a choice
+      const consentStatus = localStorage.getItem('cookie_consent');
+      const cookiesAccepted = localStorage.getItem('cookiesAccepted');
+      
+      if (!consentStatus && !cookiesAccepted) {
+        // Show banner after a short delay
+        setTimeout(() => {
+          const banner = document.getElementById('cookie-banner');
+          if (banner) {
+            banner.classList.remove('translate-y-full');
+          }
+        }, 1500);
+      }
+    });
+
+    // Dark mode toggle (checks system preference)
+    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  </script>
+
+  <!-- Custom JavaScript -->
+  <script src="/static/js/app.js"></script>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

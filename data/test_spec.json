@@ -1,0 +1,10 @@
+{
+  "job_id": "TEST-2024-001",
+  "target_temp_C": 170.0,
+  "hold_time_s": 480,
+  "sensor_uncertainty_C": 2.0,
+  "conservative_threshold_C": 172.0,
+  "max_sample_period_s": 10,
+  "allowed_gaps_s": 30,
+  "hold_logic": "Continuous"
+}

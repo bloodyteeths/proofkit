@@ -1,0 +1,112 @@
+<svg width="550" height="320" viewBox="0 0 550 320" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="550" height="320" fill="#f8fafc"/>
+  
+  <!-- Medical facility floor -->
+  <rect x="0" y="280" width="550" height="40" fill="#e2e8f0"/>
+  
+  <!-- Autoclave chamber -->
+  <rect x="200" y="80" width="200" height="160" rx="15" fill="#64748b" stroke="#475569" stroke-width="3"/>
+  <rect x="210" y="90" width="180" height="140" rx="10" fill="#374151"/>
+  
+  <!-- Autoclave door -->
+  <rect x="190" y="120" width="20" height="80" rx="3" fill="#9ca3af"/>
+  <circle cx="200" cy="160" r="4" fill="#6b7280"/>
+  
+  <!-- Door seal -->
+  <rect x="208" y="115" width="4" height="90" fill="#ef4444"/>
+  
+  <!-- Steam lines inside -->
+  <path d="M 230 110 Q 235 105 240 110" stroke="#e2e8f0" stroke-width="2" fill="none" opacity="0.7"/>
+  <path d="M 250 115 Q 255 110 260 115" stroke="#e2e8f0" stroke-width="2" fill="none" opacity="0.7"/>
+  <path d="M 270 110 Q 275 105 280 110" stroke="#e2e8f0" stroke-width="2" fill="none" opacity="0.7"/>
+  <path d="M 230 130 Q 235 125 240 130" stroke="#e2e8f0" stroke-width="2" fill="none" opacity="0.7"/>
+  <path d="M 250 135 Q 255 130 260 135" stroke="#e2e8f0" stroke-width="2" fill="none" opacity="0.7"/>
+  
+  <!-- Control panel -->
+  <rect x="420" y="100" width="100" height="120" rx="8" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="470" y="95" font-family="Arial, sans-serif" font-size="12" fill="#374151" text-anchor="middle">Control Panel</text>
+  
+  <!-- Digital display -->
+  <rect x="430" y="110" width="80" height="30" rx="4" fill="#1f2937"/>
+  <text x="470" y="125" font-family="Arial, sans-serif" font-size="11" fill="#0050FF" text-anchor="middle">134°C</text>
+  <text x="470" y="135" font-family="Arial, sans-serif" font-size="9" fill="#23C48E" text-anchor="middle">15 min</text>
+  
+  <!-- Pressure gauge -->
+  <circle cx="450" cy="165" r="20" fill="#ffffff" stroke="#9ca3af" stroke-width="2"/>
+  <circle cx="450" cy="165" r="15" fill="#f9fafb"/>
+  <path d="M 450 150 A 15 15 0 0 1 460 175" stroke="#0050FF" stroke-width="3" fill="none"/>
+  <text x="450" y="195" font-family="Arial, sans-serif" font-size="8" fill="#374151" text-anchor="middle">2.1 bar</text>
+  
+  <!-- Status lights -->
+  <circle cx="440" cy="200" r="6" fill="#22c55e"/>
+  <circle cx="460" cy="200" r="6" fill="#ef4444" opacity="0.3"/>
+  <circle cx="480" cy="200" r="6" fill="#eab308" opacity="0.3"/>
+  
+  <!-- Medical instruments inside autoclave -->
+  <!-- Surgical scissors -->
+  <path d="M 260 140 L 280 160 M 270 145 L 275 155" stroke="#9ca3af" stroke-width="2" fill="none"/>
+  <circle cx="265" cy="145" r="3" fill="#d1d5db"/>
+  <circle cx="275" cy="155" r="3" fill="#d1d5db"/>
+  
+  <!-- Forceps -->
+  <path d="M 300 150 L 320 150 M 305 145 L 315 145 M 305 155 L 315 155" stroke="#9ca3af" stroke-width="2" fill="none"/>
+  
+  <!-- Scalpel -->
+  <rect x="330" y="148" width="20" height="4" fill="#d1d5db"/>
+  <rect x="350" y="149" width="8" height="2" fill="#9ca3af"/>
+  
+  <!-- Temperature sensors -->
+  <rect x="280" y="120" width="15" height="6" rx="2" fill="#23C48E"/>
+  <line x1="287" y1="120" x2="287" y2="110" stroke="#15803d" stroke-width="2"/>
+  <circle cx="287" cy="108" r="3" fill="#15803d"/>
+  
+  <rect x="320" y="180" width="15" height="6" rx="2" fill="#23C48E"/>
+  <line x1="327" y1="180" x2="327" y2="190" stroke="#15803d" stroke-width="2"/>
+  <circle cx="327" cy="192" r="3" fill="#15803d"/>
+  
+  <!-- Steam generator -->
+  <rect x="50" y="150" width="80" height="60" rx="8" fill="#6b7280"/>
+  <circle cx="90" cy="180" r="25" fill="#9ca3af"/>
+  <circle cx="90" cy="180" r="15" fill="#64748b"/>
+  
+  <!-- Steam pipes -->
+  <rect x="130" y="175" width="60" height="10" fill="#9ca3af"/>
+  <path d="M 140 170 Q 145 165 150 170" stroke="#e2e8f0" stroke-width="2" fill="none"/>
+  <path d="M 160 170 Q 165 165 170 170" stroke="#e2e8f0" stroke-width="2" fill="none"/>
+  
+  <!-- Monitoring computer -->
+  <rect x="30" y="50" width="100" height="80" rx="6" fill="#1f2937"/>
+  <rect x="35" y="55" width="90" height="60" rx="3" fill="#ffffff"/>
+  
+  <!-- Screen display -->
+  <text x="80" y="50" font-family="Arial, sans-serif" font-size="10" fill="#374151" text-anchor="middle">Sterilization Monitor</text>
+  
+  <!-- Temperature curve -->
+  <rect x="40" y="65" width="80" height="35" fill="#f9fafb" stroke="#e5e7eb"/>
+  <path d="M 45 95 Q 60 80 80 75 Q 100 75 115 78" stroke="#0050FF" stroke-width="2" fill="none"/>
+  <line x1="45" y1="78" x2="115" y2="78" stroke="#23C48E" stroke-width="1" stroke-dasharray="2,2"/>
+  
+  <!-- Cycle status -->
+  <rect x="40" y="105" width="80" height="15" rx="3" fill="#0050FF"/>
+  <text x="80" y="115" font-family="Arial, sans-serif" font-size="9" fill="white" text-anchor="middle">STERILIZING</text>
+  
+  <!-- Biological indicator -->
+  <rect x="450" y="250" width="30" height="15" rx="3" fill="#23C48E"/>
+  <text x="465" y="261" font-family="Arial, sans-serif" font-size="8" fill="white" text-anchor="middle">BI</text>
+  <circle cx="440" cy="257" r="5" fill="#22c55e"/>
+  
+  <!-- Chemical indicator strips -->
+  <rect x="350" y="250" width="25" height="8" fill="#eab308"/>
+  <rect x="380" y="250" width="25" height="8" fill="#22c55e"/>
+  <rect x="410" y="250" width="25" height="8" fill="#0050FF"/>
+  
+  <!-- Validation record -->
+  <rect x="150" y="250" width="80" height="25" rx="3" fill="#ffffff" stroke="#d1d5db"/>
+  <text x="190" y="265" font-family="Arial, sans-serif" font-size="9" fill="#374151" text-anchor="middle">Cycle #247</text>
+  <text x="190" y="275" font-family="Arial, sans-serif" font-size="8" fill="#6b7280" text-anchor="middle">VALIDATED</text>
+  
+  <!-- ProofKit logo/branding -->
+  <text x="420" y="40" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#0050FF">ProofKit</text>
+  <text x="420" y="55" font-family="Arial, sans-serif" font-size="10" fill="#64748b">Steam Sterilization</text>
+</svg>

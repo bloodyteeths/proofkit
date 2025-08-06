@@ -1,0 +1,161 @@
+{% extends "../base.html" %}
+
+{% block title %}{{ headline }} - ProofKit{% endblock %}
+
+{% block content %}
+<!-- Industry-specific Hero Section -->
+<section>
+    <div style="text-align: center; margin-bottom: 3rem; padding: 3rem 2rem; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); border-radius: 1rem; position: relative; overflow: hidden;">
+        <!-- Hero SVG Background -->
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.1; z-index: 0;">
+            {% if hero_svg %}
+                {{ hero_svg | safe }}
+            {% endif %}
+        </div>
+        
+        <div style="position: relative; z-index: 1;">
+            <h1 style="color: #4c51bf; margin-bottom: 1rem; font-size: 2.5rem; font-weight: 700;">
+                {{ headline }}
+            </h1>
+            <p style="font-size: 1.2rem; color: #64748b; max-width: 700px; margin: 0 auto 2rem auto; line-height: 1.6;">
+                {{ subline }}
+            </p>
+            
+            <!-- Trust Badges -->
+            {% if trust_badges %}
+            <div style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; margin-top: 2rem;">
+                {% for badge in trust_badges %}
+                <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; background: white; border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); border: 1px solid #e2e8f0;">
+                    <span style="font-size: 1.25rem;">{{ badge.icon }}</span>
+                    <span style="font-weight: 600; color: #374151; font-size: 0.9rem;">{{ badge.text }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Upload Section -->
+<section>
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <h2 style="color: #4c51bf; margin-bottom: 0.5rem;">Upload Temperature Log</h2>
+        <p style="font-size: 1.1rem; color: #64748b; max-width: 600px; margin: 0 auto;">
+            Upload your CSV temperature log file and configure the specification to generate inspector-ready proof PDFs and evidence bundles.
+        </p>
+    </div>
+    
+    <form id="upload-form" hx-post="/api/compile" hx-encoding="multipart/form-data" hx-target="#results" hx-indicator="#progress">
+        <!-- CSV File Upload -->
+        <div class="upload-area" id="upload-area">
+            <label for="csv_file">
+                <div style="font-size: 3rem; margin-bottom: 1rem; color: #667eea;">📊</div>
+                <h4>CSV Temperature Log</h4>
+                <p style="margin: 0.5rem 0 1rem 0; color: #64748b;">Click to select or drag and drop your CSV file here</p>
+                <input type="file" id="csv_file" name="csv_file" accept=".csv,text/csv" required style="display: none;">
+                <small style="color: #94a3b8;">Maximum file size: 10MB | Supported formats: .csv</small>
+            </label>
+            <div id="file-info" style="display: none; margin-top: 1.5rem; padding: 1rem; background: rgba(102, 126, 234, 0.1); border-radius: 0.5rem; border: 1px solid #c7d2fe;">
+                <div style="color: #4c51bf; font-weight: 600; margin-bottom: 0.5rem;">
+                    ✅ <span id="file-name"></span>
+                </div>
+                <small style="color: #64748b;">Size: <span id="file-size"></span></small>
+            </div>
+        </div>
+        
+        <!-- Industry-specific Specification Form -->
+        {% block spec_form %}
+        <!-- Default form will be inserted here by child templates -->
+        {% endblock %}
+        
+        <!-- Submit Button -->
+        <div style="margin-top: 3rem; text-align: center;">
+            <button type="submit" class="primary" style="font-size: 1.1rem; padding: 0.75rem 2rem; border-radius: 0.75rem;">
+                🚀 Generate Proof
+            </button>
+            <button type="button" onclick="resetForm()" style="margin-left: 1rem; padding: 0.75rem 1.5rem; border-radius: 0.75rem;">
+                🔄 Reset Form
+            </button>
+        </div>
+    </form>
+    
+    <!-- Progress Indicator -->
+    <div id="progress" class="progress-indicator">
+        <div style="font-size: 2rem; margin-bottom: 1rem;">⏳</div>
+        <h4 style="color: #4c51bf; margin-bottom: 0.5rem;">Processing Your Temperature Log</h4>
+        <p style="color: #64748b; margin-bottom: 1.5rem;">Validating data, generating charts, and creating proof documents...</p>
+        <progress style="margin-bottom: 1rem;"></progress>
+        <small style="color: #94a3b8;">This may take a few moments depending on file size</small>
+    </div>
+    
+    <!-- Results will be inserted here by HTMX -->
+    <div id="results"></div>
+</section>
+
+<!-- Industry-specific Examples Section -->
+{% if examples %}
+<section style="margin-top: 4rem;">
+    <div style="background: white; padding: 2rem; border-radius: 1rem; box-shadow: var(--card-shadow);">
+        <details>
+            <summary style="font-size: 1.1rem; font-weight: 600; color: #4c51bf; cursor: pointer; margin-bottom: 1rem;">
+                📁 {{ examples.title }}
+            </summary>
+            
+            <div style="margin-top: 1.5rem;">
+                <p style="color: #64748b; margin-bottom: 1.5rem;">{{ examples.description }}</p>
+                
+                <div style="display: grid; gap: 1rem; margin-bottom: 2rem;">
+                    {% for example in examples.files %}
+                    <div style="padding: 1rem; background: {{ example.bg_color }}; border-radius: 0.5rem; border-left: 4px solid {{ example.border_color }};">
+                        <div style="display: flex; justify-content: between; align-items: center;">
+                            <div>
+                                <strong style="color: #4c51bf;">{{ example.icon }} {{ example.name }}</strong>
+                                <p style="margin: 0.25rem 0 0 0; font-size: 0.9rem; color: #64748b;">{{ example.description }}</p>
+                            </div>
+                            <a href="{{ example.url }}" download style="margin-left: auto; padding: 0.5rem 1rem; background: {{ example.border_color }}; color: white; border-radius: 0.25rem; text-decoration: none; font-size: 0.9rem;">Download</a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div style="background: #f1f5f9; padding: 1.5rem; border-radius: 0.5rem; border: 1px solid #cbd5e1;">
+                    <h5 style="color: #475569; margin: 0 0 1rem 0;">📋 CSV Format Requirements</h5>
+                    <ul style="margin: 0; padding-left: 1.5rem; color: #64748b; line-height: 1.6;">
+                        {% for requirement in examples.format_requirements %}
+                        <li>{{ requirement }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </details>
+    </div>
+</section>
+{% endif %}
+
+<!-- Industry-specific FAQ Section -->
+{% if faq %}
+<section style="margin-top: 4rem;">
+    <div style="background: white; padding: 2rem; border-radius: 1rem; box-shadow: var(--card-shadow);">
+        <h3 style="color: #4c51bf; margin-bottom: 2rem; text-align: center;">{{ faq.title }}</h3>
+        
+        <div style="display: grid; gap: 1rem;">
+            {% for item in faq.items %}
+            <details style="border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 1rem;">
+                <summary style="cursor: pointer; font-weight: 600; color: #374151; padding: 0.5rem; margin: -0.5rem; border-radius: 0.5rem;">
+                    {{ item.question }}
+                </summary>
+                <div style="margin-top: 1rem; color: #64748b; line-height: 1.6;">
+                    {{ item.answer | safe }}
+                </div>
+            </details>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<script{% if get_nonce(request) %} nonce="{{ get_nonce(request) }}"{% endif %}>
+// Make default spec available to JavaScript for reset functionality
+window.defaultSpec = `{{ default_spec | safe }}`;
+</script>
+{% endblock %}

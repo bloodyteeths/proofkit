@@ -1,0 +1,29 @@
+<svg width="96" height="96" viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="qualicoat-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#059669;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#10b981;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Shield shape -->
+  <path d="M48 8 L78 20 L78 48 Q78 68 48 88 Q18 68 18 48 L18 20 Z" fill="url(#qualicoat-gradient)" stroke="#047857" stroke-width="2"/>
+  
+  <!-- Inner white area -->
+  <path d="M48 16 L70 26 L70 48 Q70 64 48 80 Q26 64 26 48 L26 26 Z" fill="white" stroke="#047857" stroke-width="1"/>
+  
+  <!-- Qualicoat text -->
+  <text x="48" y="38" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#047857">QUALICOAT</text>
+  
+  <!-- Certified text -->
+  <text x="48" y="52" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="normal" fill="#047857">CERTIFIED</text>
+  
+  <!-- Quality symbol -->
+  <circle cx="48" cy="28" r="3" fill="#10b981"/>
+  
+  <!-- Decorative check mark -->
+  <path d="M42 60 L46 64 L54 56" stroke="#10b981" stroke-width="2" fill="none" stroke-linecap="round"/>
+  
+  <!-- Placeholder notice -->
+  <text x="48" y="85" text-anchor="middle" font-family="Arial, sans-serif" font-size="6" fill="#9ca3af">PLACEHOLDER</text>
+</svg>

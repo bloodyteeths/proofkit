@@ -1,0 +1,38 @@
+{
+  "version": "1.0",
+  "industry": "concrete",
+  "job": {
+    "job_id": "astm_c31_curing_validation"
+  },
+  "spec": {
+    "method": "OVEN_AIR",
+    "target_temp_C": 21.5,
+    "hold_time_s": 86400,
+    "temp_band_C": {
+      "min": 16.0,
+      "max": 27.0
+    },
+    "sensor_uncertainty_C": 0.5
+  },
+  "data_requirements": {
+    "max_sample_period_s": 600.0,
+    "allowed_gaps_s": 1800.0
+  },
+  "sensor_selection": {
+    "mode": "mean_of_set",
+    "require_at_least": 2
+  },
+  "logic": {
+    "continuous": true,
+    "max_total_dips_s": 0
+  },
+  "preconditions": {
+    "max_ramp_rate_C_per_min": 1.0,
+    "max_time_to_threshold_s": 3600
+  },
+  "reporting": {
+    "units": "C",
+    "language": "en",
+    "timezone": "UTC"
+  }
+}

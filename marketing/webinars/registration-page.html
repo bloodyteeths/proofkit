@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProofKit Webinar Series - Register Free | Quality Control Automation</title>
+    <meta name="description" content="Join free 20-minute webinars: Pass Your Qualicoat Audit Without Excel & CFR 11 Autoclave Logs in 30s. Live demos, expert Q&A, instant certificates.">
+    <meta name="keywords" content="Qualicoat audit, CFR 11 compliance, autoclave validation, powder coat certificate, quality control webinar">
+    
+    <!-- Open Graph / Social Media -->
+    <meta property="og:title" content="Free Quality Control Webinars - ProofKit">
+    <meta property="og:description" content="Learn to generate audit-proof certificates in 30 seconds. No Excel, no errors, no audit failures.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://proofkit.com/webinars/register">
+    
+    <!-- Schema.org structured data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Event",
+      "name": "ProofKit Quality Control Webinar Series",
+      "description": "Learn to generate Qualicoat and CFR 11 compliant certificates in 30 seconds",
+      "startDate": "2025-08-15T14:00:00Z",
+      "endDate": "2025-08-15T14:20:00Z",
+      "eventStatus": "https://schema.org/EventScheduled",
+      "eventAttendanceMode": "https://schema.org/OnlineEventAttendanceMode",
+      "location": {
+        "@type": "VirtualLocation",
+        "url": "https://zoom.us/webinar/register/proofkit"
+      },
+      "organizer": {
+        "@type": "Organization",
+        "name": "ProofKit",
+        "url": "https://proofkit.com"
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR",
+        "availability": "https://schema.org/InStock"
+      }
+    }
+    </script>
+    
+    <link rel="stylesheet" href="../static/css/pico.min.css">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #dc2626;
+            --muted: #6b7280;
+        }
+        
+        .hero {
+            background: linear-gradient(135deg, var(--primary) 0%, #1e40af 100%);
+            color: white;
+            padding: 4rem 0;
+            text-align: center;
+        }
+        
+        .hero h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .hero p {
+            font-size: 1.25rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+        
+        .webinar-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            background: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .webinar-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        .webinar-card h3 {
+            color: var(--primary);
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .webinar-meta {
+            display: flex;
+            gap: 2rem;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+        
+        .benefit-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .benefit-list li {
+            padding: 0.5rem 0;
+            position: relative;
+            padding-left: 2rem;
+        }
+        
+        .benefit-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--success);
+            font-weight: bold;
+        }
+        
+        .registration-form {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .webinar-meta {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+        
+        .social-proof {
+            background: #f0f9ff;
+            border-left: 4px solid var(--primary);
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .urgency-banner {
+            background: var(--warning);
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+        
+        .feature-card {
+            text-align: center;
+            padding: 1.5rem;
+            border-radius: 8px;
+            background: white;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.25);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        
+        .btn-secondary:hover {
+            background: var(--primary);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <div class="container">
+            <h1>Stop Failing Quality Audits</h1>
+            <p>Join 2,000+ quality professionals learning to generate audit-proof certificates in 30 seconds. No Excel, no errors, no audit failures.</p>
+            <div class="urgency-banner">
+                🔥 Limited Seats: Only 100 spots per session • Next cohort: August 15-16, 2025
+            </div>
+        </div>
+    </div>
+    
+    <main class="container">
+        <section class="webinar-schedule">
+            <h2 style="text-align: center; margin: 3rem 0 2rem;">Choose Your Session (Or Attend Both)</h2>
+            
+            <!-- Webinar 1: Qualicoat -->
+            <div class="webinar-card">
+                <h3>🎯 Pass Your Qualicoat Audit Without Excel</h3>
+                <p style="font-size: 1.1rem; color: var(--muted); margin-bottom: 1rem;">
+                    Generate ISO 2368 compliant powder coat cure certificates with zero manual calculations
+                </p>
+                
+                <div class="webinar-meta">
+                    <div class="meta-item">
+                        <span>📅</span>
+                        <span><strong>Thursday, August 15th, 2025</strong></span>
+                    </div>
+                    <div class="meta-item">
+                        <span>🕐</span>
+                        <span><strong>2:00 PM UTC</strong> (3:00 PM CET, 9:00 AM EST)</span>
+                    </div>
+                    <div class="meta-item">
+                        <span>⏱️</span>
+                        <span><strong>20 minutes</strong> + 5 min Q&A</span>
+                    </div>
+                </div>
+                
+                <ul class="benefit-list">
+                    <li>Live demo: CSV to Qualicoat certificate in 30 seconds</li>
+                    <li>Conservative threshold calculation (target + sensor uncertainty)</li>
+                    <li>Automated hysteresis and ramp rate validation</li>
+                    <li>Tamper-proof verification with QR codes</li>
+                    <li>ROI analysis: 98% time savings vs Excel</li>
+                </ul>
+                
+                <div style="margin-top: 1.5rem;">
+                    <a href="#register-form" class="btn-primary" onclick="selectWebinar('qualicoat')">Register for Qualicoat Session</a>
+                </div>
+            </div>
+            
+            <!-- Webinar 2: CFR 11 -->
+            <div class="webinar-card">
+                <h3>🏥 CFR 11 Autoclave Logs in 30 Seconds</h3>
+                <p style="font-size: 1.1rem; color: var(--muted); margin-bottom: 1rem;">
+                    Generate FDA-compliant sterilization certificates with Fo value validation
+                </p>
+                
+                <div class="webinar-meta">
+                    <div class="meta-item">
+                        <span>📅</span>
+                        <span><strong>Friday, August 16th, 2025</strong></span>
+                    </div>
+                    <div class="meta-item">
+                        <span>🕐</span>
+                        <span><strong>2:00 PM UTC</strong> (3:00 PM CET, 9:00 AM EST)</span>
+                    </div>
+                    <div class="meta-item">
+                        <span>⏱️</span>
+                        <span><strong>20 minutes</strong> + 5 min Q&A</span>
+                    </div>
+                </div>
+                
+                <ul class="benefit-list">
+                    <li>Live demo: Raw logger data to CFR 11 certificate</li>
+                    <li>Automated Fo value calculation with Z-value integration</li>
+                    <li>Pressure correlation validation throughout cycle</li>
+                    <li>Independent third-party verification capability</li>
+                    <li>Complete audit trail and electronic signature compliance</li>
+                </ul>
+                
+                <div style="margin-top: 1.5rem;">
+                    <a href="#register-form" class="btn-primary" onclick="selectWebinar('cfr11')">Register for CFR 11 Session</a>
+                </div>
+            </div>
+        </section>
+        
+        <div class="social-proof">
+            <h4 style="margin-bottom: 1rem;">Why 2,000+ Quality Professionals Trust ProofKit</h4>
+            <p style="margin-bottom: 0.5rem;">💬 <em>"Reduced our Qualicoat audit prep from 8 hours to 30 minutes. Game changer."</em> - Sarah M., Quality Manager</p>
+            <p style="margin-bottom: 0.5rem;">💬 <em>"FDA inspector was impressed by the mathematical verification capability."</em> - Dr. James R., Pharma QA</p>
+            <p>💬 <em>"Finally, temperature validation that auditors can't question."</em> - Michael K., Manufacturing Director</p>
+        </div>
+        
+        <section class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h4>Live Demonstrations</h4>
+                <p>Watch real CSV files become audit-proof certificates in real-time</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔬</div>
+                <h4>Expert Q&A</h4>
+                <p>Get your specific compliance questions answered by validation specialists</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📁</div>
+                <h4>Free Resources</h4>
+                <p>Download sample files, templates, and compliance checklists</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎁</div>
+                <h4>Free Trial Access</h4>
+                <p>3 free certificates to test with your own data immediately after</p>
+            </div>
+        </section>
+        
+        <!-- Registration Form -->
+        <section id="register-form" class="registration-form">
+            <h2 style="text-align: center; margin-bottom: 2rem;">Secure Your Spot (100% Free)</h2>
+            
+            <form id="webinar-registration" onsubmit="handleRegistration(event)">
+                <div class="form-row">
+                    <div>
+                        <label for="first-name">First Name *</label>
+                        <input type="text" id="first-name" name="firstName" required>
+                    </div>
+                    <div>
+                        <label for="last-name">Last Name *</label>
+                        <input type="text" id="last-name" name="lastName" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div>
+                        <label for="email">Work Email *</label>
+                        <input type="email" id="email" name="email" required 
+                               placeholder="your.name@company.com">
+                    </div>
+                    <div>
+                        <label for="company">Company *</label>
+                        <input type="text" id="company" name="company" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div>
+                        <label for="job-title">Job Title</label>
+                        <input type="text" id="job-title" name="jobTitle" 
+                               placeholder="Quality Manager, QA Director, etc.">
+                    </div>
+                    <div>
+                        <label for="industry">Primary Industry *</label>
+                        <select id="industry" name="industry" required>
+                            <option value="">Select Industry</option>
+                            <option value="powder_coating">Powder Coating / Metal Finishing</option>
+                            <option value="pharmaceutical">Pharmaceutical</option>
+                            <option value="medical_device">Medical Device</option>
+                            <option value="food_beverage">Food & Beverage</option>
+                            <option value="construction">Construction / Concrete</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div>
+                    <label for="webinar-preference">Webinar Preference *</label>
+                    <select id="webinar-preference" name="webinarPreference" required>
+                        <option value="">Select Session</option>
+                        <option value="qualicoat">Thursday: Qualicoat Audit (Powder Coating)</option>
+                        <option value="cfr11">Friday: CFR 11 Autoclave (Pharma/Medical)</option>
+                        <option value="both">Both Sessions</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="current-challenges">Current Quality Documentation Challenges (Optional)</label>
+                    <textarea id="current-challenges" name="challenges" rows="3" 
+                              placeholder="What's your biggest pain point with current quality documentation? This helps us tailor the demo."></textarea>
+                </div>
+                
+                <div style="margin: 1.5rem 0;">
+                    <label>
+                        <input type="checkbox" id="marketing-consent" name="marketingConsent">
+                        I'd like to receive quality control tips and ProofKit updates (2-3 emails/month max)
+                    </label>
+                </div>
+                
+                <div style="text-align: center; margin-top: 2rem;">
+                    <button type="submit" class="btn-primary" style="width: 100%; max-width: 400px;">
+                        🎯 Secure My Free Spot
+                    </button>
+                    <p style="font-size: 0.9rem; color: var(--muted); margin-top: 1rem;">
+                        ✅ No spam ever ✅ Unsubscribe anytime ✅ Your data stays private
+                    </p>
+                </div>
+            </form>
+        </section>
+        
+        <!-- FAQ Section -->
+        <section style="margin: 4rem 0;">
+            <h2 style="text-align: center; margin-bottom: 2rem;">Frequently Asked Questions</h2>
+            
+            <div style="max-width: 800px; margin: 0 auto;">
+                <details style="margin-bottom: 1rem; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 8px;">
+                    <summary style="font-weight: 600; cursor: pointer;">Will this work with my data logger brand?</summary>
+                    <p style="margin-top: 1rem; color: var(--muted);">ProofKit accepts CSV files from any time-series data logger including Omega, Onset, Lascar, Testo, Fluke, and 20+ other brands. If you're unsure, send us a sample CSV and we'll confirm compatibility within 24 hours.</p>
+                </details>
+                
+                <details style="margin-bottom: 1rem; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 8px;">
+                    <summary style="font-weight: 600; cursor: pointer;">Is this suitable for regulated environments?</summary>
+                    <p style="margin-top: 1rem; color: var(--muted);">Yes. ProofKit is designed for FDA CFR 11, ISO 9001, Qualicoat, and other regulatory compliance. We provide IQ/OQ/PQ validation protocols and maintain SOC 2 Type II compliance for the processing infrastructure.</p>
+                </details>
+                
+                <details style="margin-bottom: 1rem; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 8px;">
+                    <summary style="font-weight: 600; cursor: pointer;">What if I can't attend live?</summary>
+                    <p style="margin-top: 1rem; color: var(--muted);">All registrants receive the recording within 24 hours, plus slide decks, sample files, and templates. However, live attendees get priority for Q&A and can request specific demo scenarios.</p>
+                </details>
+                
+                <details style="margin-bottom: 1rem; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 8px;">
+                    <summary style="font-weight: 600; cursor: pointer;">How much does ProofKit cost after the trial?</summary>
+                    <p style="margin-top: 1rem; color: var(--muted);">Individual certificates are €7 each. Volume discounts available for 50+ certificates/month. Enterprise licensing available for site-wide deployment. We'll cover pricing options during the webinar Q&A.</p>
+                </details>
+            </div>
+        </section>
+        
+        <!-- Final CTA -->
+        <section style="text-align: center; padding: 3rem 0; background: #f9fafb; border-radius: 12px; margin: 2rem 0;">
+            <h2>Ready to Stop Failing Quality Audits?</h2>
+            <p style="font-size: 1.1rem; color: var(--muted); max-width: 600px; margin: 1rem auto 2rem;">
+                Join 2,000+ quality professionals who've eliminated Excel errors from their compliance workflow.
+            </p>
+            <a href="#register-form" class="btn-primary" style="margin-right: 1rem;">Register Now (Free)</a>
+            <a href="mailto:support@proofkit.com" class="btn-secondary">Questions? Email Us</a>
+        </section>
+    </main>
+    
+    <footer style="background: #1f2937; color: white; padding: 2rem 0; text-align: center; margin-top: 4rem;">
+        <div class="container">
+            <p>&copy; 2025 ProofKit. Professional quality control automation.</p>
+            <p style="font-size: 0.9rem; opacity: 0.8;">
+                <a href="/privacy" style="color: #93c5fd;">Privacy Policy</a> • 
+                <a href="/terms" style="color: #93c5fd;">Terms of Service</a> • 
+                <a href="mailto:support@proofkit.com" style="color: #93c5fd;">Contact Support</a>
+            </p>
+        </div>
+    </footer>
+    
+    <script>
+        function selectWebinar(type) {
+            const select = document.getElementById('webinar-preference');
+            if (type === 'qualicoat') {
+                select.value = 'qualicoat';
+            } else if (type === 'cfr11') {
+                select.value = 'cfr11';
+            }
+            
+            // Smooth scroll to form
+            document.getElementById('register-form').scrollIntoView({ 
+                behavior: 'smooth' 
+            });
+        }
+        
+        function handleRegistration(event) {
+            event.preventDefault();
+            
+            // Collect form data
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData.entries());
+            
+            // Add UTM parameters if available
+            const urlParams = new URLSearchParams(window.location.search);
+            data.utm_source = urlParams.get('utm_source') || 'direct';
+            data.utm_medium = urlParams.get('utm_medium') || 'direct';
+            data.utm_campaign = urlParams.get('utm_campaign') || 'webinar-organic';
+            
+            // In real implementation, send to registration API
+            console.log('Registration data:', data);
+            
+            // Show success message
+            alert('Registration successful! Check your email for webinar access details.');
+            
+            // In real implementation:
+            // - Send to Zoom webinar registration API
+            // - Add to email marketing list
+            // - Send confirmation email
+            // - Redirect to thank you page
+        }
+        
+        // Track page interactions for analytics
+        document.addEventListener('DOMContentLoaded', function() {
+            // Track which session buttons are clicked
+            document.querySelectorAll('.btn-primary').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    if (this.textContent.includes('Qualicoat')) {
+                        // Analytics: Track Qualicoat interest
+                        console.log('Event: Qualicoat session interest');
+                    } else if (this.textContent.includes('CFR 11')) {
+                        // Analytics: Track CFR 11 interest
+                        console.log('Event: CFR 11 session interest');
+                    }
+                });
+            });
+            
+            // Track scroll depth for engagement
+            let scrollDepth = 0;
+            window.addEventListener('scroll', function() {
+                const depth = Math.round((window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100);
+                if (depth > scrollDepth && depth % 25 === 0) {
+                    scrollDepth = depth;
+                    console.log('Scroll depth:', depth + '%');
+                }
+            });
+        });
+    </script>
+    
+    <!-- Google Analytics / Tag Manager would go here in production -->
+    <!-- Facebook Pixel for retargeting would go here in production -->
+</body>
+</html>

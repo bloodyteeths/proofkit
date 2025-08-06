@@ -269,12 +269,21 @@ class AuthMiddleware(BaseHTTPMiddleware):
         if token:
             payload = self.auth_handler.verify_jwt_token(token)
             if payload:
+                # Get user's current plan from quota system
+                try:
+                    from middleware.quota import load_user_quota_data
+                    quota_data = load_user_quota_data(payload["sub"])
+                    user_plan = quota_data.get('plan', 'free')
+                except Exception:
+                    user_plan = 'free'  # Default to free plan if lookup fails
+                
                 # Inject user state into request
                 request.state.user = User(
                     email=payload["sub"],
                     role=UserRole(payload["role"]),
                     created_at=datetime.fromtimestamp(payload["iat"], tz=timezone.utc),
-                    last_login=datetime.fromtimestamp(payload["iat"], tz=timezone.utc)
+                    last_login=datetime.fromtimestamp(payload["iat"], tz=timezone.utc),
+                    plan=user_plan
                 )
         
         response = await call_next(request)
@@ -319,14 +328,16 @@ def get_current_user(request: Request) -> Optional[User]:
                 email="test-qa@example.com",
                 role=UserRole.QA,
                 created_at=datetime.now(timezone.utc),
-                last_login=datetime.now(timezone.utc)
+                last_login=datetime.now(timezone.utc),
+                plan="free"
             )
         elif fake_role == "op":
             return User(
                 email="test-op@example.com", 
                 role=UserRole.OPERATOR,
                 created_at=datetime.now(timezone.utc),
-                last_login=datetime.now(timezone.utc)
+                last_login=datetime.now(timezone.utc),
+                plan="free"
             )
     
     return getattr(request.state, 'user', None)

@@ -1,0 +1,224 @@
+{% extends "industry_base.html" %}
+
+{% set headline = "Concrete Cure Temperature Monitoring" %}
+{% set subline = "Generate compliant proof PDFs for concrete curing temperature validation. Meet ACI, ASTM, and DOT specifications with traceable mass concrete monitoring." %}
+
+{% set trust_badges = [
+    {"icon": "🏗️", "text": "ACI 301 Compliant"},
+    {"icon": "📏", "text": "ASTM C1074 Ready"},
+    {"icon": "🛣️", "text": "DOT Approved"},
+    {"icon": "✅", "text": "Mass Concrete Certified"}
+] %}
+
+{% set examples = {
+    "title": "Need concrete curing example data to test with?",
+    "description": "Download example temperature log files from concrete curing projects:",
+    "files": [
+        {
+            "name": "bridge_pour.csv",
+            "description": "Bridge deck - mass concrete, 72 hr monitoring with differential limits",
+            "icon": "✅",
+            "bg_color": "#f8f9ff",
+            "border_color": "#4CAF50",
+            "url": "/examples/concrete/bridge_pour.csv"
+        },
+        {
+            "name": "foundation_cure.csv",
+            "description": "Foundation wall - temperature differential exceeded 20°C limit",
+            "icon": "⚠️",
+            "bg_color": "#fff8f0",
+            "border_color": "#f59e0b",
+            "url": "/examples/concrete/foundation_cure.csv"
+        },
+        {
+            "name": "pavement_failure.csv",
+            "description": "Pavement slab - rapid cooling, thermal cracking risk",
+            "icon": "❌",
+            "bg_color": "#fef2f2",
+            "border_color": "#ef4444",
+            "url": "/examples/concrete/pavement_failure.csv"
+        }
+    ],
+    "format_requirements": [
+        "<strong>Timestamp column:</strong> Long-term monitoring (hours to days of data)",
+        "<strong>Temperature columns:</strong> Core temp, surface temp, ambient (e.g., core_temp, surface_temp, ambient_temp)",
+        "<strong>Mix design:</strong> Include cement content, SCMs, admixtures in metadata (#)",
+        "<strong>Pour info:</strong> Pour date, element thickness, location in CSV comments",
+        "<strong>Weather data:</strong> Optional ambient temperature and humidity for correlation"
+    ]
+} %}
+
+{% set faq = {
+    "title": "Concrete Curing Temperature FAQ",
+    "items": [
+        {
+            "question": "What concrete curing standards does ProofKit support?",
+            "answer": "ProofKit supports ACI 301 (mass concrete requirements), ASTM C1074 (temperature monitoring), ACI 207 (mass concrete guide), and various DOT specifications. The system monitors temperature differentials, peak temperatures, cooling rates, and minimum curing temperatures per project specifications."
+        },
+        {
+            "question": "How do I set up monitoring for mass concrete elements?",
+            "answer": "Mass concrete (minimum dimension >3 feet) requires special monitoring:<br><strong>Temperature differential:</strong> Core vs. surface ≤35°F (19°C) typical<br><strong>Peak temperature:</strong> Usually limited to 160°F (71°C)<br><strong>Cooling rate:</strong> ≤3°F/hr (1.7°C/hr) maximum<br>Use multiple sensors at different depths and include ambient temperature for comprehensive analysis."
+        },
+        {
+            "question": "Can ProofKit calculate maturity values for strength estimation?",
+            "answer": "Yes! ProofKit calculates concrete maturity using both Nurse-Saul (time-temperature factor) and Arrhenius (equivalent age) methods. Input your concrete mix's activation energy and reference temperature to get accurate maturity values for strength estimation and form removal timing per ASTM C1074."
+        },
+        {
+            "question": "How do I monitor different concrete elements (slabs, walls, columns)?",
+            "answer": "Different elements have specific monitoring requirements:<br><strong>Mass elements:</strong> Core and surface sensors, differential monitoring<br><strong>Slabs:</strong> Surface temperature, ambient correlation<br><strong>Walls:</strong> Multiple depth sensors, form insulation effects<br><strong>Columns:</strong> Center and edge sensors for thermal gradients<br>Position sensors according to ACI 207 guidelines."
+        },
+        {
+            "question": "What weather protection validation does ProofKit provide?",
+            "answer": "ProofKit helps validate weather protection effectiveness by:<br>• Monitoring minimum concrete temperature (typically 50°F/10°C minimum)<br>• Tracking temperature uniformity across protected areas<br>• Analyzing heating system performance during cold weather<br>• Validating curing blanket and enclosure effectiveness<br>• Generating compliance reports for ACI 306 cold weather concreting"
+        }
+    ]
+} %}
+
+{% block spec_form %}
+<div style="margin-top: 3rem;">
+    <h4 style="color: #4c51bf; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+        🏗️ Concrete Curing Specification
+    </h4>
+    <p style="margin: 0 0 2rem 0; color: #64748b; font-size: 0.95rem;">
+        Configure your concrete curing temperature requirements. Default values follow ACI 301 and ASTM C1074 standards for mass concrete monitoring.
+    </p>
+    
+    <div style="background: white; padding: 2rem; border-radius: 1rem; box-shadow: var(--card-shadow); border: 2px solid #e2e8f0;">
+        <div class="form-grid" style="margin-bottom: 2rem;">
+            <!-- Job Information -->
+            <div>
+                <label for="job_id" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                    📋 Pour/Element ID
+                </label>
+                <input type="text" id="job_id" value="POUR_2024_001" 
+                       placeholder="e.g., POUR_2024_001, BRIDGE_DECK_A">
+                <small style="color: #6b7280; font-size: 0.85rem;">Concrete placement identifier for project records</small>
+            </div>
+            
+            <!-- Max Temperature -->
+            <div>
+                <label for="target_temp" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                    🌡️ Maximum Temperature (°C)
+                </label>
+                <input type="number" id="target_temp" value="71" min="50" max="85" step="1">
+                <small style="color: #6b7280; font-size: 0.85rem;">Typical limit: 71°C (160°F) for mass concrete, 65°C for standard</small>
+            </div>
+        </div>
+        
+        <div class="form-grid" style="margin-bottom: 2rem;">
+            <!-- Monitoring Duration -->
+            <div>
+                <label for="hold_time" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                    ⏱️ Monitoring Duration (hours)
+                </label>
+                <input type="number" id="hold_time" value="72" min="24" max="168" step="12">
+                <small style="color: #6b7280; font-size: 0.85rem;">72 hrs typical, up to 168 hrs (1 week) for mass concrete</small>
+            </div>
+            
+            <!-- Sensor Uncertainty -->
+            <div>
+                <label for="sensor_uncertainty" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                    📊 Sensor Uncertainty (°C)
+                </label>
+                <input type="number" id="sensor_uncertainty" value="1.0" min="0.5" max="3.0" step="0.5">
+                <small style="color: #6b7280; font-size: 0.85rem;">±1°C typical for embedded thermocouples</small>
+            </div>
+        </div>
+        
+        <!-- Advanced Settings Toggle -->
+        <details style="margin-top: 2rem;">
+            <summary style="font-weight: 600; color: #4c51bf; cursor: pointer; margin-bottom: 1rem;">
+                🔧 Advanced Concrete Monitoring Settings
+            </summary>
+            
+            <div style="background: #f8f9ff; padding: 1.5rem; border-radius: 0.75rem; margin-top: 1rem;">
+                <div class="form-grid" style="margin-bottom: 1.5rem;">
+                    <!-- Max Cooling Rate -->
+                    <div>
+                        <label for="max_ramp_rate" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                            📉 Max Cooling Rate (°C/hour)
+                        </label>
+                        <input type="number" id="max_ramp_rate" value="1.7" min="1.0" max="5.0" step="0.1">
+                        <small style="color: #6b7280; font-size: 0.85rem;">1.7°C/hr (3°F/hr) typical limit to prevent thermal cracking</small>
+                    </div>
+                    
+                    <!-- Temperature Differential -->
+                    <div>
+                        <label for="max_temp_differential" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                            🌡️ Max Temperature Differential (°C)
+                        </label>
+                        <input type="number" id="max_temp_differential" value="19" min="10" max="30" step="1">
+                        <small style="color: #6b7280; font-size: 0.85rem;">19°C (35°F) typical core-to-surface differential limit</small>
+                    </div>
+                </div>
+                
+                <!-- Minimum Temperature -->
+                <div class="form-grid" style="margin-bottom: 1.5rem;">
+                    <div>
+                        <label for="min_curing_temp" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                            🧊 Minimum Curing Temperature (°C)
+                        </label>
+                        <input type="number" id="min_curing_temp" value="10" min="5" max="20" step="1">
+                        <small style="color: #6b7280; font-size: 0.85rem;">10°C (50°F) minimum for proper hydration</small>
+                    </div>
+                    
+                    <!-- Maturity Calculation -->
+                    <div>
+                        <label for="maturity_enabled" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                            📊 Maturity Calculation
+                        </label>
+                        <select id="maturity_method" style="width: 100%; padding: 0.75rem;">
+                            <option value="nurse_saul">Nurse-Saul Method</option>
+                            <option value="arrhenius">Arrhenius Method</option>
+                            <option value="disabled">Disabled</option>
+                        </select>
+                        <small style="color: #6b7280; font-size: 0.85rem;">Calculate maturity for strength estimation</small>
+                    </div>
+                </div>
+                
+                <!-- Sensor Configuration -->
+                <div>
+                    <label style="font-weight: 600; color: #374151; margin-bottom: 1rem; display: block;">
+                        📡 Multi-Sensor Analysis
+                    </label>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; white-space: nowrap;">
+                            <input type="radio" name="sensor_mode" value="max_of_set" checked
+                                   style="accent-color: #667eea; margin: 0;">
+                            <span><strong>Maximum</strong> (peak temperature)</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; white-space: nowrap;">
+                            <input type="radio" name="sensor_mode" value="mean_of_set" 
+                                   style="accent-color: #667eea; margin: 0;">
+                            <span><strong>Average</strong> (typical analysis)</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; white-space: nowrap;">
+                            <input type="radio" name="sensor_mode" value="differential" 
+                                   style="accent-color: #667eea; margin: 0;">
+                            <span><strong>Differential</strong> (core vs surface)</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </details>
+        
+        <!-- Industry Info Box -->
+        <div style="background: #f9fafb; border: 1px solid #6b7280; border-radius: 0.75rem; padding: 1rem; margin-top: 2rem;">
+            <div style="display: flex; align-items: start; gap: 0.75rem;">
+                <div style="font-size: 1.25rem;">🏗️</div>
+                <div>
+                    <strong style="color: #374151;">ACI Mass Concrete Standards</strong>
+                    <p style="margin: 0.5rem 0 0 0; color: #374151; font-size: 0.9rem; line-height: 1.4;">
+                        Default values meet ACI 301 and ACI 207 requirements for mass concrete elements. 
+                        Temperature differential monitoring prevents thermal cracking. Peak temperature limits prevent delayed ettringite formation (DEF).
+                        Always consider local climate conditions and specify appropriate weather protection per ACI 306/308.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hidden JSON field for backend -->
+    <input type="hidden" id="spec_json" name="spec_json" value="">
+</div>
+{% endblock %}

@@ -1,0 +1,683 @@
+{% extends "layout.html" %}
+
+{% block title %}ProofKit - Temperature Log Validation{% endblock %}
+{% block description %}Generate inspector-ready proof PDFs from CSV temperature logs. Professional compliance documentation for regulatory inspections.{% endblock %}
+
+{% block hero %}
+<section class="hero-gradient">
+  <div class="container-wide">
+    <div class="hero-content">
+      <div class="hero-text">
+        <h1 class="hero-title">
+          Temperature Log<br>
+          <span class="gradient-text">Validation</span>
+        </h1>
+        <p class="hero-subtitle">
+          Generate inspector-ready proof PDFs from CSV temperature logs. 
+          Professional compliance documentation that passes regulatory inspections.
+        </p>
+        <div class="hero-actions">
+          <a href="/signup" class="btn btn-primary btn-lg">
+            <span>Start Free Trial</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="m9 18 6-6-6-6"/>
+            </svg>
+          </a>
+          <a href="/examples" class="btn btn-outline btn-lg">
+            <span>View Examples</span>
+          </a>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="hero-card">
+          <div class="card-header">
+            <div class="card-title">powder_coating_cure.csv</div>
+            <div class="status-badge pass">PASS</div>
+          </div>
+          <div class="mini-chart">
+            <svg viewBox="0 0 200 80" class="chart-svg">
+              <defs>
+                <linearGradient id="tempGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" style="stop-color:#667eea;stop-opacity:0.3"/>
+                  <stop offset="100%" style="stop-color:#667eea;stop-opacity:0.1"/>
+                </linearGradient>
+              </defs>
+              <path d="M10 60 L50 45 L90 35 L130 30 L170 32 L190 35" 
+                    fill="none" stroke="#667eea" stroke-width="2"/>
+              <path d="M10 60 L50 45 L90 35 L130 30 L170 32 L190 35 L190 80 L10 80 Z" 
+                    fill="url(#tempGradient)"/>
+              <line x1="10" y1="40" x2="190" y2="40" stroke="#22c55e" stroke-width="1" stroke-dasharray="3,3"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<!-- Key Benefits Section -->
+<section class="section">
+  <div class="container-wide">
+    <div class="section-header text-center">
+      <h2>Why ProofKit?</h2>
+      <p>Professional temperature validation that inspectors trust</p>
+    </div>
+    
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14,2 14,8 20,8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10,9 9,9 8,9"/>
+          </svg>
+        </div>
+        <h3>Inspector-Ready Reports</h3>
+        <p>Professional PDFs with QR codes, chain of custody, and cryptographic verification that regulators accept.</p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="m9 12 2 2 4-4"/>
+          </svg>
+        </div>
+        <h3>Regulatory Compliance</h3>
+        <p>Meets FDA 21 CFR Part 11, EU GMP, and ISO standards. Built for pharmaceutical, food, and medical device industries.</p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12,6 12,12 16,14"/>
+          </svg>
+        </div>
+        <h3>Instant Results</h3>
+        <p>Upload CSV, get proof PDF in seconds. No waiting, no complex setup. Works with any temperature logger format.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="section bg-subtle">
+  <div class="container-wide">
+    <div class="section-header text-center">
+      <h2>How It Works</h2>
+      <p>Three simple steps to compliance-ready documentation</p>
+    </div>
+    
+    <div class="process-grid">
+      <div class="process-step">
+        <div class="step-number">1</div>
+        <div class="step-content">
+          <h3>Upload CSV</h3>
+          <p>Drop your temperature log file and specify your validation requirements</p>
+          <div class="step-preview">
+            <div class="upload-preview">
+              <div class="file-icon">📄</div>
+              <span>temperature_log.csv</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="process-step">
+        <div class="step-number">2</div>
+        <div class="step-content">
+          <h3>Automated Analysis</h3>
+          <p>Our engine validates against your spec and generates detailed metrics</p>
+          <div class="step-preview">
+            <div class="analysis-preview">
+              <div class="metric-row">
+                <span>Hold Time:</span>
+                <span class="pass">47.2 min ✓</span>
+              </div>
+              <div class="metric-row">
+                <span>Max Temp:</span>
+                <span class="pass">185.3°C ✓</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="process-step">
+        <div class="step-number">3</div>
+        <div class="step-content">
+          <h3>Download Proof</h3>
+          <p>Get your signed PDF and evidence package ready for inspection</p>
+          <div class="step-preview">
+            <div class="download-preview">
+              <div class="doc-icon">📋</div>
+              <span>proof_certificate.pdf</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Industries Section -->
+<section class="section">
+  <div class="container-wide">
+    <div class="section-header text-center">
+      <h2>Trusted Across Industries</h2>
+      <p>Specialized validation for critical temperature processes</p>
+    </div>
+    
+    <div class="industries-grid">
+      <a href="/industries/powder-coating" class="industry-card">
+        <div class="industry-icon">🎨</div>
+        <h3>Powder Coating</h3>
+        <p>Cure validation for automotive, aerospace, and industrial coatings</p>
+        <div class="card-footer">
+          <span class="learn-more">Learn more →</span>
+        </div>
+      </a>
+      
+      <a href="/industries/autoclave" class="industry-card">
+        <div class="industry-icon">🏥</div>
+        <h3>Medical Sterilization</h3>
+        <p>Autoclave and ETO sterilization cycle validation</p>
+        <div class="card-footer">
+          <span class="learn-more">Learn more →</span>
+        </div>
+      </a>
+      
+      <a href="/industries/concrete" class="industry-card">
+        <div class="industry-icon">🏗️</div>
+        <h3>Concrete Curing</h3>
+        <p>Temperature monitoring for structural concrete projects</p>
+        <div class="card-footer">
+          <span class="learn-more">Learn more →</span>
+        </div>
+      </a>
+      
+      <a href="/industries/cold-chain" class="industry-card">
+        <div class="industry-icon">❄️</div>
+        <h3>Cold Chain</h3>
+        <p>Pharmaceutical and food storage temperature validation</p>
+        <div class="card-footer">
+          <span class="learn-more">Learn more →</span>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Call to Action -->
+<section class="section cta-section">
+  <div class="container">
+    <div class="cta-content text-center">
+      <h2>Ready to validate your temperature logs?</h2>
+      <p>Start generating inspector-ready proof documents in seconds</p>
+      <div class="cta-actions">
+        <a href="/signup" class="btn btn-primary btn-lg">
+          <span>Start Free Trial</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m9 18 6-6-6-6"/>
+          </svg>
+        </a>
+        <a href="/examples" class="btn btn-outline btn-lg">View Examples</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block styles %}
+<style>
+/* Hero Section */
+.hero-gradient {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 4rem 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-gradient::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('/static/hero/grid.svg') center/cover;
+  opacity: 0.1;
+}
+
+.hero-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+}
+
+.hero-title {
+  font-size: 3.5rem;
+  font-weight: 700;
+  line-height: 1.1;
+  margin: 0 0 1.5rem 0;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-subtitle {
+  font-size: 1.25rem;
+  line-height: 1.6;
+  opacity: 0.9;
+  margin: 0 0 2rem 0;
+  max-width: 500px;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Hero Visual Card */
+.hero-visual {
+  display: flex;
+  justify-content: center;
+}
+
+.hero-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 320px;
+  color: #334155;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.card-title {
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.status-badge.pass {
+  background: #10b981;
+  color: white;
+}
+
+.mini-chart {
+  height: 80px;
+}
+
+.chart-svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Section Styling */
+.section {
+  padding: 4rem 0;
+}
+
+.bg-subtle {
+  background: #fafbfc;
+}
+
+.section-header {
+  margin-bottom: 3rem;
+}
+
+.section-header h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0 0 1rem 0;
+  color: #1e293b;
+}
+
+.section-header p {
+  font-size: 1.2rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Features Grid */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.feature-card {
+  background: white;
+  border-radius: 1rem;
+  padding: 2rem;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px);
+}
+
+.feature-icon {
+  display: inline-flex;
+  padding: 1rem;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border-radius: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.feature-card h3 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  color: #1e293b;
+}
+
+.feature-card p {
+  color: #64748b;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Process Grid */
+.process-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 3rem;
+}
+
+.process-step {
+  text-align: center;
+}
+
+.step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+}
+
+.step-content h3 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  color: #1e293b;
+}
+
+.step-content p {
+  color: #64748b;
+  margin: 0 0 1.5rem 0;
+  line-height: 1.6;
+}
+
+.step-preview {
+  display: flex;
+  justify-content: center;
+}
+
+.upload-preview, .download-preview {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+  font-size: 0.9rem;
+  font-family: 'SF Mono', Monaco, monospace;
+}
+
+.analysis-preview {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  max-width: 200px;
+}
+
+.metric-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.metric-row:last-child {
+  margin-bottom: 0;
+}
+
+.metric-row .pass {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.file-icon, .doc-icon {
+  font-size: 1.5rem;
+}
+
+/* Industries Grid */
+.industries-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+}
+
+.industry-card {
+  background: white;
+  border-radius: 1rem;
+  padding: 2rem;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.industry-card:hover {
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px);
+  color: inherit;
+}
+
+.industry-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.industry-card h3 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  color: #1e293b;
+}
+
+.industry-card p {
+  color: #64748b;
+  line-height: 1.6;
+  margin: 0;
+  flex-grow: 1;
+}
+
+.card-footer {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.learn-more {
+  color: #667eea;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.industry-card:hover .learn-more {
+  color: #5a67d8;
+}
+
+/* CTA Section */
+.cta-section {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  color: white;
+}
+
+.cta-content h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0 0 1rem 0;
+}
+
+.cta-content p {
+  font-size: 1.2rem;
+  opacity: 0.9;
+  margin: 0 0 2rem 0;
+}
+
+.cta-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Button Styles */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+
+.btn-lg {
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+  color: white;
+}
+
+.btn-outline {
+  border-color: rgba(255, 255, 255, 0.3);
+  color: white;
+  background: transparent;
+}
+
+.btn-outline:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.cta-section .btn-outline {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .hero-content {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    text-align: center;
+  }
+  
+  .hero-title {
+    font-size: 2.5rem;
+  }
+  
+  .hero-actions {
+    justify-content: center;
+  }
+  
+  .section-header h2 {
+    font-size: 2rem;
+  }
+  
+  .features-grid,
+  .process-grid,
+  .industries-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .cta-content h2 {
+    font-size: 2rem;
+  }
+  
+  .btn-lg {
+    padding: 0.875rem 1.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-title {
+    font-size: 2rem;
+  }
+  
+  .hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .hero-actions .btn {
+    justify-content: center;
+  }
+}
+</style>
+{% endblock %}

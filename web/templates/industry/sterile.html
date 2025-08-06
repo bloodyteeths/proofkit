@@ -1,0 +1,219 @@
+{% extends "industry_base.html" %}
+
+{% set headline = "EtO Sterilization Validation" %}
+{% set subline = "Generate ISO 11135-compliant proof PDFs for ethylene oxide sterilization processes. Meet medical device, pharmaceutical, and spice sterilization requirements with temperature validation." %}
+
+{% set trust_badges = [
+    {"icon": "🏥", "text": "ISO 11135 Ready"},
+    {"icon": "💊", "text": "FDA 510(k) Support"},
+    {"icon": "🌿", "text": "ASTA Spice Standards"},
+    {"icon": "✅", "text": "EN 556 Compliant"}
+] %}
+
+{% set examples = {
+    "title": "Need EtO sterilization example data to test with?",
+    "description": "Download example temperature log files from ethylene oxide sterilization cycles:",
+    "files": [
+        {
+            "name": "medical_device_cycle.csv",
+            "description": "Medical devices - 54°C for 4 hours (standard EtO cycle)",
+            "icon": "✅",
+            "bg_color": "#f8f9ff",
+            "border_color": "#4CAF50",
+            "url": "/examples/sterile/medical_device_cycle.csv"
+        },
+        {
+            "name": "spice_sterilization.csv",
+            "description": "Spice treatment - 50°C for 6 hours (ASTA standards)",
+            "icon": "⚠️",
+            "bg_color": "#fff8f0",
+            "border_color": "#f59e0b",
+            "url": "/examples/sterile/spice_sterilization.csv"
+        },
+        {
+            "name": "temperature_excursion.csv",
+            "description": "Temperature excursion - exceeded 60°C limit, product damage risk",
+            "icon": "❌",
+            "bg_color": "#fef2f2",
+            "border_color": "#ef4444",
+            "url": "/examples/sterile/temperature_excursion.csv"
+        }
+    ],
+    "format_requirements": [
+        "<strong>Timestamp column:</strong> Full cycle logging (preconditioning through aeration)",
+        "<strong>Temperature columns:</strong> Chamber temp, load temp, hot spots (e.g., chamber_temp, load_probe_1)",
+        "<strong>Humidity data:</strong> Optional RH% sensors for process correlation",
+        "<strong>Cycle phases:</strong> Include phase markers in CSV comments (#)",
+        "<strong>Load documentation:</strong> Product type, packaging, sterility level in metadata"
+    ]
+} %}
+
+{% set faq = {
+    "title": "EtO Sterilization Validation FAQ",
+    "items": [
+        {
+            "question": "What EtO sterilization standards does ProofKit support?",
+            "answer": "ProofKit supports ISO 11135 (ethylene oxide sterilization), AAMI ST41 (healthcare facilities), ASTA guidelines for spice sterilization, and FDA medical device requirements. The system validates temperature control throughout preconditioning, sterilization, and aeration phases."
+        },
+        {
+            "question": "How do I validate different EtO cycle types (medical devices vs. food/spice)?",
+            "answer": "Different applications require specific temperature profiles:<br><strong>Medical devices:</strong> 37-63°C (typically 54°C) for 2-8 hours<br><strong>Spices/herbs:</strong> 50-55°C for 4-12 hours (ASTA standards)<br><strong>Pharmaceuticals:</strong> 45-60°C for 6-24 hours<br>Set temperature based on product heat sensitivity and required sterility assurance level (SAL)."
+        },
+        {
+            "question": "Can ProofKit track temperature uniformity across large chambers?",
+            "answer": "Yes! EtO chambers require excellent temperature uniformity (±3°C typical). Include multiple temperature probes in your CSV (probe_1, probe_2, etc.) positioned throughout the chamber and load. ProofKit will analyze temperature distribution and flag any probes that deviate beyond acceptable limits."
+        },
+        {
+            "question": "How does ProofKit handle the different EtO cycle phases?",
+            "answer": "EtO cycles have distinct phases with different temperature requirements:<br><strong>Preconditioning:</strong> Temperature and humidity equilibration<br><strong>Gas introduction:</strong> Maintain temperature during EtO injection<br><strong>Exposure:</strong> Hold temperature for sterilization time<br><strong>Evacuation/Aeration:</strong> Temperature control during gas removal<br>Use CSV comments to mark phase transitions for detailed analysis."
+        },
+        {
+            "question": "What safety considerations does ProofKit address for EtO validation?",
+            "answer": "ProofKit helps ensure safe EtO operations by:<br>• Monitoring temperature limits to prevent gas polymerization (>60°C danger)<br>• Validating uniform heating to prevent hot spots<br>• Documenting exposure time at temperature for efficacy<br>• Generating tamper-evident records for regulatory compliance<br>• Providing deviation reports for corrective action<br>Always follow OSHA and EPA guidelines for EtO safety."
+        }
+    ]
+} %}
+
+{% block spec_form %}
+<div style="margin-top: 3rem;">
+    <h4 style="color: #4c51bf; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+        🧪 EtO Sterilization Specification
+    </h4>
+    <p style="margin: 0 0 2rem 0; color: #64748b; font-size: 0.95rem;">
+        Configure your ethylene oxide sterilization requirements. Default values follow ISO 11135 and medical device industry standards.
+    </p>
+    
+    <div style="background: white; padding: 2rem; border-radius: 1rem; box-shadow: var(--card-shadow); border: 2px solid #e2e8f0;">
+        <div class="form-grid" style="margin-bottom: 2rem;">
+            <!-- Job Information -->
+            <div>
+                <label for="job_id" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                    📋 Cycle/Batch ID
+                </label>
+                <input type="text" id="job_id" value="ETO_2024_001" 
+                       placeholder="e.g., ETO_2024_001, BATCH_MD123">
+                <small style="color: #6b7280; font-size: 0.85rem;">EtO sterilization cycle identifier</small>
+            </div>
+            
+            <!-- Target Temperature -->
+            <div>
+                <label for="target_temp" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                    🌡️ Target Temperature (°C)
+                </label>
+                <input type="number" id="target_temp" value="54" min="37" max="65" step="1">
+                <small style="color: #6b7280; font-size: 0.85rem;">Typical: 54°C (medical devices), 50°C (spices), 45°C (heat-sensitive)</small>
+            </div>
+        </div>
+        
+        <div class="form-grid" style="margin-bottom: 2rem;">
+            <!-- Hold Time -->
+            <div>
+                <label for="hold_time" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                    ⏱️ Exposure Time (seconds)
+                </label>
+                <input type="number" id="hold_time" value="14400" min="3600" max="86400" step="1800">
+                <small style="color: #6b7280; font-size: 0.85rem;">14400s = 4 hrs (typical), range: 1-24 hours based on product</small>
+            </div>
+            
+            <!-- Sensor Uncertainty -->
+            <div>
+                <label for="sensor_uncertainty" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                    📊 Sensor Uncertainty (°C)
+                </label>
+                <input type="number" id="sensor_uncertainty" value="1.0" min="0.5" max="3.0" step="0.5">
+                <small style="color: #6b7280; font-size: 0.85rem;">±1°C typical for EtO chamber sensors</small>
+            </div>
+        </div>
+        
+        <!-- Advanced Settings Toggle -->
+        <details style="margin-top: 2rem;">
+            <summary style="font-weight: 600; color: #4c51bf; cursor: pointer; margin-bottom: 1rem;">
+                🔧 Advanced EtO Settings
+            </summary>
+            
+            <div style="background: #f8f9ff; padding: 1.5rem; border-radius: 0.75rem; margin-top: 1rem;">
+                <div class="form-grid" style="margin-bottom: 1.5rem;">
+                    <!-- Max Ramp Rate -->
+                    <div>
+                        <label for="max_ramp_rate" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                            📈 Max Heating Rate (°C/hour)
+                        </label>
+                        <input type="number" id="max_ramp_rate" value="10" min="5" max="30" step="1">
+                        <small style="color: #6b7280; font-size: 0.85rem;">Slow heating to prevent thermal damage (5-15°C/hr typical)</small>
+                    </div>
+                    
+                    <!-- Time to Threshold -->
+                    <div>
+                        <label for="max_time_to_threshold" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                            ⏰ Max Preconditioning Time (seconds)
+                        </label>
+                        <input type="number" id="max_time_to_threshold" value="7200" min="1800" max="14400" step="900">
+                        <small style="color: #6b7280; font-size: 0.85rem;">Maximum time allowed for temperature equilibration</small>
+                    </div>
+                </div>
+                
+                <!-- Hold Logic -->
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="font-weight: 600; color: #374151; margin-bottom: 1rem; display: block;">
+                        🔄 Exposure Time Logic
+                    </label>
+                    <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; white-space: nowrap;">
+                            <input type="radio" name="hold_logic" value="continuous" checked 
+                                   style="accent-color: #667eea; margin: 0;">
+                            <span><strong>Continuous</strong> - ISO requirement</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; white-space: nowrap;">
+                            <input type="radio" name="hold_logic" value="cumulative" 
+                                   style="accent-color: #667eea; margin: 0;">
+                            <span><strong>Cumulative</strong> - Special cycles only</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Sensor Configuration -->
+                <div>
+                    <label style="font-weight: 600; color: #374151; margin-bottom: 1rem; display: block;">
+                        📡 Chamber Mapping Logic
+                    </label>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; white-space: nowrap;">
+                            <input type="radio" name="sensor_mode" value="min_of_set" 
+                                   style="accent-color: #667eea; margin: 0;">
+                            <span><strong>Minimum</strong> (cold spot)</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; white-space: nowrap;">
+                            <input type="radio" name="sensor_mode" value="mean_of_set" checked
+                                   style="accent-color: #667eea; margin: 0;">
+                            <span><strong>Average</strong> (chamber average)</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; white-space: nowrap;">
+                            <input type="radio" name="sensor_mode" value="majority_over_threshold" 
+                                   style="accent-color: #667eea; margin: 0;">
+                            <span><strong>Majority</strong> (statistical)</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </details>
+        
+        <!-- Industry Info Box -->
+        <div style="background: #fef2f2; border: 1px solid #ef4444; border-radius: 0.75rem; padding: 1rem; margin-top: 2rem;">
+            <div style="display: flex; align-items: start; gap: 0.75rem;">
+                <div style="font-size: 1.25rem;">⚠️</div>
+                <div>
+                    <strong style="color: #dc2626;">EtO Safety & Compliance Notice</strong>
+                    <p style="margin: 0.5rem 0 0 0; color: #dc2626; font-size: 0.9rem; line-height: 1.4;">
+                        Ethylene oxide is carcinogenic and explosive. Temperature control is critical for safety and efficacy.
+                        Never exceed 60°C (gas polymerization risk). Exposure time begins when ALL load sensors reach target temperature.
+                        Always follow OSHA 29 CFR 1910.1047 and EPA regulations. Validate aeration cycles to ensure residual EtO levels meet FDA limits.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hidden JSON field for backend -->
+    <input type="hidden" id="spec_json" name="spec_json" value="">
+</div>
+{% endblock %}

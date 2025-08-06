@@ -1,0 +1,42 @@
+{
+  "version": "1.0",
+  "job": {
+    "job_id": "vaccine_storage_usp797_standard"
+  },
+  "spec": {
+    "method": "COLD_CHAIN",
+    "target_temp_C": 5.0,
+    "hold_time_s": 7776000,
+    "temp_band_C": {
+      "min": 2.0,
+      "max": 8.0
+    },
+    "sensor_uncertainty_C": 0.5
+  },
+  "data_requirements": {
+    "max_sample_period_s": 900.0,
+    "allowed_gaps_s": 1800.0
+  },
+  "sensor_selection": {
+    "mode": "mean_of_set",
+    "sensors": ["fridge_temp_C"],
+    "require_at_least": 1
+  },
+  "logic": {
+    "continuous": false,
+    "max_total_dips_s": 7200,
+    "excursion_tolerance": 0.01,
+    "mkt_calculation": true
+  },
+  "preconditions": {
+    "max_ramp_rate_C_per_min": 5.0,
+    "max_time_to_threshold_s": 1800
+  },
+  "reporting": {
+    "units": "C",
+    "language": "en",
+    "timezone": "UTC",
+    "usp797_compliant": true,
+    "cdc_vfc_compliant": true
+  }
+}

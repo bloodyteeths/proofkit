@@ -1,7 +1,26 @@
 <!-- Result template for HTMX partial response -->
 <section id="result-section" style="margin-top: 2rem;">
+    <!-- Approval Status Banner -->
+    {% if user and user.role == "qa" %}
+        {% if approved %}
+            <div style="background: #d1fae5; color: #065f46; padding: 1rem 1.5rem; border-radius: 0.75rem; margin-bottom: 1.5rem; border: 1px solid #a7f3d0; font-weight: 600;">
+                ✅ APPROVED - This validation has been approved by QA
+            </div>
+        {% else %}
+            <div style="background: #fef3c7; color: #92400e; padding: 1rem 1.5rem; border-radius: 0.75rem; margin-bottom: 1.5rem; border: 1px solid #fbbf24; font-weight: 600;">
+                ⏳ AWAITING QA APPROVAL - This validation requires QA sign-off
+                <br><small style="font-weight: 400; opacity: 0.8;">Contact your QA personnel to approve this job.</small>
+            </div>
+        {% endif %}
+    {% elif not approved %}
+        <div style="background: #f0f9ff; color: #1e40af; padding: 1rem 1.5rem; border-radius: 0.75rem; margin-bottom: 1.5rem; border: 1px solid #93c5fd; font-weight: 600;">
+            📋 DRAFT - This validation is awaiting QA approval
+            <br><small style="font-weight: 400; opacity: 0.8;">QA personnel will review and approve this result.</small>
+        </div>
+    {% endif %}
+    
     <!-- PASS/FAIL Banner -->
-    <div class="result-banner {{ 'pass' if result.pass else 'fail' }}">
+    <div style="padding: 1.5rem; border-radius: 0.75rem; margin-bottom: 2rem; text-align: center; font-size: 1.25rem; font-weight: 700; {% if result.pass %}background: #d1fae5; color: #065f46; border: 2px solid #10b981;{% else %}background: #fef2f2; color: #dc2626; border: 2px solid #ef4444;{% endif %}">
         {% if result.pass %}
             ✓ PASS - Temperature Requirements Met
         {% else %}
@@ -10,65 +29,71 @@
     </div>
     
     <!-- Metrics Table -->
-    <div class="metrics-table">
-        <h3>Validation Results</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Metric</th>
-                    <th>Value</th>
-                    <th>Requirement</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
+    <div class="card" style="margin-bottom: 2rem;">
+        <h3 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1.5rem; color: #1a1a1a; display: flex; align-items: center; gap: 0.5rem;">
+            📊 Validation Results
+        </h3>
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
+                <thead>
+                    <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                        <th style="padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #374151;">Metric</th>
+                        <th style="padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #374151;">Value</th>
+                        <th style="padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #374151;">Requirement</th>
+                        <th style="padding: 0.75rem 1rem; text-align: center; font-weight: 600; color: #374151;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
                 {% if result.metrics %}
-                    <tr>
-                        <td>Target Temperature</td>
-                        <td>{{ "%.1f°C" | format(result.metrics.target_temp_C) }}</td>
-                        <td>{{ "%.1f°C" | format(result.metrics.target_temp_C) }}</td>
-                        <td>✓</td>
+                    <tr style="border-bottom: 1px solid #e5e7eb;">
+                        <td style="padding: 0.75rem 1rem; color: #374151; font-weight: 500;">Target Temperature</td>
+                        <td style="padding: 0.75rem 1rem; color: #111827; font-weight: 600;">{{ "%.1f°C" | format(result.metrics.target_temp_C) }}</td>
+                        <td style="padding: 0.75rem 1rem; color: #6b7280;">{{ "%.1f°C" | format(result.metrics.target_temp_C) }}</td>
+                        <td style="padding: 0.75rem 1rem; text-align: center; color: #10b981; font-size: 1.1rem;">✓</td>
                     </tr>
-                    <tr>
-                        <td>Hold Time Required</td>
-                        <td>{{ result.metrics.required_hold_time_s }}s</td>
-                        <td>{{ result.metrics.required_hold_time_s }}s</td>
-                        <td>{{ "✓" if result.metrics.actual_hold_time_s >= result.metrics.required_hold_time_s else "✗" }}</td>
+                    <tr style="border-bottom: 1px solid #e5e7eb;">
+                        <td style="padding: 0.75rem 1rem; color: #374151; font-weight: 500;">Hold Time Required</td>
+                        <td style="padding: 0.75rem 1rem; color: #111827; font-weight: 600;">{{ result.metrics.required_hold_time_s }}s</td>
+                        <td style="padding: 0.75rem 1rem; color: #6b7280;">{{ result.metrics.required_hold_time_s }}s</td>
+                        <td style="padding: 0.75rem 1rem; text-align: center; {% if result.metrics.actual_hold_time_s >= result.metrics.required_hold_time_s %}color: #10b981;{% else %}color: #ef4444;{% endif %} font-size: 1.1rem;">{{ "✓" if result.metrics.actual_hold_time_s >= result.metrics.required_hold_time_s else "✗" }}</td>
                     </tr>
-                    <tr>
-                        <td>Hold Time Achieved</td>
-                        <td>{{ result.metrics.actual_hold_time_s }}s</td>
-                        <td>≥ {{ result.metrics.required_hold_time_s }}s</td>
-                        <td>{{ "✓" if result.metrics.actual_hold_time_s >= result.metrics.required_hold_time_s else "✗" }}</td>
+                    <tr style="border-bottom: 1px solid #e5e7eb;">
+                        <td style="padding: 0.75rem 1rem; color: #374151; font-weight: 500;">Hold Time Achieved</td>
+                        <td style="padding: 0.75rem 1rem; color: #111827; font-weight: 600; {% if result.metrics.actual_hold_time_s < result.metrics.required_hold_time_s %}color: #ef4444;{% endif %}">{{ result.metrics.actual_hold_time_s }}s</td>
+                        <td style="padding: 0.75rem 1rem; color: #6b7280;">≥ {{ result.metrics.required_hold_time_s }}s</td>
+                        <td style="padding: 0.75rem 1rem; text-align: center; {% if result.metrics.actual_hold_time_s >= result.metrics.required_hold_time_s %}color: #10b981;{% else %}color: #ef4444;{% endif %} font-size: 1.1rem;">{{ "✓" if result.metrics.actual_hold_time_s >= result.metrics.required_hold_time_s else "✗" }}</td>
                     </tr>
                     {% if result.metrics.max_temp_C %}
-                    <tr>
-                        <td>Maximum Temperature</td>
-                        <td>{{ "%.1f°C" | format(result.metrics.max_temp_C) }}</td>
-                        <td>-</td>
-                        <td>ℹ</td>
+                    <tr style="border-bottom: 1px solid #e5e7eb;">
+                        <td style="padding: 0.75rem 1rem; color: #374151; font-weight: 500;">Maximum Temperature</td>
+                        <td style="padding: 0.75rem 1rem; color: #111827; font-weight: 600;">{{ "%.1f°C" | format(result.metrics.max_temp_C) }}</td>
+                        <td style="padding: 0.75rem 1rem; color: #6b7280;">-</td>
+                        <td style="padding: 0.75rem 1rem; text-align: center; color: #3b82f6; font-size: 1.1rem;">ℹ</td>
                     </tr>
                     {% endif %}
                     {% if result.metrics.time_to_threshold_s %}
-                    <tr>
-                        <td>Time to Threshold</td>
-                        <td>{{ result.metrics.time_to_threshold_s }}s</td>
-                        <td>-</td>
-                        <td>ℹ</td>
+                    <tr style="border-bottom: 1px solid #e5e7eb;">
+                        <td style="padding: 0.75rem 1rem; color: #374151; font-weight: 500;">Time to Threshold</td>
+                        <td style="padding: 0.75rem 1rem; color: #111827; font-weight: 600;">{{ result.metrics.time_to_threshold_s }}s</td>
+                        <td style="padding: 0.75rem 1rem; color: #6b7280;">-</td>
+                        <td style="padding: 0.75rem 1rem; text-align: center; color: #3b82f6; font-size: 1.1rem;">ℹ</td>
                     </tr>
                     {% endif %}
                 {% endif %}
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </div>
     
     <!-- Reasons for Pass/Fail -->
     {% if result.reasons %}
-    <div style="margin-top: 1rem;">
-        <h4>{% if result.pass %}Validation Passed{% else %}Validation Failed{% endif %}</h4>
-        <ul>
+    <div class="card" style="margin-bottom: 2rem;">
+        <h4 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: {% if result.pass %}#065f46{% else %}#dc2626{% endif %}; display: flex; align-items: center; gap: 0.5rem;">
+            {% if result.pass %}✅ Validation Passed{% else %}❌ Validation Failed{% endif %}
+        </h4>
+        <ul style="margin: 0; padding-left: 1.5rem; color: #374151; line-height: 1.6;">
             {% for reason in result.reasons %}
-                <li>{{ reason }}</li>
+                <li style="margin-bottom: 0.5rem;">{{ reason }}</li>
             {% endfor %}
         </ul>
     </div>
@@ -76,47 +101,115 @@
     
     <!-- Warnings -->
     {% if result.warnings %}
-    <div style="margin-top: 1rem;">
-        <h4>Warnings</h4>
-        <ul style="color: var(--warning-color);">
+    <div class="card" style="margin-bottom: 2rem; border: 1px solid #fbbf24; background: #fffbeb;">
+        <h4 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: #92400e; display: flex; align-items: center; gap: 0.5rem;">
+            ⚠️ Warnings
+        </h4>
+        <ul style="margin: 0; padding-left: 1.5rem; color: #92400e; line-height: 1.6;">
             {% for warning in result.warnings %}
-                <li>{{ warning }}</li>
+                <li style="margin-bottom: 0.5rem;">{{ warning }}</li>
             {% endfor %}
         </ul>
     </div>
     {% endif %}
     
     <!-- Download Links -->
-    <div class="download-links">
-        <h3>Download Results</h3>
-        <p>Your validation results are ready for download:</p>
+    <div class="card" style="margin-bottom: 2rem;">
+        <h3 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem; color: #1a1a1a; display: flex; align-items: center; gap: 0.5rem;">
+            📥 Download Results
+        </h3>
+        <p style="color: #6b7280; margin-bottom: 2rem; line-height: 1.6;">Your validation results are ready for download:</p>
         
-        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-            <a href="{{ result.urls.pdf }}" class="primary" role="button">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+            <a href="{{ result.urls.pdf }}" class="download-btn download-btn-pdf" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.75rem 1.5rem; background: #667eea; color: white; text-decoration: none; border-radius: 0.5rem; font-weight: 600; transition: all 0.2s; border: none; cursor: pointer;">
                 📄 Download Proof PDF
             </a>
-            <a href="{{ result.urls.zip }}" class="secondary" role="button">
+            <a href="{{ result.urls.zip }}" class="download-btn download-btn-zip" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.75rem 1.5rem; background: #48bb78; color: white; text-decoration: none; border-radius: 0.5rem; font-weight: 600; transition: all 0.2s; border: none; cursor: pointer;">
                 📦 Download Evidence Bundle
             </a>
-            <a href="{{ result.urls.verify }}" class="outline" role="button">
+            <a href="{{ result.urls.verify }}" class="download-btn download-btn-verify" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.75rem 1.5rem; background: transparent; color: #667eea; text-decoration: none; border-radius: 0.5rem; font-weight: 600; transition: all 0.2s; border: 2px solid #667eea; cursor: pointer;">
                 🔍 Verify Results
             </a>
+            {% if user and user.role == "qa" and not approved %}
+            <a href="/approve/{{ result.id }}" class="download-btn download-btn-qa" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.75rem 1.5rem; background: #f59e0b; color: white; text-decoration: none; border-radius: 0.5rem; font-weight: 600; transition: all 0.2s; border: none; cursor: pointer;">
+                🔒 QA Approval
+            </a>
+            {% endif %}
+            {% if user %}
+            <a href="/api/validation-pack/{{ result.id }}" class="download-btn download-btn-pack" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.75rem 1.5rem; background: transparent; color: #8b5cf6; text-decoration: none; border-radius: 0.5rem; font-weight: 600; transition: all 0.2s; border: 2px solid #8b5cf6; cursor: pointer;">
+                📋 Validation Pack
+            </a>
+            {% endif %}
         </div>
+        {% if user and user.role == "op" and not approved %}
+        <div style="margin-top: 1.5rem;">
+            <label for="qa-approval-link"><strong>Send for QA Approval:</strong></label>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <input id="qa-approval-link" type="text" value="{{ request.url.scheme }}://{{ request.url.netloc }}/approve/{{ result.id }}" readonly style="width: 350px; max-width: 100%;">
+                <button type="button" id="copy-qa-link-btn">Copy Link</button>
+            </div>
+            <small>Share this link with a QA user to approve this job.</small>
+        </div>
+        {% endif %}
         
-        <details style="margin-top: 1rem;">
-            <summary><strong>About these files</strong></summary>
-            <ul>
-                <li><strong>Proof PDF:</strong> Inspector-ready document with validation results, charts, and QR code for verification</li>
-                <li><strong>Evidence Bundle:</strong> ZIP file containing all input data, normalized data, decision logs, and integrity manifest</li>
-                <li><strong>Verify Page:</strong> Independent verification of the evidence bundle using cryptographic hashes</li>
+        <details style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e5e7eb;">
+            <summary style="cursor: pointer; font-weight: 600; color: #374151; font-size: 1.1rem; margin-bottom: 1rem;">About these files</summary>
+            <ul style="margin: 0; padding-left: 1.5rem; color: #6b7280; line-height: 1.6; font-size: 0.95rem;">
+                <li style="margin-bottom: 0.75rem;"><strong style="color: #374151;">Proof PDF:</strong> Inspector-ready document with validation results, charts, and QR code for verification</li>
+                <li style="margin-bottom: 0.75rem;"><strong style="color: #374151;">Evidence Bundle:</strong> ZIP file containing all input data, normalized data, decision logs, and integrity manifest</li>
+                <li style="margin-bottom: 0.75rem;"><strong style="color: #374151;">Verify Page:</strong> Independent verification of the evidence bundle using cryptographic hashes</li>
             </ul>
         </details>
     </div>
     
     <!-- Process Another File -->
-    <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--muted-border-color);">
-        <button type="button" onclick="location.reload()" class="outline">
+    <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e5e7eb; text-align: center;">
+        <button type="button" id="reload-btn" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.75rem 1.5rem; background: transparent; color: #6b7280; border: 2px solid #d1d5db; border-radius: 0.5rem; font-weight: 600; transition: all 0.2s; cursor: pointer; font-size: 1rem;">
             🔄 Process Another File
         </button>
     </div>
 </section>
+
+<!-- CSS for hover effects -->
+<style>
+.download-btn {
+    transition: all 0.2s;
+}
+
+.download-btn-pdf:hover {
+    background: #5a67d8 !important;
+    transform: translateY(-2px) !important;
+}
+
+.download-btn-zip:hover {
+    background: #38a169 !important;
+    transform: translateY(-2px) !important;
+}
+
+.download-btn-verify:hover {
+    background: #667eea !important;
+    color: white !important;
+    transform: translateY(-2px) !important;
+}
+
+.download-btn-qa:hover {
+    background: #d97706 !important;
+    transform: translateY(-2px) !important;
+}
+
+.download-btn-pack:hover {
+    background: #8b5cf6 !important;
+    color: white !important;
+    transform: translateY(-2px) !important;
+}
+
+#reload-btn {
+    transition: all 0.2s;
+}
+
+#reload-btn:hover {
+    border-color: #9ca3af !important;
+    color: #374151 !important;
+    transform: translateY(-2px) !important;
+}
+</style>

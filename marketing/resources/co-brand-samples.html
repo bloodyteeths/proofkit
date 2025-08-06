@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProofKit Partner Resources - Co-Branded Temperature Validation</title>
+    <meta name="description" content="Co-branded temperature validation certificates and partnership resources for data logger manufacturers">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+        
+        .hero-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            background: white;
+            margin: -2rem auto 2rem auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .section {
+            padding: 3rem 2rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .section:last-child {
+            border-bottom: none;
+        }
+        
+        .section-title {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .benefit-card {
+            background: #f7fafc;
+            padding: 2rem;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .benefit-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 1rem;
+        }
+        
+        .benefit-description {
+            color: #4a5568;
+        }
+        
+        .sample-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .sample-card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .sample-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .sample-header {
+            background: #667eea;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        .sample-vendor {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        
+        .sample-type {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .sample-preview {
+            padding: 1.5rem;
+        }
+        
+        .sample-image {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(45deg, #f0f0f0 25%, transparent 25%), 
+                        linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), 
+                        linear-gradient(45deg, transparent 75%, #f0f0f0 75%), 
+                        linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            border: 2px dashed #cbd5e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #718096;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+        
+        .sample-details {
+            font-size: 0.9rem;
+            color: #4a5568;
+            line-height: 1.5;
+        }
+        
+        .download-btn {
+            background: #667eea;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 1rem;
+            width: 100%;
+        }
+        
+        .download-btn:hover {
+            background: #5a67d8;
+        }
+        
+        .integration-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .step-card {
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .step-number {
+            display: inline-block;
+            width: 3rem;
+            height: 3rem;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            line-height: 3rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .step-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 1rem;
+        }
+        
+        .step-description {
+            color: #4a5568;
+        }
+        
+        .cta-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 3rem 2rem;
+        }
+        
+        .cta-title {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .cta-description {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: white;
+            color: #667eea;
+            padding: 1rem 2rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .partner-logos {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+            margin-top: 2rem;
+            opacity: 0.7;
+        }
+        
+        .partner-logo {
+            width: 120px;
+            height: 60px;
+            background: white;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4a5568;
+            font-weight: 500;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .stat-card {
+            text-align: center;
+            padding: 2rem;
+            background: #f7fafc;
+            border-radius: 8px;
+        }
+        
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #667eea;
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 1rem;
+            color: #4a5568;
+            margin-top: 0.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2rem;
+            }
+            
+            .container {
+                padding: 0 1rem;
+            }
+            
+            .section {
+                padding: 2rem 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1 class="hero-title">ProofKit Partner Resources</h1>
+            <p class="hero-subtitle">Co-branded temperature validation certificates for data logger manufacturers</p>
+        </div>
+    </header>
+
+    <main class="main-content container">
+        <section class="section">
+            <h2 class="section-title">Partnership Benefits</h2>
+            <div class="benefits-grid">
+                <div class="benefit-card">
+                    <h3 class="benefit-title">🏢 Enhanced Value Proposition</h3>
+                    <p class="benefit-description">Offer customers instant compliance documentation alongside your hardware, differentiating from competitors who only provide raw data logging.</p>
+                </div>
+                <div class="benefit-card">
+                    <h3 class="benefit-title">💰 Revenue Sharing</h3>
+                    <p class="benefit-description">Earn 15% of all certificate fees generated using your co-branded templates. Average customer generates $84/month in certificates.</p>
+                </div>
+                <div class="benefit-card">
+                    <h3 class="benefit-title">🔒 Customer Retention</h3>
+                    <p class="benefit-description">Integrated validation workflow increases customer stickiness. 73% of users continue service after first certificate generation.</p>
+                </div>
+                <div class="benefit-card">
+                    <h3 class="benefit-title">⚡ Zero Development Time</h3>
+                    <p class="benefit-description">We handle all technical integration. Simply provide CSV format documentation and branding assets to get started.</p>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-number">3,200+</span>
+                    <span class="stat-label">Weekly Certificates</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">47</span>
+                    <span class="stat-label">Integration Requests</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">73%</span>
+                    <span class="stat-label">User Retention Rate</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">15%</span>
+                    <span class="stat-label">Revenue Share</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Co-Branded Certificate Samples</h2>
+            <p style="text-align: center; color: #4a5568; margin-bottom: 2rem;">
+                See how your brand integrates with ProofKit's validation engine across different industries
+            </p>
+
+            <div class="sample-gallery">
+                <div class="sample-card">
+                    <div class="sample-header">
+                        <div class="sample-vendor">Omega + ProofKit</div>
+                        <div class="sample-type">Powder Coat Cure Validation</div>
+                    </div>
+                    <div class="sample-preview">
+                        <div class="sample-image">
+                            Omega Logo + ProofKit Validation<br>
+                            ISO 2368 Compliant Certificate
+                        </div>
+                        <div class="sample-details">
+                            <strong>Application:</strong> Industrial powder coating cure validation<br>
+                            <strong>Compliance:</strong> ISO 2368, Qualicoat standards<br>
+                            <strong>Features:</strong> Multi-sensor averaging, ramp rate analysis, QR verification
+                        </div>
+                        <button class="download-btn">Download Sample PDF</button>
+                    </div>
+                </div>
+
+                <div class="sample-card">
+                    <div class="sample-header">
+                        <div class="sample-vendor">Testo + ProofKit</div>
+                        <div class="sample-type">Autoclave Sterilization</div>
+                    </div>
+                    <div class="sample-preview">
+                        <div class="sample-image">
+                            Testo Logo + ProofKit Validation<br>
+                            CFR 11 Compliant Certificate
+                        </div>
+                        <div class="sample-details">
+                            <strong>Application:</strong> Pharmaceutical autoclave validation<br>
+                            <strong>Compliance:</strong> 21 CFR Part 11, FDA requirements<br>
+                            <strong>Features:</strong> Fo value calculation, pressure verification, digital signatures
+                        </div>
+                        <button class="download-btn">Download Sample PDF</button>
+                    </div>
+                </div>
+
+                <div class="sample-card">
+                    <div class="sample-header">
+                        <div class="sample-vendor">Onset + ProofKit</div>
+                        <div class="sample-type">Cold Chain Monitoring</div>
+                    </div>
+                    <div class="sample-preview">
+                        <div class="sample-image">
+                            HOBO Logo + ProofKit Validation<br>
+                            USP 797 Compliant Certificate
+                        </div>
+                        <div class="sample-details">
+                            <strong>Application:</strong> Vaccine storage validation<br>
+                            <strong>Compliance:</strong> USP 797, CDC guidelines<br>
+                            <strong>Features:</strong> Excursion analysis, time-in-range reporting, alert documentation
+                        </div>
+                        <button class="download-btn">Download Sample PDF</button>
+                    </div>
+                </div>
+
+                <div class="sample-card">
+                    <div class="sample-header">
+                        <div class="sample-vendor">Fluke + ProofKit</div>
+                        <div class="sample-type">HACCP Cooling Validation</div>
+                    </div>
+                    <div class="sample-preview">
+                        <div class="sample-image">
+                            Fluke Logo + ProofKit Validation<br>
+                            HACCP 135-70-41 Certificate
+                        </div>
+                        <div class="sample-details">
+                            <strong>Application:</strong> Food safety cooling curve validation<br>
+                            <strong>Compliance:</strong> HACCP, FDA Food Code<br>
+                            <strong>Features:</strong> 135-70-41 rule verification, cooling rate analysis, inspector-ready format
+                        </div>
+                        <button class="download-btn">Download Sample PDF</button>
+                    </div>
+                </div>
+
+                <div class="sample-card">
+                    <div class="sample-header">
+                        <div class="sample-vendor">Lascar + ProofKit</div>
+                        <div class="sample-type">Concrete Curing</div>
+                    </div>
+                    <div class="sample-preview">
+                        <div class="sample-image">
+                            Lascar Logo + ProofKit Validation<br>
+                            ASTM C31 Compliant Certificate
+                        </div>
+                        <div class="sample-details">
+                            <strong>Application:</strong> Construction concrete curing validation<br>
+                            <strong>Compliance:</strong> ASTM C31, ACI 306<br>
+                            <strong>Features:</strong> Temperature-time integration, ambient monitoring, construction-ready reports
+                        </div>
+                        <button class="download-btn">Download Sample PDF</button>
+                    </div>
+                </div>
+
+                <div class="sample-card">
+                    <div class="sample-header">
+                        <div class="sample-vendor">Vaisala + ProofKit</div>
+                        <div class="sample-type">Environmental Chamber</div>
+                    </div>
+                    <div class="sample-preview">
+                        <div class="sample-image">
+                            Vaisala Logo + ProofKit Validation<br>
+                            IQ/OQ/PQ Certificate
+                        </div>
+                        <div class="sample-details">
+                            <strong>Application:</strong> Environmental chamber qualification<br>
+                            <strong>Compliance:</strong> GMP, ISO 17025<br>
+                            <strong>Features:</strong> Multi-point mapping, uniformity analysis, qualification documentation
+                        </div>
+                        <button class="download-btn">Download Sample PDF</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Integration Process</h2>
+            <p style="text-align: center; color: #4a5568; margin-bottom: 2rem;">
+                Simple 4-step process to launch your co-branded validation service
+            </p>
+
+            <div class="integration-steps">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h3 class="step-title">Send Assets</h3>
+                    <p class="step-description">Provide logo files (SVG/PNG), CSV format documentation, and sample data files from your loggers.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h3 class="step-title">Template Design</h3>
+                    <p class="step-description">We create co-branded PDF templates and CSV import parsers optimized for your logger formats.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h3 class="step-title">Beta Testing</h3>
+                    <p class="step-description">Test with select customers, gather feedback, and refine the integration based on real-world usage.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">4</div>
+                    <h3 class="step-title">Launch & Promote</h3>
+                    <p class="step-description">Go live with co-marketing announcement, dedicated resource page, and revenue sharing begins.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Technical Specifications</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+                <div>
+                    <h3 style="color: #667eea; margin-bottom: 1rem;">🔧 Integration Requirements</h3>
+                    <ul style="color: #4a5568; line-height: 1.8;">
+                        <li>CSV column header documentation</li>
+                        <li>Timestamp format specification</li>
+                        <li>Sample data files (2-3 examples)</li>
+                        <li>Logo files (SVG preferred, high-res PNG acceptable)</li>
+                        <li>Brand guidelines (colors, fonts, placement rules)</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 style="color: #667eea; margin-bottom: 1rem;">📊 Supported Validations</h3>
+                    <ul style="color: #4a5568; line-height: 1.8;">
+                        <li>Temperature threshold analysis with hysteresis</li>
+                        <li>Hold time calculation (continuous/cumulative)</li>
+                        <li>Ramp rate analysis using central differences</li>
+                        <li>Multi-sensor selection and averaging</li>
+                        <li>Data quality checks (gaps, sampling rate)</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 style="color: #667eea; margin-bottom: 1rem;">📋 Compliance Standards</h3>
+                    <ul style="color: #4a5568; line-height: 1.8;">
+                        <li>21 CFR Part 11 (Electronic Records)</li>
+                        <li>ISO 2368 (Powder Coating)</li>
+                        <li>HACCP 135-70-41 (Food Safety)</li>
+                        <li>USP 797 (Pharmaceutical Storage)</li>
+                        <li>ASTM C31 (Concrete Curing)</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 style="color: #667eea; margin-bottom: 1rem;">🛡️ Security Features</h3>
+                    <ul style="color: #4a5568; line-height: 1.8;">
+                        <li>SHA-256 file integrity verification</li>
+                        <li>PDF/A-3 format for long-term archival</li>
+                        <li>QR codes linking to verification portal</li>
+                        <li>Deterministic processing (identical inputs = identical outputs)</li>
+                        <li>No data retention (files deleted after processing)</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Current Partners</h2>
+            <p style="text-align: center; color: #4a5568; margin-bottom: 2rem;">
+                Join leading manufacturers already providing validated temperature documentation
+            </p>
+            <div class="partner-logos">
+                <div class="partner-logo">Partner Logo 1</div>
+                <div class="partner-logo">Partner Logo 2</div>
+                <div class="partner-logo">Partner Logo 3</div>
+                <div class="partner-logo">Your Logo Here</div>
+            </div>
+        </section>
+    </main>
+
+    <section class="cta-section">
+        <div class="container">
+            <h2 class="cta-title">Ready to Partner with ProofKit?</h2>
+            <p class="cta-description">
+                Join the temperature validation revolution. Provide your customers with instant compliance documentation while generating additional revenue for your business.
+            </p>
+            <a href="mailto:partnerships@proofkit.com?subject=Partnership Inquiry&body=Hi, I'm interested in discussing a co-branding partnership for our temperature logging products." class="cta-button">
+                Start Partnership Discussion
+            </a>
+            <div style="margin-top: 2rem; font-size: 0.9rem; opacity: 0.8;">
+                <p>📧 partnerships@proofkit.com | 📞 +1 (555) 123-4567</p>
+                <p>Average response time: 24 hours | Partnership setup: 1-2 weeks</p>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Add download tracking for sample PDFs
+        document.querySelectorAll('.download-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const vendor = this.closest('.sample-card').querySelector('.sample-vendor').textContent;
+                
+                // Track download attempt
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'sample_download', {
+                        'vendor': vendor,
+                        'source': 'co_brand_samples_page'
+                    });
+                }
+                
+                // Show modal or redirect to actual download
+                alert(`Sample PDF download for ${vendor} - Implementation pending`);
+                
+                // In production, this would trigger actual PDF download:
+                // window.open(`/samples/${vendor.toLowerCase().replace(' ', '_')}_sample.pdf`);
+            });
+        });
+
+        // Add CTA button tracking
+        document.querySelector('.cta-button').addEventListener('click', function() {
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'partnership_inquiry', {
+                    'source': 'co_brand_samples_cta',
+                    'method': 'email'
+                });
+            }
+        });
+
+        // Add smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>

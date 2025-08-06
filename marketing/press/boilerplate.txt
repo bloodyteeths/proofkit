@@ -1,0 +1,63 @@
+ProofKit Company Boilerplate
+============================
+
+SHORT VERSION (50 words)
+------------------------
+ProofKit transforms industrial temperature data into compliant quality certificates in seconds. Serving powder coating, food safety, pharmaceutical, medical device, and construction industries, ProofKit generates tamper-evident PDF/A-3 certificates with cryptographic integrity verification for regulatory compliance and audit requirements.
+
+MEDIUM VERSION (100 words)
+--------------------------
+ProofKit is a specialized quality assurance platform that converts CSV temperature logs into regulatory-compliant certificates for critical industrial processes. Supporting industries including powder coating (ISO 2368), food safety (HACCP), pharmaceutical cold chain (USP 797), medical device sterilization (CFR 11), and construction concrete curing (ASTM C31), ProofKit generates deterministic, tamper-evident PDF/A-3 certificates with SHA-256 integrity verification. The platform processes data in memory without cloud storage, ensuring security and privacy while delivering instant certificate generation with public verification capabilities. Founded in 2025, ProofKit serves quality assurance professionals requiring audit-ready documentation.
+
+LONG VERSION (200 words)
+------------------------
+ProofKit is a cutting-edge quality assurance platform designed to transform industrial temperature monitoring data into regulatory-compliant, tamper-evident certificates. The system addresses critical compliance needs across multiple industries including powder coating facilities requiring ISO 2368 and Qualicoat certification, food production operations following HACCP cooling curve protocols, pharmaceutical cold chain management under USP 797 guidelines, medical device manufacturers adhering to CFR 11 sterilization requirements, and construction companies documenting concrete curing per ASTM C31 standards.
+
+The platform's core innovation lies in its deterministic processing engine that ensures identical CSV inputs always produce identical PDF certificates and cryptographic hashes, providing unparalleled reliability for audit and regulatory purposes. Each certificate is generated in PDF/A-3 archival format with embedded evidence files, SHA-256 integrity verification, and RFC 3161 timestamping, creating a complete chain of custody for quality documentation.
+
+ProofKit prioritizes data security through memory-only processing with zero cloud persistence, TLS 1.3 encryption, and comprehensive input validation. The system typically processes certificates in under 2 seconds while maintaining 99.9% uptime. A public verification portal allows instant authentication of any ProofKit certificate through QR code scanning or hash verification.
+
+Founded in 2025, ProofKit serves quality assurance professionals, compliance officers, and industrial operators who require audit-ready documentation that meets the highest standards of regulatory scrutiny and technical integrity.
+
+PRODUCT DESCRIPTION
+-------------------
+ProofKit automatically validates temperature data against industry specifications, checking for:
+• Temperature threshold achievement and continuous hold times
+• Sensor uncertainty calculations and conservative thresholds  
+• Data completeness with gap detection and quality validation
+• Ramp rate compliance to prevent material damage
+• Multi-sensor redundancy with configurable selection logic
+• Hysteresis application to prevent false threshold crossings
+
+The platform supports both continuous and cumulative hold logic, accommodates multiple temperature units (Celsius/Fahrenheit), and provides detailed pass/fail reasoning with visual temperature charts embedded in each certificate.
+
+COMPETITIVE ADVANTAGES
+---------------------
+• Only platform providing deterministic, reproducible quality certificates
+• Comprehensive cryptographic integrity with SHA-256 manifests
+• Zero data persistence for maximum security and privacy
+• Multi-industry specification library with expert-validated parameters
+• Sub-2-second processing with enterprise-grade uptime
+• Public verification system for certificate authenticity
+• PDF/A-3 archival format ensuring 25+ year document readability
+
+TECHNICAL HIGHLIGHTS
+-------------------
+Built on FastAPI with Pydantic v2 validation, pandas data processing, matplotlib visualization, and ReportLab PDF generation. The system implements streaming CSV parsing for large files, conservative statistical calculations, and comprehensive error handling with clear user feedback.
+
+Key algorithms include hysteresis-based threshold detection, central difference ramp rate calculation, and multi-sensor selection logic supporting minimum-of-set, mean, and majority configurations.
+
+INDUSTRY APPLICATIONS
+--------------------
+• Powder Coating: PMT sensor validation for cure cycle compliance
+• Food Safety: HACCP cooling curve verification (135°F to 70°F protocols)
+• Pharmaceutical: Cold chain temperature monitoring and deviation detection  
+• Medical Devices: Autoclave sterilization with F0 value calculations
+• Construction: Concrete curing temperature documentation and ASTM C31 compliance
+
+COMPANY CONTACT
+---------------
+Website: https://proofkit.dev
+Email: hello@proofkit.dev
+Press: press@proofkit.dev
+Support: support@proofkit.dev

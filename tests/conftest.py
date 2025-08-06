@@ -191,14 +191,16 @@ def simple_temp_data() -> pd.DataFrame:
     """
     timestamps = pd.date_range(
         start="2024-01-15T10:00:00Z",
-        periods=25,
+        periods=26,
         freq="30s",
         tz="UTC"
     )
     
     # Create temperature data that passes - ramps up to 182°C and holds
-    temps_1 = [165.0, 170.0, 175.0, 179.0, 181.0] + [182.0] * 20
-    temps_2 = [164.5, 169.5, 174.5, 178.5, 180.5] + [181.5] * 20
+    # Conservative threshold = 180 + 2 = 182°C, so min_of_set must be >= 182°C
+    # Need 600s hold time = 20 intervals, so ramp in 5 samples, hold for 21 samples
+    temps_1 = [165.0, 170.0, 175.0, 179.0, 181.0] + [183.0] * 21
+    temps_2 = [164.5, 169.5, 174.5, 178.5, 180.5] + [182.5] * 21
     
     return pd.DataFrame({
         "timestamp": timestamps,
@@ -217,14 +219,15 @@ def failing_temp_data() -> pd.DataFrame:
     """
     timestamps = pd.date_range(
         start="2024-01-15T10:00:00Z",
-        periods=15,
+        periods=25,
         freq="30s",
         tz="UTC"
     )
     
     # Temperature data that doesn't reach target or hold long enough
-    temps_1 = [165.0, 170.0, 175.0, 179.0, 181.0] + [175.0] * 10
-    temps_2 = [164.5, 169.5, 174.5, 178.5, 180.5] + [174.5] * 10
+    # Max temp is 180.5°C which is below conservative threshold of 182°C
+    temps_1 = [165.0, 170.0, 175.0, 179.0, 181.0] + [175.0] * 20
+    temps_2 = [164.5, 169.5, 174.5, 178.5, 180.5] + [174.5] * 20
     
     return pd.DataFrame({
         "timestamp": timestamps,
@@ -243,14 +246,15 @@ def fahrenheit_temp_data() -> pd.DataFrame:
     """
     timestamps = pd.date_range(
         start="2024-01-15T10:00:00Z",
-        periods=25,
+        periods=26,
         freq="30s",
         tz="UTC"
     )
     
-    # Temperature data in Fahrenheit: ~356°F (180°C)
-    temps_1_f = [329.0, 338.0, 347.0, 354.0, 358.0] + [356.0] * 20
-    temps_2_f = [328.0, 337.0, 346.0, 353.0, 357.0] + [355.0] * 20
+    # Temperature data in Fahrenheit: correspond to passing Celsius values
+    # 183°C = 361.4°F, 182.5°C = 360.5°F (above 182°C threshold)
+    temps_1_f = [329.0, 338.0, 347.0, 354.0, 358.0] + [361.4] * 21
+    temps_2_f = [328.0, 337.0, 346.0, 353.0, 357.0] + [360.5] * 21
     
     return pd.DataFrame({
         "timestamp": timestamps,
@@ -279,8 +283,8 @@ def gaps_temp_data() -> pd.DataFrame:
     for i in range(8, 15):  # Resume at 4 minutes
         timestamps.append(base_time + pd.Timedelta(seconds=i*30))
     
-    temps_1 = [165.0, 170.0, 175.0, 179.0, 181.0, 182.0, 182.0, 182.0, 182.0, 182.0, 182.0, 182.0]
-    temps_2 = [164.5, 169.5, 174.5, 178.5, 180.5, 181.5, 181.5, 181.5, 181.5, 181.5, 181.5, 181.5]
+    temps_1 = [165.0, 170.0, 175.0, 179.0, 181.0, 183.0, 183.0, 183.0, 183.0, 183.0, 183.0, 183.0]
+    temps_2 = [164.5, 169.5, 174.5, 178.5, 180.5, 182.5, 182.5, 182.5, 182.5, 182.5, 182.5, 182.5]
     
     return pd.DataFrame({
         "timestamp": timestamps,
@@ -299,10 +303,10 @@ def unix_timestamp_data() -> pd.DataFrame:
     """
     # Start at 2024-01-15T10:00:00Z = 1705320000
     base_unix = 1705320000
-    unix_times = [base_unix + i*30 for i in range(25)]
+    unix_times = [base_unix + i*30 for i in range(26)]
     
-    temps_1 = [165.0, 170.0, 175.0, 179.0, 181.0] + [182.0] * 20
-    temps_2 = [164.5, 169.5, 174.5, 178.5, 180.5] + [181.5] * 20
+    temps_1 = [165.0, 170.0, 175.0, 179.0, 181.0] + [183.0] * 21
+    temps_2 = [164.5, 169.5, 174.5, 178.5, 180.5] + [182.5] * 21
     
     return pd.DataFrame({
         "unix_timestamp": unix_times,
@@ -329,8 +333,8 @@ def duplicate_timestamp_data() -> pd.DataFrame:
     # Add duplicate timestamp
     timestamps.insert(10, timestamps[9])
     
-    temps_1 = [165.0, 170.0, 175.0, 179.0, 181.0] + [182.0] * 16
-    temps_2 = [164.5, 169.5, 174.5, 178.5, 180.5] + [181.5] * 16
+    temps_1 = [165.0, 170.0, 175.0, 179.0, 181.0] + [183.0] * 16
+    temps_2 = [164.5, 169.5, 174.5, 178.5, 180.5] + [182.5] * 16
     
     return pd.DataFrame({
         "timestamp": timestamps,
@@ -357,8 +361,8 @@ def non_monotonic_data() -> pd.DataFrame:
     # Swap two timestamps to make non-monotonic
     timestamps[5], timestamps[10] = timestamps[10], timestamps[5]
     
-    temps_1 = [165.0, 170.0, 175.0, 179.0, 181.0] + [182.0] * 15
-    temps_2 = [164.5, 169.5, 174.5, 178.5, 180.5] + [181.5] * 15
+    temps_1 = [165.0, 170.0, 175.0, 179.0, 181.0] + [183.0] * 15
+    temps_2 = [164.5, 169.5, 174.5, 178.5, 180.5] + [182.5] * 15
     
     return pd.DataFrame({
         "timestamp": timestamps,

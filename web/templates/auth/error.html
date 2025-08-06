@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Authentication Error - ProofKit{% endblock %}
+
+{% block content %}
+<main class="container">
+    <article>
+        <header>
+            <h1>❌ Authentication Error</h1>
+            <p>We couldn't complete your authentication.</p>
+        </header>
+
+        <div class="error-banner">
+            <h3>🔐 Authentication Failed</h3>
+            <p>{{ error }}</p>
+        </div>
+
+        <div style="margin-top: 2rem;">
+            <h3>Possible Solutions</h3>
+            <ul>
+                <li><strong>Expired Link:</strong> Magic links expire after 15 minutes. Request a new one.</li>
+                <li><strong>Already Used:</strong> Each magic link can only be used once.</li>
+                <li><strong>Invalid Token:</strong> The link may be corrupted or incomplete.</li>
+                <li><strong>Network Issues:</strong> Check your internet connection and try again.</li>
+            </ul>
+        </div>
+
+        <div style="margin-top: 2rem;">
+            <a href="/auth/login" class="primary" role="button">
+                🔄 Try Again
+            </a>
+            <a href="/" class="outline" role="button">
+                🏠 Go Home
+            </a>
+        </div>
+
+        <details style="margin-top: 2rem;">
+            <summary>Need Help?</summary>
+            <p>If you continue to experience issues:</p>
+            <ul>
+                <li>Check that you're using the complete link from your email</li>
+                <li>Ensure your email client hasn't modified the link</li>
+                <li>Try copying and pasting the link directly into your browser</li>
+                <li>Contact your system administrator if problems persist</li>
+            </ul>
+        </details>
+    </article>
+</main>
+{% endblock %} 

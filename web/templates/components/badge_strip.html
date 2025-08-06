@@ -1,0 +1,51 @@
+{#
+Badge Strip Component
+
+Usage:
+{% include 'components/badge_strip.html' with badges=[
+  {src: '/static/badges/iso-13485.svg', alt: 'ISO 13485 Medical Devices', href: 'https://iso.org/iso-13485'},
+  {src: '/static/badges/fda-21cfr-part11.svg', alt: 'FDA 21 CFR Part 11', href: 'https://fda.gov/21cfr-part11'}
+] %}
+
+API:
+- badges: Array of badge objects with src, alt, and optional href properties
+#}
+
+{% if badges and badges|length > 0 %}
+<section class="badge-strip" role="region" aria-label="Compliance badges">
+  <div class="badge-container">
+    {% for badge in badges %}
+    <div class="badge-card">
+      {% if badge.href %}
+      <a href="{{ badge.href }}" 
+         target="_blank" 
+         rel="noopener noreferrer"
+         class="badge-link"
+         aria-label="Learn more about {{ badge.alt }} (opens in new tab)">
+        <img src="{{ badge.src }}" 
+             alt="{{ badge.alt }}"
+             class="badge-image"
+             loading="lazy"
+             width="96"
+             height="64">
+      </a>
+      {% else %}
+      <img src="{{ badge.src }}" 
+           alt="{{ badge.alt }}"
+           class="badge-image"
+           loading="lazy"
+           width="96"
+           height="64">
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  
+  <p class="muted-note">
+    <small>
+      Compliance badges indicate relevant industry standards.
+      <a href="#" class="muted-link">Learn more about our certifications</a>
+    </small>
+  </p>
+</section>
+{% endif %}

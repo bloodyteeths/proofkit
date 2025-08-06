@@ -1,0 +1,21 @@
+User-agent: *
+Allow: /
+Disallow: /storage/
+Disallow: /download/*/zip
+Disallow: /download/*/validation-pack
+Disallow: /auth/
+Disallow: /api/
+Disallow: /approve/
+Disallow: /my-jobs
+
+# Allow specific downloads
+Allow: /download/*/pdf
+
+# Allow sitemap
+Allow: /sitemap.xml
+
+# Sitemap location
+Sitemap: https://www.proofkit.net/sitemap.xml
+
+# Crawl delay to be respectful
+Crawl-delay: 1

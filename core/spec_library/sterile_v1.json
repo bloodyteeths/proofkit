@@ -1,0 +1,38 @@
+{
+  "version": "1.0",
+  "industry": "sterile",
+  "job": {
+    "job_id": "eto_sterilization_validation"
+  },
+  "spec": {
+    "method": "OVEN_AIR",
+    "target_temp_C": 55.0,
+    "hold_time_s": 7200,
+    "temp_band_C": {
+      "min": 50.0,
+      "max": 60.0
+    },
+    "sensor_uncertainty_C": 1.0
+  },
+  "data_requirements": {
+    "max_sample_period_s": 120.0,
+    "allowed_gaps_s": 300.0
+  },
+  "sensor_selection": {
+    "mode": "majority_over_threshold",
+    "require_at_least": 3
+  },
+  "logic": {
+    "continuous": true,
+    "max_total_dips_s": 0
+  },
+  "preconditions": {
+    "max_ramp_rate_C_per_min": 2.0,
+    "max_time_to_threshold_s": 7200
+  },
+  "reporting": {
+    "units": "C",
+    "language": "en",
+    "timezone": "UTC"
+  }
+}

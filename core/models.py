@@ -50,6 +50,16 @@ class TemperatureUnits(str, Enum):
     FAHRENHEIT = "F"
 
 
+class Industry(str, Enum):
+    """Enumeration of supported industries."""
+    POWDER = "powder"
+    HACCP = "haccp"
+    AUTOCLAVE = "autoclave"
+    STERILE = "sterile"
+    CONCRETE = "concrete"
+    COLDCHAIN = "coldchain"
+
+
 class JobInfo(BaseModel):
     """Job identification and metadata."""
     job_id: str = Field(
@@ -86,8 +96,8 @@ class CureSpec(BaseModel):
     hold_time_s: int = Field(
         ...,
         ge=1,
-        le=7200,
-        description="Required hold time at target temperature in seconds (>= 1)"
+        le=172800,  # Increased to 48 hours (172800s) to support concrete curing and other long processes
+        description="Required hold time at target temperature in seconds (>= 1, <= 48 hours)"
     )
     temp_band_C: Optional[TemperatureBand] = Field(
         None,
@@ -106,14 +116,14 @@ class DataRequirements(BaseModel):
     max_sample_period_s: float = Field(
         ...,
         ge=1,
-        le=300,
-        description="Maximum allowed time between samples in seconds"
+        le=3600,  # Increased to 1 hour to support longer monitoring intervals
+        description="Maximum allowed time between samples in seconds (>= 1, <= 1 hour)"
     )
     allowed_gaps_s: float = Field(
         ...,
         ge=0,
-        le=600,
-        description="Maximum allowed gap in data in seconds"
+        le=7200,  # Increased to 2 hours to support longer gap tolerances
+        description="Maximum allowed gap in data in seconds (>= 0, <= 2 hours)"
     )
 
 
@@ -198,6 +208,10 @@ class SpecV1(BaseModel):
     required for ProofKit to validate a cure process.
     """
     version: Literal["1.0"] = Field("1.0", description="Specification version identifier")
+    industry: Literal["powder", "haccp", "autoclave", "sterile", "concrete", "coldchain"] = Field(
+        "powder", 
+        description="Industry specification type"
+    )
     job: JobInfo = Field(..., description="Job identification and metadata")
     spec: CureSpec = Field(..., description="Core cure process specification")
     data_requirements: DataRequirements = Field(..., description="Data quality requirements")
@@ -220,6 +234,41 @@ class SpecV1(BaseModel):
         description="Optional reporting preferences"
     )
     
+    @model_validator(mode='after')
+    def validate_industry_specification(self):
+        """Validate that the industry field matches specification constraints."""
+        # All industries currently use version 1.0, so version validation is consistent
+        if self.version != "1.0":
+            raise ValueError(f"Unsupported version '{self.version}' for industry '{self.industry}'")
+            
+        # Industry-specific validation
+        if self.industry == "powder":
+            # Powder coat specifications typically use PMT or OVEN_AIR methods
+            if self.spec.method not in ["PMT", "OVEN_AIR"]:
+                raise ValueError(f"Invalid method '{self.spec.method}' for powder coating industry")
+        elif self.industry == "haccp":
+            # HACCP cooling requires OVEN_AIR method for food safety monitoring
+            if self.spec.method != "OVEN_AIR":
+                raise ValueError(f"HACCP industry requires OVEN_AIR method, got '{self.spec.method}'")
+        elif self.industry == "autoclave":
+            # Autoclave sterilization uses OVEN_AIR for steam monitoring
+            if self.spec.method != "OVEN_AIR":
+                raise ValueError(f"Autoclave industry requires OVEN_AIR method, got '{self.spec.method}'")
+        elif self.industry == "sterile":
+            # EtO sterilization uses OVEN_AIR for gas/temperature monitoring
+            if self.spec.method != "OVEN_AIR":
+                raise ValueError(f"Sterile industry requires OVEN_AIR method, got '{self.spec.method}'")
+        elif self.industry == "concrete":
+            # Concrete curing uses OVEN_AIR for ambient monitoring
+            if self.spec.method != "OVEN_AIR":
+                raise ValueError(f"Concrete industry requires OVEN_AIR method, got '{self.spec.method}'")
+        elif self.industry == "coldchain":
+            # Cold chain uses OVEN_AIR for ambient temperature monitoring
+            if self.spec.method != "OVEN_AIR":
+                raise ValueError(f"Cold chain industry requires OVEN_AIR method, got '{self.spec.method}'")
+                
+        return self
+    
     model_config = {
         # Reject unknown fields to ensure strict validation
         "extra": "forbid",
@@ -231,6 +280,7 @@ class SpecV1(BaseModel):
         "json_schema_extra": {
             "example": {
                 "version": "1.0",
+                "industry": "powder",
                 "job": {
                     "job_id": "batch_001"
                 },

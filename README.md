@@ -1,5 +1,12 @@
 # ProofKit — CSV → Proof Certificate (Powder-Coat Cure v0.1)
 
+[![Tests](https://github.com/proofkit/proofkit/workflows/Tests/badge.svg)](https://github.com/proofkit/proofkit/actions)
+[![Coverage](https://codecov.io/gh/proofkit/proofkit/branch/main/graph/badge.svg)](https://codecov.io/gh/proofkit/proofkit)
+[![Docker Size](https://img.shields.io/docker/image-size/proofkit/proofkit/latest)](https://hub.docker.com/r/proofkit/proofkit)
+[![Deploy](https://img.shields.io/badge/deploy-Fly.io-blue)](https://fly.io/docs/speedrun/)
+
+![HACCP Compile Demo](https://github.com/proofkit/proofkit/raw/main/docs/haccp-compile-demo.gif)
+
 Turn an oven/part temperature log (CSV) + a small JSON spec into:
 - **proof.pdf** — an inspector-ready certificate (PASS/FAIL, chart, fields, QR with integrity hash)
 - **evidence.zip** — a tamper-evident bundle (inputs, normalized.csv, decision.json, plot.png, manifest with SHA-256)

@@ -1,0 +1,140 @@
+{% extends "modern_base.html" %}
+
+{% block title %}HACCP Compliance Validation - ProofKit{% endblock %}
+{% block description %}HACCP-compliant temperature validation for food safety. Generate inspector-ready documentation for critical control points and cooling processes.{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-container">
+        <div class="hero-grid">
+            <div>
+                <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(255, 255, 255, 0.2); padding: 0.5rem 1rem; border-radius: 2rem; margin-bottom: 1.5rem;">
+                    <span style="font-size: 1.5rem;">🍖</span>
+                    <span style="font-weight: 600;">HACCP Compliance</span>
+                </div>
+                <h1>
+                    Food Safety<br>
+                    <span class="highlight">Temperature Validation</span>
+                </h1>
+                <p>
+                    Generate HACCP-compliant validation reports for critical control points and cooling processes. 
+                    Meet FDA, USDA, and food safety regulatory requirements.
+                </p>
+                <div class="hero-actions">
+                    <a href="/app?industry=haccp" class="btn btn-primary">
+                        Validate HACCP Process →
+                    </a>
+                    <a href="/examples" class="btn btn-secondary">
+                        View Examples
+                    </a>
+                </div>
+            </div>
+            <div class="card glass">
+                <div style="background: white; border-radius: 0.5rem; padding: 1.5rem; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                        <span style="font-size: 2rem;">🍖</span>
+                        <span style="font-weight: 600; color: #1a1a1a;">HACCP Process</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1rem;">
+                        <div style="text-align: center; padding: 0.75rem; background: #fef2f2; border-radius: 0.5rem;">
+                            <div style="font-size: 0.75rem; color: #b91c1c; text-transform: uppercase; letter-spacing: 0.05em;">Cook Temp</div>
+                            <div style="font-size: 1.25rem; font-weight: bold; color: #1a1a1a;">74°C</div>
+                        </div>
+                        <div style="text-align: center; padding: 0.75rem; background: #fef2f2; border-radius: 0.5rem;">
+                            <div style="font-size: 0.75rem; color: #b91c1c; text-transform: uppercase; letter-spacing: 0.05em;">Hold Time</div>
+                            <div style="font-size: 1.25rem; font-weight: bold; color: #1a1a1a;">15 sec</div>
+                        </div>
+                    </div>
+                    <div style="padding: 0.75rem; background: #dcfce7; border-radius: 0.5rem; text-align: center;">
+                        <span style="color: #166534; font-weight: bold; font-size: 0.875rem;">🍖 HACCP COMPLIANT</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="section">
+    <div class="section-container">
+        <div class="section-header">
+            <h2>HACCP Validation</h2>
+            <p class="section-subtitle">Food safety temperature validation for critical control points</p>
+        </div>
+        
+        <div class="grid-3">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <h3>HACCP Compliant</h3>
+                <p>Meets FDA Food Code, USDA FSIS, and HACCP critical control point requirements for food safety.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                </div>
+                <h3>Critical Control Points</h3>
+                <p>Validate cooking, cooling, reheating, and holding temperatures for all food safety processes.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                </div>
+                <h3>Audit Ready</h3>
+                <p>Inspector-ready documentation for health department inspections and food safety audits.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Applications -->
+<section class="section" style="background: #f7fafc;">
+    <div class="section-container">
+        <div class="section-header">
+            <h2>Applications</h2>
+            <p class="section-subtitle">Critical food safety validation across food service operations</p>
+        </div>
+        
+        <div class="grid-3">
+            <div class="card">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🍽️</div>
+                <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: #1a1a1a;">Restaurant Operations</h3>
+                <p style="color: #718096; line-height: 1.6;">Cooking, holding, and reheating temperature validation for restaurant and food service operations.</p>
+            </div>
+            
+            <div class="card">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🏭</div>
+                <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: #1a1a1a;">Food Manufacturing</h3>
+                <p style="color: #718096; line-height: 1.6;">Industrial food processing temperature control and validation for manufacturing facilities.</p>
+            </div>
+            
+            <div class="card">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🏪</div>
+                <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: #1a1a1a;">Retail Food</h3>
+                <p style="color: #718096; line-height: 1.6;">Grocery stores, delis, and retail food operations requiring HACCP compliance.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="hero">
+    <div class="section-container" style="text-align: center;">
+        <h2 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; color: white;">Ready to validate your food safety processes?</h2>
+        <p style="font-size: 1.25rem; opacity: 0.9; margin-bottom: 2rem; color: white;">Upload your temperature data and get HACCP-compliant validation reports</p>
+        <a href="/app?industry=haccp" class="btn" style="background: white; color: #667eea; font-size: 1.125rem; padding: 1rem 2rem;">
+            Start Validation →
+        </a>
+    </div>
+</section>
+{% endblock %}

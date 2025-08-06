@@ -30,8 +30,9 @@ from datetime import datetime, timezone
 from typing import List, Tuple, Optional, Dict, Any
 from pathlib import Path
 import logging
+import os
 
-from core.models import SpecV1, DecisionResult, SensorMode
+from core.models import SpecV1, DecisionResult, SensorMode, Industry
 from core.decide import (
     combine_sensor_readings, 
     detect_temperature_columns,
@@ -47,6 +48,71 @@ class PlotError(Exception):
     pass
 
 
+# Industry-specific color palettes (deterministic)
+INDUSTRY_COLORS = {
+    Industry.POWDER: {
+        'primary': '#2E5BBA',  # Deep blue
+        'secondary': '#8ECAE6',  # Light blue
+        'accent': '#FFB300',  # Amber
+        'target': '#219653',  # Green
+        'threshold': '#D73502'  # Red-orange
+    },
+    Industry.HACCP: {
+        'primary': '#7B2CBF',  # Purple
+        'secondary': '#C77DFF',  # Light purple
+        'accent': '#F72585',  # Pink
+        'target': '#10451D',  # Dark green
+        'threshold': '#E71D36'  # Red
+    },
+    Industry.AUTOCLAVE: {
+        'primary': '#0077B6',  # Ocean blue
+        'secondary': '#90E0EF',  # Sky blue
+        'accent': '#00B4D8',  # Cyan
+        'target': '#2D6A4F',  # Forest green
+        'threshold': '#D00000'  # Pure red
+    },
+    Industry.STERILE: {
+        'primary': '#06FFA5',  # Mint green
+        'secondary': '#B7E4C7',  # Light green
+        'accent': '#52B788',  # Medium green
+        'target': '#2D6A4F',  # Dark green
+        'threshold': '#BA1A1A'  # Dark red
+    },
+    Industry.CONCRETE: {
+        'primary': '#6C757D',  # Gray
+        'secondary': '#ADB5BD',  # Light gray
+        'accent': '#FFC107',  # Yellow
+        'target': '#198754',  # Success green
+        'threshold': '#DC3545'  # Danger red
+    },
+    Industry.COLDCHAIN: {
+        'primary': '#0D47A1',  # Deep blue
+        'secondary': '#BBDEFB',  # Very light blue
+        'accent': '#03DAC6',  # Teal
+        'target': '#1B5E20',  # Dark green
+        'threshold': '#B71C1C'  # Dark red
+    }
+}
+
+# Default color palette
+DEFAULT_COLORS = INDUSTRY_COLORS[Industry.POWDER]
+
+
+def get_industry_colors(industry: Optional[Industry] = None) -> Dict[str, str]:
+    """
+    Get color palette for specified industry.
+    
+    Args:
+        industry: Industry type for color selection
+        
+    Returns:
+        Dictionary containing industry-specific colors
+    """
+    if industry and industry in INDUSTRY_COLORS:
+        return INDUSTRY_COLORS[industry]
+    return DEFAULT_COLORS
+
+
 def configure_matplotlib_for_deterministic_rendering():
     """
     Configure matplotlib for consistent, deterministic rendering.
@@ -54,6 +120,11 @@ def configure_matplotlib_for_deterministic_rendering():
     Sets font family, sizes, DPI, and other parameters to ensure
     identical output across different environments.
     """
+    # Ensure Agg backend for testing environment
+    if os.getenv('PROOFKIT_TEST') == '1':
+        import matplotlib
+        matplotlib.use('Agg')
+    
     plt.rcParams.update({
         # Font settings for consistency
         'font.family': 'DejaVu Sans',
@@ -82,7 +153,13 @@ def configure_matplotlib_for_deterministic_rendering():
         # Margin settings
         'figure.autolayout': True,
         'axes.xmargin': 0.02,
-        'axes.ymargin': 0.05
+        'axes.ymargin': 0.05,
+        
+        # Additional deterministic settings for testing
+        'svg.fonttype': 'none' if os.getenv('PROOFKIT_TEST') == '1' else 'path',
+        'text.antialiased': False if os.getenv('PROOFKIT_TEST') == '1' else True,
+        'lines.antialiased': False if os.getenv('PROOFKIT_TEST') == '1' else True,
+        'patch.antialiased': False if os.getenv('PROOFKIT_TEST') == '1' else True
     })
 
 
@@ -195,7 +272,7 @@ def find_hold_intervals(timestamps: pd.Series, temperatures: pd.Series,
 
 def create_temperature_plot(timestamps: pd.Series, temperatures: pd.Series,
                           spec: SpecV1, decision: DecisionResult,
-                          sensor_names: List[str]) -> plt.Figure:
+                          sensor_names: List[str], industry: Optional[Industry] = None) -> plt.Figure:
     """
     Create the main temperature vs time plot.
     
@@ -205,27 +282,32 @@ def create_temperature_plot(timestamps: pd.Series, temperatures: pd.Series,
         spec: Cure process specification
         decision: Decision result
         sensor_names: List of sensor names used
+        industry: Industry type for color palette selection
         
     Returns:
         Matplotlib figure object
     """
+    # Get industry-specific colors
+    colors_palette = get_industry_colors(industry)
+    
     # Create figure and axis
     fig, ax = plt.subplots(figsize=(12, 8))
     
     # Convert timestamps to matplotlib dates for proper x-axis handling
     time_dates = mdates.date2num([ts.to_pydatetime() for ts in timestamps])
     
-    # Plot main PMT line
-    ax.plot(time_dates, temperatures, 'b-', linewidth=2, label='PMT Temperature', alpha=0.8)
+    # Plot main PMT line using industry primary color
+    ax.plot(time_dates, temperatures, color=colors_palette['primary'], linewidth=2, 
+            label='PMT Temperature', alpha=0.8)
     
-    # Add target temperature line
+    # Add target temperature line using industry target color
     target_temp = spec.spec.target_temp_C
-    ax.axhline(y=target_temp, color='green', linestyle='--', linewidth=2, 
+    ax.axhline(y=target_temp, color=colors_palette['target'], linestyle='--', linewidth=2, 
                label=f'Target Temperature ({target_temp:.1f}°C)')
     
-    # Add conservative threshold line
+    # Add conservative threshold line using industry threshold color
     threshold_temp = decision.conservative_threshold_C
-    ax.axhline(y=threshold_temp, color='red', linestyle='--', linewidth=2,
+    ax.axhline(y=threshold_temp, color=colors_palette['threshold'], linestyle='--', linewidth=2,
                label=f'Conservative Threshold ({threshold_temp:.1f}°C)')
     
     # Find and shade hold intervals
@@ -241,9 +323,9 @@ def create_temperature_plot(timestamps: pd.Series, temperatures: pd.Series,
         y_max = max(temperatures.max(), threshold_temp) + 10
         height = y_max - y_min
         
-        # Add shaded rectangle for hold interval
+        # Add shaded rectangle for hold interval using industry secondary color
         rect = Rectangle((start_date, y_min), width, height, 
-                        facecolor='lightgreen', alpha=0.3, 
+                        facecolor=colors_palette['secondary'], alpha=0.3, 
                         label='Hold Interval' if i == 0 else "")
         ax.add_patch(rect)
     
@@ -296,7 +378,8 @@ def create_temperature_plot(timestamps: pd.Series, temperatures: pd.Series,
 
 
 def generate_proof_plot(normalized_df: pd.DataFrame, spec: SpecV1, 
-                       decision: DecisionResult, output_path: str) -> str:
+                       decision: DecisionResult, output_path: str,
+                       industry: Optional[Industry] = None) -> str:
     """
     Generate proof plot for ProofKit cure validation.
     
@@ -306,12 +389,14 @@ def generate_proof_plot(normalized_df: pd.DataFrame, spec: SpecV1,
     - Conservative threshold line  
     - Shaded hold intervals where criteria are met
     - Key metrics and pass/fail status
+    - Industry-specific color palette
     
     Args:
         normalized_df: Normalized temperature data from core.normalize
         spec: Cure process specification
         decision: Decision result from core.decide
         output_path: Output file path for the plot
+        industry: Industry type for color palette selection
         
     Returns:
         Absolute path to the generated plot file
@@ -334,7 +419,7 @@ def generate_proof_plot(normalized_df: pd.DataFrame, spec: SpecV1,
             raise PlotError("Insufficient data points for plotting")
         
         # Create the plot
-        fig = create_temperature_plot(timestamps, temperatures, spec, decision, sensor_names)
+        fig = create_temperature_plot(timestamps, temperatures, spec, decision, sensor_names, industry)
         
         # Save the plot
         output_path = Path(output_path).resolve()

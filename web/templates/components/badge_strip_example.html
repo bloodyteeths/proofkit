@@ -1,0 +1,106 @@
+{# 
+Badge Strip Example Usage
+
+This file demonstrates how to use the badge_strip.html component.
+Include this example in your templates to show compliance badges.
+#}
+
+{% extends "base.html" %}
+
+{% block title %}Badge Strip Example{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1>Badge Strip Component Example</h1>
+  
+  <p>Here's how the badge strip component looks with sample compliance badges:</p>
+  
+  {# Example 1: Full badge data with links #}
+  {% set compliance_badges = [
+    {
+      'src': '/static/badges/iso-13485.svg',
+      'alt': 'ISO 13485 Medical Devices Quality Management',
+      'href': 'https://www.iso.org/iso-13485-medical-devices.html'
+    },
+    {
+      'src': '/static/badges/fda-21cfr-part11.svg',
+      'alt': 'FDA 21 CFR Part 11 Electronic Records',
+      'href': 'https://www.fda.gov/regulatory-information/search-fda-guidance-documents/part-11-electronic-records-electronic-signatures-scope-and-application'
+    },
+    {
+      'src': '/static/badges/fda-fsma.svg',
+      'alt': 'FDA Food Safety Modernization Act',
+      'href': 'https://www.fda.gov/food/food-safety-modernization-act-fsma'
+    },
+    {
+      'src': '/static/badges/gmp-annex11.svg',
+      'alt': 'GMP Annex 11 Computerised Systems',
+      'href': 'https://www.ema.europa.eu/en/ich-q7-good-manufacturing-practice-guide-active-pharmaceutical-ingredients'
+    },
+    {
+      'src': '/static/badges/usp-797.svg',
+      'alt': 'USP 797 Pharmaceutical Compounding',
+      'href': 'https://www.usp.org/compounding/general-chapter-797'
+    },
+    {
+      'src': '/static/badges/astm-c31.svg',
+      'alt': 'ASTM C31 Concrete Testing Standard',
+      'href': 'https://www.astm.org/c0031_c0031m-19a.html'
+    },
+    {
+      'src': '/static/badges/iso-2368.svg',
+      'alt': 'ISO 2368 Temperature Monitoring',
+      'href': 'https://www.iso.org/standard/7150.html'
+    },
+    {
+      'src': '/static/badges/qualicoat.svg',
+      'alt': 'Qualicoat Quality Assurance',
+      'href': 'https://www.qualicoat.net/'
+    }
+  ] %}
+  
+  {% include 'components/badge_strip.html' %}
+  
+  <h2>Usage in Templates</h2>
+  
+  <pre><code>
+{# Define your badge data #}
+{% set badges = [
+  {
+    'src': '/static/badges/iso-13485.svg',
+    'alt': 'ISO 13485 Medical Devices',
+    'href': 'https://iso.org/iso-13485'
+  },
+  {
+    'src': '/static/badges/fda-21cfr-part11.svg',
+    'alt': 'FDA 21 CFR Part 11',
+    'href': 'https://fda.gov/21cfr-part11'
+  }
+] %}
+
+{# Include the component #}
+{% include 'components/badge_strip.html' %}
+  </code></pre>
+  
+  <h2>Badge Data Structure</h2>
+  
+  <p>Each badge object should contain:</p>
+  <ul>
+    <li><strong>src</strong> (required): Path to the badge SVG image</li>
+    <li><strong>alt</strong> (required): Accessible description of the badge</li>
+    <li><strong>href</strong> (optional): External link for more information</li>
+  </ul>
+  
+  <h2>Features</h2>
+  
+  <ul>
+    <li>Mobile-friendly horizontal scrolling</li>
+    <li>Hover and focus effects with shadows</li>
+    <li>External links open in new tabs</li>
+    <li>Accessible with proper ARIA labels</li>
+    <li>Responsive design (96×64px on desktop, 80×54px on mobile)</li>
+    <li>Support for reduced motion preferences</li>
+    <li>High contrast mode compatibility</li>
+  </ul>
+</div>
+{% endblock %}

@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProofKit Pricing - Choose Your Plan</title>
+    <meta name="description" content="Choose the perfect ProofKit plan for your temperature validation needs. From free trial to enterprise solutions.">
+    
+    <!-- Pico CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', path='css/pico.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/modern.css') }}">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', path='brand/proofkit_favicon.svg') }}">
+    
+    <style nonce="{{ get_nonce(request) }}">
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 0;
+        }
+        
+        .pricing-card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 1rem;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .pricing-card:hover {
+            border-color: #667eea;
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .pricing-card.popular {
+            border-color: #667eea;
+            transform: scale(1.05);
+            box-shadow: 0 20px 25px -5px rgba(102, 126, 234, 0.2);
+        }
+        
+        .popular-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 2rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .plan-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 0.5rem;
+        }
+        
+        .plan-price {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #667eea;
+            margin-bottom: 0.25rem;
+            line-height: 1;
+        }
+        
+        .plan-price .currency {
+            font-size: 1.5rem;
+            vertical-align: top;
+        }
+        
+        .plan-period {
+            color: #718096;
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .plan-description {
+            color: #4a5568;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 2rem 0;
+            text-align: left;
+        }
+        
+        .feature-list li {
+            padding: 0.5rem 0;
+            color: #4a5568;
+            display: flex;
+            align-items: center;
+        }
+        
+        .feature-list li:before {
+            content: "✓";
+            color: #48bb78;
+            font-weight: bold;
+            width: 1.5rem;
+            margin-right: 0.75rem;
+        }
+        
+        .cta-button {
+            width: 100%;
+            padding: 1rem 2rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .cta-button.primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .cta-button.primary:hover {
+            background: linear-gradient(135deg, #5a67d8, #6b46c1);
+            transform: translateY(-2px);
+        }
+        
+        .cta-button.secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        
+        .cta-button.secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .enterprise-contact {
+            background: linear-gradient(135deg, #1a202c, #2d3748);
+            color: white;
+            border: none;
+        }
+        
+        .enterprise-contact:hover {
+            background: linear-gradient(135deg, #2d3748, #4a5568);
+        }
+        
+        .pricing-faq {
+            max-width: 800px;
+            margin: 4rem auto 0;
+            padding: 2rem;
+        }
+        
+        .faq-item {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 0.75rem;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .faq-question {
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 0.75rem;
+            font-size: 1.125rem;
+        }
+        
+        .faq-answer {
+            color: #4a5568;
+            line-height: 1.6;
+        }
+        
+        .single-cert-option {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            color: #4a5568;
+        }
+        
+        .single-cert-price {
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        @media (max-width: 768px) {
+            .pricing-grid {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+                gap: 1.5rem;
+            }
+            
+            .pricing-card.popular {
+                transform: none;
+            }
+            
+            .plan-price {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    {% include 'nav.html' %}
+    
+    <main class="container">
+        <!-- Header Section -->
+        <header style="text-align: center; padding: 4rem 0 2rem;">
+            <h1 style="font-size: 3rem; font-weight: 800; color: #1a202c; margin-bottom: 1rem;">
+                Choose Your Plan
+            </h1>
+            <p style="font-size: 1.25rem; color: #4a5568; max-width: 600px; margin: 0 auto;">
+                From free trials to enterprise solutions, find the perfect plan for your temperature validation needs.
+            </p>
+        </header>
+        
+        <!-- Pricing Grid -->
+        <div class="pricing-grid">
+            <!-- Free Plan -->
+            <div class="pricing-card">
+                <div class="plan-name">Free</div>
+                <div class="plan-price">
+                    <span class="currency">€</span>0
+                </div>
+                <div class="plan-period">Forever free</div>
+                <div class="plan-description">
+                    Perfect for trying ProofKit and understanding how it works.
+                </div>
+                
+                <ul class="feature-list">
+                    <li>2 certificates total</li>
+                    <li>All industry templates</li>
+                    <li>Basic PDF format</li>
+                    <li>Community support</li>
+                    <li>Email notifications</li>
+                </ul>
+                
+                <div class="single-cert-option">
+                    Need more? Buy individual certificates for <span class="single-cert-price">€7 each</span>
+                </div>
+                
+                <a href="/app" class="cta-button secondary">
+                    Start Free Trial
+                </a>
+            </div>
+            
+            <!-- Starter Plan -->
+            <div class="pricing-card">
+                <div class="plan-name">Starter</div>
+                <div class="plan-price">
+                    <span class="currency">€</span>14
+                </div>
+                <div class="plan-period">per month</div>
+                <div class="plan-description">
+                    Ideal for small teams and regular temperature validation workflows.
+                </div>
+                
+                <ul class="feature-list">
+                    <li>10 certificates per month</li>
+                    <li>Clean, professional PDFs</li>
+                    <li>All industry templates</li>
+                    <li>Email support</li>
+                    <li>CSV data validation</li>
+                    <li>Overage: €3 per certificate</li>
+                </ul>
+                
+                <div class="single-cert-option">
+                    Or buy individual certificates for <span class="single-cert-price">€5 each</span>
+                </div>
+                
+                <button class="cta-button primary" onclick="upgradeToStarter()">
+                    Choose Starter
+                </button>
+            </div>
+            
+            <!-- Pro Plan (Popular) -->
+            <div class="pricing-card popular">
+                <div class="popular-badge">Most Popular</div>
+                <div class="plan-name">Pro</div>
+                <div class="plan-price">
+                    <span class="currency">€</span>59
+                </div>
+                <div class="plan-period">per month</div>
+                <div class="plan-description">
+                    Perfect for growing businesses with custom branding needs.
+                </div>
+                
+                <ul class="feature-list">
+                    <li>75 certificates per month</li>
+                    <li>Custom logo in certificates</li>
+                    <li>Professional PDF templates</li>
+                    <li>Priority email support</li>
+                    <li>Advanced data validation</li>
+                    <li>API access (coming soon)</li>
+                    <li>Overage: €1.50 per certificate</li>
+                </ul>
+                
+                <div class="single-cert-option">
+                    Or buy individual certificates for <span class="single-cert-price">€4 each</span>
+                </div>
+                
+                <button class="cta-button primary" onclick="upgradeToPro()">
+                    Choose Pro
+                </button>
+            </div>
+            
+            <!-- Business Plan -->
+            <div class="pricing-card">
+                <div class="plan-name">Business</div>
+                <div class="plan-price">
+                    <span class="currency">€</span>199
+                </div>
+                <div class="plan-period">per month</div>
+                <div class="plan-description">
+                    Comprehensive solution for larger organizations and compliance teams.
+                </div>
+                
+                <ul class="feature-list">
+                    <li>300 certificates per month</li>
+                    <li>Custom logo & header design</li>
+                    <li>Business PDF templates</li>
+                    <li>Phone & email support</li>
+                    <li>Team collaboration tools</li>
+                    <li>API access with rate limits</li>
+                    <li>Custom integrations</li>
+                    <li>Overage: €0.75 per certificate</li>
+                </ul>
+                
+                <div class="single-cert-option">
+                    Or buy individual certificates for <span class="single-cert-price">€4 each</span>
+                </div>
+                
+                <button class="cta-button primary" onclick="upgradeToBusiness()">
+                    Choose Business
+                </button>
+            </div>
+            
+            <!-- Enterprise Plan -->
+            <div class="pricing-card">
+                <div class="plan-name">Enterprise</div>
+                <div class="plan-price" style="font-size: 2rem;">
+                    Custom
+                </div>
+                <div class="plan-period">Contact for pricing</div>
+                <div class="plan-description">
+                    Complete white-label solution with dedicated support and custom features.
+                </div>
+                
+                <ul class="feature-list">
+                    <li>Unlimited certificates</li>
+                    <li>Complete white-labeling</li>
+                    <li>Custom PDF templates</li>
+                    <li>Dedicated account manager</li>
+                    <li>24/7 phone support</li>
+                    <li>Full API access</li>
+                    <li>Custom integrations</li>
+                    <li>SLA guarantees</li>
+                    <li>On-premise deployment</li>
+                </ul>
+                
+                <button class="cta-button enterprise-contact" onclick="contactEnterprise()">
+                    Contact Sales
+                </button>
+            </div>
+        </div>
+        
+        <!-- FAQ Section -->
+        <section class="pricing-faq">
+            <h2 style="text-align: center; font-size: 2.5rem; color: #1a202c; margin-bottom: 3rem;">
+                Frequently Asked Questions
+            </h2>
+            
+            <div class="faq-item">
+                <div class="faq-question">Can I change plans anytime?</div>
+                <div class="faq-answer">
+                    Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately, and we'll prorate any billing adjustments.
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">What happens if I exceed my monthly certificate limit?</div>
+                <div class="faq-answer">
+                    For paid plans, we automatically bill overage at the rates shown. For the free plan, you can purchase individual certificates or upgrade to a paid plan.
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">Are there any setup fees?</div>
+                <div class="faq-answer">
+                    No setup fees for any plan. You only pay the monthly subscription fee, plus any overage charges for certificates beyond your plan limit.
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">Can I use my own logo on certificates?</div>
+                <div class="faq-answer">
+                    Custom logos are available on Pro plans and above. Simply upload your logo in PNG, JPG, or SVG format, and it will appear on all your certificates.
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">What payment methods do you accept?</div>
+                <div class="faq-answer">
+                    We accept all major credit cards and bank transfers through Stripe. Enterprise customers can arrange custom payment terms.
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">Is there a free trial for paid plans?</div>
+                <div class="faq-answer">
+                    The Free plan serves as our trial - you get 2 certificates to fully test ProofKit. Paid plans can be canceled anytime within the first 30 days for a full refund.
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <!-- Footer -->
+    {# Footer component not available yet #}
+    
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', path='js/htmx.min.js') }}" nonce="{{ get_nonce(request) }}"></script>
+    <script nonce="{{ get_nonce(request) }}">
+        async function upgradeToStarter() {
+            await upgradeToplan('starter');
+        }
+        
+        async function upgradeToPro() {
+            await upgradeToplan('pro');
+        }
+        
+        async function upgradeToBusiness() {
+            await upgradeToplan('business');
+        }
+        
+        async function upgradeToplan(planName) {
+            // Check if user is authenticated
+            const isAuthenticated = await checkAuth();
+            if (!isAuthenticated) {
+                window.location.href = '/auth/login?redirect=' + encodeURIComponent('/pricing');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/upgrade/${planName}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        success_url: window.location.origin + '/billing/success?plan=' + planName,
+                        cancel_url: window.location.origin + '/pricing'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    window.location.href = data.checkout_url;
+                } else if (response.status === 401) {
+                    window.location.href = '/auth/login?redirect=' + encodeURIComponent('/pricing');
+                } else {
+                    const error = await response.json();
+                    alert('Upgrade failed: ' + error.detail);
+                }
+            } catch (error) {
+                console.error('Upgrade error:', error);
+                alert('Upgrade failed. Please try again.');
+            }
+        }
+        
+        function contactEnterprise() {
+            window.location.href = 'mailto:sales@proofkit.net?subject=Enterprise Plan Inquiry&body=Hi, I\'m interested in learning more about ProofKit Enterprise. Please contact me to discuss our requirements.';
+        }
+        
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/usage');
+                return response.status !== 401;
+            } catch {
+                return false;
+            }
+        }
+        
+        // Show upgrade modal if coming from quota exceeded
+        if (window.location.hash === '#upgrade') {
+            document.querySelector('.pricing-grid').scrollIntoView({
+                behavior: 'smooth'
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "pass_": false,
+  "job_id": "astm_c31_curing_validation",
+  "target_temp_C": 21.5,
+  "conservative_threshold_C": 22.0,
+  "actual_hold_time_s": 0.0,
+  "required_hold_time_s": 86400,
+  "max_temp_C": 0.0,
+  "min_temp_C": 0.0,
+  "reasons": [
+    "Insufficient data points for reliable analysis: 312 points, need at least 2882"
+  ],
+  "warnings": []
+}

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}My Jobs - ProofKit{% endblock %}
+
+{% block content %}
+<main class="container">
+    <article>
+        <header>
+            <h1>📂 My Jobs</h1>
+            <p>
+                {% if user.role == "op" %}
+                    Jobs you have submitted for validation.
+                {% else %}
+                    Jobs awaiting your QA approval.
+                {% endif %}
+            </p>
+        </header>
+
+        {% if jobs %}
+        <table style="width: 100%; margin-top: 2rem;">
+            <thead>
+                <tr>
+                    <th>Job ID</th>
+                    <th>Submitted By</th>
+                    <th>Created</th>
+                    <th>Status</th>
+                    <th>Approved At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for job in jobs %}
+                <tr>
+                    <td><code>{{ job.job_id }}</code></td>
+                    <td>{{ job.creator.email if job.creator else 'Unknown' }}</td>
+                    <td>{{ job.created_at or '-' }}</td>
+                    <td>
+                        {% if job.approved %}
+                            <span class="success">✅ Approved</span>
+                        {% else %}
+                            <span class="warning">⏳ Pending</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ job.approved_at or '-' }}</td>
+                    <td>
+                        <a href="/download/{{ job.job_id }}/pdf" class="outline" title="Download PDF">📄</a>
+                        <a href="/download/{{ job.job_id }}/zip" class="outline" title="Download ZIP">📦</a>
+                        <a href="/verify/{{ job.job_id }}" class="outline" title="Verify">🔍</a>
+                        <a href="/api/validation-pack/{{ job.job_id }}" class="outline" title="Validation Pack">📋</a>
+                        {% if user.role == "qa" %}
+                            <a href="/approve/{{ job.job_id }}" class="primary" title="Approve">🔒 Approve</a>
+                        {% else %}
+                            <a href="/download/{{ job.job_id }}/pdf" class="primary" title="View">View</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="margin-top: 2rem;">
+            <p><em>No jobs found.</em></p>
+        </div>
+        {% endif %}
+    </article>
+</main>
+{% endblock %} 

@@ -1,0 +1,15 @@
+{
+  "pass_": false,
+  "job_id": "pharma_sterilization_validation",
+  "target_temp_C": 121.0,
+  "conservative_threshold_C": 121.5,
+  "actual_hold_time_s": 0.0,
+  "required_hold_time_s": 900,
+  "max_temp_C": 120.1,
+  "min_temp_C": 19.8,
+  "reasons": [
+    "Temperature never reached conservative threshold of 121.5\u00b0C",
+    "Maximum temperature recorded: 120.1\u00b0C"
+  ],
+  "warnings": []
+}

@@ -1,0 +1,526 @@
+<!-- Upgrade Modal Component -->
+<div id="upgrade-modal" class="upgrade-modal" style="display: none;">
+    <div class="modal-overlay" onclick="closeUpgradeModal()"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modal-title">Upgrade Required</h2>
+            <button class="close-button" onclick="closeUpgradeModal()" aria-label="Close modal">×</button>
+        </div>
+        
+        <div class="modal-body">
+            <div id="quota-exceeded-content" class="upgrade-section">
+                <div class="upgrade-icon">⚡</div>
+                <p id="quota-message" class="quota-message">
+                    You've reached your plan limit. Choose how to continue:
+                </p>
+                
+                <div class="upgrade-options">
+                    <div class="option-card" id="single-cert-option" style="display: none;">
+                        <h3>Buy Single Certificate</h3>
+                        <div class="price-display">
+                            <span class="price" id="single-cert-price">€7</span>
+                            <span class="price-suffix">one-time</span>
+                        </div>
+                        <p>Get 1 certificate immediately</p>
+                        <button class="cta-button secondary" onclick="buySingleCertificate()">
+                            Buy Now
+                        </button>
+                    </div>
+                    
+                    <div class="option-card recommended" id="upgrade-option">
+                        <div class="recommended-badge">Recommended</div>
+                        <h3 id="recommended-plan-name">Starter Plan</h3>
+                        <div class="price-display">
+                            <span class="price" id="recommended-price">€14</span>
+                            <span class="price-suffix">per month</span>
+                        </div>
+                        <ul class="feature-list" id="recommended-features">
+                            <li>10 certificates per month</li>
+                            <li>No watermarks</li>
+                            <li>Email support</li>
+                        </ul>
+                        <button class="cta-button primary" onclick="upgradeToRecommendedPlan()">
+                            Upgrade Now
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="all-plans-link">
+                    <a href="/pricing" onclick="closeUpgradeModal()">View all plans</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style nonce="{{ get_nonce(request) }}">
+    .upgrade-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: modalFadeIn 0.3s ease;
+    }
+    
+    .modal-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(2px);
+    }
+    
+    .modal-content {
+        position: relative;
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        max-width: 600px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        animation: modalSlideIn 0.3s ease;
+    }
+    
+    .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.5rem 2rem 1rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .modal-header h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1a202c;
+    }
+    
+    .close-button {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #718096;
+        cursor: pointer;
+        padding: 0.25rem;
+        line-height: 1;
+        border-radius: 0.25rem;
+        transition: all 0.2s ease;
+    }
+    
+    .close-button:hover {
+        color: #2d3748;
+        background: #f7fafc;
+    }
+    
+    .modal-body {
+        padding: 1.5rem 2rem 2rem;
+    }
+    
+    .upgrade-section {
+        text-align: center;
+    }
+    
+    .upgrade-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.8;
+    }
+    
+    .quota-message {
+        font-size: 1.125rem;
+        color: #4a5568;
+        margin-bottom: 2rem;
+        line-height: 1.6;
+    }
+    
+    .upgrade-options {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    @media (max-width: 640px) {
+        .upgrade-options {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+    }
+    
+    .option-card {
+        background: #f7fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        text-align: center;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+    
+    .option-card:hover {
+        border-color: #cbd5e0;
+        transform: translateY(-2px);
+    }
+    
+    .option-card.recommended {
+        border-color: #667eea;
+        background: linear-gradient(135deg, #f7fafc, #edf2f7);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+    }
+    
+    .recommended-badge {
+        position: absolute;
+        top: -8px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .option-card h3 {
+        margin: 0 0 1rem 0;
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1a202c;
+    }
+    
+    .price-display {
+        margin-bottom: 1rem;
+    }
+    
+    .price {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #667eea;
+    }
+    
+    .price-suffix {
+        font-size: 0.875rem;
+        color: #718096;
+        margin-left: 0.25rem;
+    }
+    
+    .option-card p {
+        color: #4a5568;
+        margin-bottom: 1.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .feature-list {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 1.5rem 0;
+        text-align: left;
+        font-size: 0.875rem;
+    }
+    
+    .feature-list li {
+        color: #4a5568;
+        padding: 0.25rem 0;
+        display: flex;
+        align-items: center;
+    }
+    
+    .feature-list li:before {
+        content: "✓";
+        color: #48bb78;
+        font-weight: bold;
+        width: 1rem;
+        margin-right: 0.5rem;
+    }
+    
+    .cta-button {
+        width: 100%;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+        font-size: 0.875rem;
+    }
+    
+    .cta-button.primary {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+    }
+    
+    .cta-button.primary:hover {
+        background: linear-gradient(135deg, #5a67d8, #6b46c1);
+        transform: translateY(-1px);
+    }
+    
+    .cta-button.secondary {
+        background: white;
+        color: #667eea;
+        border: 2px solid #667eea;
+    }
+    
+    .cta-button.secondary:hover {
+        background: #667eea;
+        color: white;
+    }
+    
+    .all-plans-link {
+        margin-top: 1rem;
+    }
+    
+    .all-plans-link a {
+        color: #667eea;
+        text-decoration: none;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    
+    .all-plans-link a:hover {
+        text-decoration: underline;
+    }
+    
+    @keyframes modalFadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes modalSlideIn {
+        from { 
+            transform: scale(0.95) translateY(20px); 
+            opacity: 0; 
+        }
+        to { 
+            transform: scale(1) translateY(0); 
+            opacity: 1; 
+        }
+    }
+    
+    /* Loading state for buttons */
+    .cta-button.loading {
+        opacity: 0.7;
+        cursor: not-allowed;
+        position: relative;
+    }
+    
+    .cta-button.loading:after {
+        content: "";
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        margin: auto;
+        border: 2px solid transparent;
+        border-top-color: currentColor;
+        border-radius: 50%;
+        animation: buttonSpinner 1s ease infinite;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    
+    @keyframes buttonSpinner {
+        from { transform: translate(-50%, -50%) rotate(0turn); }
+        to { transform: translate(-50%, -50%) rotate(1turn); }
+    }
+</style>
+
+<script nonce="{{ get_nonce(request) }}">
+    let currentQuotaError = null;
+    let recommendedPlan = 'starter';
+    
+    function showUpgradeModal(errorData) {
+        currentQuotaError = errorData;
+        const modal = document.getElementById('upgrade-modal');
+        const titleEl = document.getElementById('modal-title');
+        const messageEl = document.getElementById('quota-message');
+        const singleCertOption = document.getElementById('single-cert-option');
+        const singleCertPrice = document.getElementById('single-cert-price');
+        
+        // Set modal content based on error type
+        if (errorData.code === 'FREE_TIER_EXCEEDED') {
+            titleEl.textContent = 'Free Trial Limit Reached';
+            messageEl.textContent = `You've used all ${errorData.limit} free certificates. Choose how to continue:`;
+            
+            // Show single certificate option for free users
+            singleCertOption.style.display = 'block';
+            singleCertPrice.textContent = `€${errorData.single_purchase.price}`;
+            
+            // Set recommended plan
+            recommendedPlan = 'starter';
+            updateRecommendedPlan('Starter Plan', '€14', [
+                '10 certificates per month',
+                'No watermarks',
+                'Professional PDFs',
+                'Email support'
+            ]);
+            
+        } else if (errorData.code === 'MONTHLY_QUOTA_EXCEEDED') {
+            titleEl.textContent = 'Monthly Quota Exceeded';
+            messageEl.textContent = `You've used all ${errorData.monthly_limit} certificates this month. Choose how to continue:`;
+            
+            // Show single certificate option
+            singleCertOption.style.display = 'block';
+            singleCertPrice.textContent = `€${errorData.single_purchase.price}`;
+            
+            // Recommend next tier up
+            recommendedPlan = getNextTier(errorData.plan);
+            updateRecommendedPlanForCurrentUser(errorData.plan);
+        }
+        
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        
+        // Track modal open event
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'upgrade_modal_shown', {
+                'error_code': errorData.code,
+                'current_plan': errorData.plan || 'free'
+            });
+        }
+    }
+    
+    function closeUpgradeModal() {
+        const modal = document.getElementById('upgrade-modal');
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+        currentQuotaError = null;
+    }
+    
+    function updateRecommendedPlan(name, price, features) {
+        document.getElementById('recommended-plan-name').textContent = name;
+        document.getElementById('recommended-price').textContent = price;
+        
+        const featuresList = document.getElementById('recommended-features');
+        featuresList.innerHTML = '';
+        features.forEach(feature => {
+            const li = document.createElement('li');
+            li.textContent = feature;
+            featuresList.appendChild(li);
+        });
+    }
+    
+    function updateRecommendedPlanForCurrentUser(currentPlan) {
+        const planConfigs = {
+            'starter': {
+                name: 'Pro Plan',
+                price: '€59',
+                features: [
+                    '75 certificates per month',
+                    'Custom logo support',
+                    'Priority support',
+                    'Advanced features'
+                ]
+            },
+            'pro': {
+                name: 'Business Plan',
+                price: '€199',
+                features: [
+                    '300 certificates per month',
+                    'Custom branding',
+                    'Team collaboration',
+                    'Phone support'
+                ]
+            }
+        };
+        
+        const config = planConfigs[currentPlan] || planConfigs['starter'];
+        updateRecommendedPlan(config.name, config.price, config.features);
+    }
+    
+    function getNextTier(currentPlan) {
+        const tierOrder = ['free', 'starter', 'pro', 'business', 'enterprise'];
+        const currentIndex = tierOrder.indexOf(currentPlan);
+        return tierOrder[currentIndex + 1] || 'business';
+    }
+    
+    async function buySingleCertificate() {
+        if (!currentQuotaError || !currentQuotaError.single_purchase.checkout_url) {
+            alert('Unable to process purchase. Please refresh and try again.');
+            return;
+        }
+        
+        const button = document.querySelector('#single-cert-option .cta-button');
+        button.classList.add('loading');
+        
+        // Track purchase attempt
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'single_cert_purchase_attempt', {
+                'price': currentQuotaError.single_purchase.price,
+                'current_plan': currentQuotaError.plan || 'free'
+            });
+        }
+        
+        // Redirect to Stripe checkout
+        window.location.href = currentQuotaError.single_purchase.checkout_url;
+    }
+    
+    async function upgradeToRecommendedPlan() {
+        const button = document.querySelector('#upgrade-option .cta-button');
+        button.classList.add('loading');
+        
+        try {
+            const response = await fetch(`/api/upgrade/${recommendedPlan}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    success_url: window.location.origin + `/billing/success?plan=${recommendedPlan}`,
+                    cancel_url: window.location.href
+                })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                // Track upgrade attempt
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'plan_upgrade_attempt', {
+                        'target_plan': recommendedPlan,
+                        'source': 'quota_modal'
+                    });
+                }
+                
+                window.location.href = data.checkout_url;
+            } else if (response.status === 401) {
+                // User not authenticated, redirect to login
+                closeUpgradeModal();
+                window.location.href = '/auth/login?redirect=' + encodeURIComponent(window.location.href);
+            } else {
+                const error = await response.json();
+                alert('Upgrade failed: ' + error.detail);
+                button.classList.remove('loading');
+            }
+        } catch (error) {
+            console.error('Upgrade error:', error);
+            alert('Upgrade failed. Please try again.');
+            button.classList.remove('loading');
+        }
+    }
+    
+    // Close modal on escape key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeUpgradeModal();
+        }
+    });
+    
+    // Prevent background scrolling when modal is open
+    document.addEventListener('click', function(event) {
+        if (event.target.id === 'upgrade-modal') {
+            closeUpgradeModal();
+        }
+    });
+</script>

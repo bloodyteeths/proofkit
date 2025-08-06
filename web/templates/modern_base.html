@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-756618Z0XS"></script>
+    <script{% if get_nonce(request) %} nonce="{{ get_nonce(request) }}"{% endif %}>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      
+      // Check cookie consent before configuring GA4
+      const cookieConsent = localStorage.getItem('cookie_consent');
+      const analyticsConsent = cookieConsent === 'analytics' ? 'granted' : 'denied';
+      
+      // Set default consent state
+      gtag('consent', 'default', {
+        'analytics_storage': analyticsConsent,
+        'ad_storage': 'denied'
+      });
+
+      gtag('config', 'G-756618Z0XS');
+    </script>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ProofKit - Industrial Temperature Validation{% endblock %}</title>
+    <meta name="description" content="{% block description %}Professional temperature validation and compliance documentation{% endblock %}">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/static/logo.svg">
+    
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Modern CSS -->
+    <link rel="stylesheet" href="/static/css/modern.css">
+    
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <!-- Logo -->
+            <a href="/" class="logo-link">
+                <img src="/static/logo.svg" alt="ProofKit">
+                <span>ProofKit</span>
+            </a>
+            
+            <!-- Desktop Navigation -->
+            <div class="nav-menu">
+                <a href="/" class="nav-link">Home</a>
+                
+                <!-- Industries Dropdown -->
+                <div class="dropdown">
+                    <button class="dropdown-toggle">
+                        Industries
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div class="dropdown-menu">
+                        <a href="/industries/powder-coating" class="dropdown-item">🎨 Powder Coating</a>
+                        <a href="/industries/autoclave" class="dropdown-item">🏥 Autoclave</a>
+                        <a href="/industries/concrete" class="dropdown-item">🏗️ Concrete</a>
+                        <a href="/industries/cold-chain" class="dropdown-item">❄️ Cold Chain</a>
+                        <a href="/industries/eto" class="dropdown-item">🧪 ETO Sterilization</a>
+                        <a href="/industries/haccp" class="dropdown-item">🍖 HACCP</a>
+                    </div>
+                </div>
+                
+                <a href="/examples" class="nav-link">Examples</a>
+                <a href="/docs" class="nav-link">Docs</a>
+                <a href="/pricing" class="nav-link">Pricing</a>
+                <a href="/trust" class="nav-link">Trust</a>
+                
+                <!-- Authentication Links -->
+                {% if user %}
+                <a href="/dashboard" class="nav-link">Dashboard</a>
+                <a href="/auth/logout" class="nav-link">Logout</a>
+                {% else %}
+                <a href="/auth/login" class="nav-link">Login</a>
+                <a href="/auth/signup" class="nav-link">Sign Up</a>
+                {% endif %}
+                
+                <a href="/app" class="btn btn-primary">Start Validating</a>
+            </div>
+            
+            <!-- Mobile Menu Button -->
+            <button id="mobile-menu-btn" class="mobile-menu-btn">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="mobile-menu hidden">
+            <a href="/" class="mobile-menu-link">Home</a>
+            <div class="mobile-menu-section">
+                <h4>Industries</h4>
+                <a href="/industries/powder-coating" class="mobile-menu-link">🎨 Powder Coating</a>
+                <a href="/industries/autoclave" class="mobile-menu-link">🏥 Autoclave</a>
+                <a href="/industries/concrete" class="mobile-menu-link">🏗️ Concrete</a>
+                <a href="/industries/cold-chain" class="mobile-menu-link">❄️ Cold Chain</a>
+                <a href="/industries/eto" class="mobile-menu-link">🧪 ETO Sterilization</a>
+                <a href="/industries/haccp" class="mobile-menu-link">🍖 HACCP</a>
+            </div>
+            <a href="/examples" class="mobile-menu-link">Examples</a>
+            <a href="/docs" class="mobile-menu-link">Docs</a>
+            <a href="/pricing" class="mobile-menu-link">Pricing</a>
+            <a href="/trust" class="mobile-menu-link">Trust</a>
+            <!-- Mobile Authentication Links -->
+            {% if user %}
+            <a href="/dashboard" class="mobile-menu-link">Dashboard</a>
+            <a href="/auth/logout" class="mobile-menu-link">Logout</a>
+            {% else %}
+            <a href="/auth/login" class="mobile-menu-link">Login</a>
+            <a href="/auth/signup" class="mobile-menu-link">Sign Up</a>
+            {% endif %}
+            <a href="/app" class="mobile-menu-link mobile-menu-cta">Start Validating</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-grid">
+                <div>
+                    <h3>ProofKit</h3>
+                    <p>Professional temperature validation for industrial compliance.</p>
+                </div>
+                <div>
+                    <h3>Product</h3>
+                    <ul class="footer-links">
+                        <li><a href="/app">Validator</a></li>
+                        <li><a href="/pricing">Pricing</a></li>
+                        <li><a href="/examples">Examples</a></li>
+                        <li><a href="/docs">Documentation</a></li>
+                        <li><a href="/blog">Blog</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>Industries</h3>
+                    <ul class="footer-links">
+                        <li><a href="/industries/powder-coating">Powder Coating</a></li>
+                        <li><a href="/industries/autoclave">Autoclave</a></li>
+                        <li><a href="/industries/concrete">Concrete</a></li>
+                        <li><a href="/industries/cold-chain">Cold Chain</a></li>
+                        <li><a href="/industries/eto">ETO Sterilization</a></li>
+                        <li><a href="/industries/haccp">HACCP</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>Account</h3>
+                    <ul class="footer-links">
+                        {% if user %}
+                        <li><a href="/dashboard">Dashboard</a></li>
+                        <li><a href="/my-jobs">My Jobs</a></li>
+                        <li><a href="/auth/logout">Logout</a></li>
+                        {% else %}
+                        <li><a href="/auth/login">Login</a></li>
+                        <li><a href="/auth/signup">Sign Up</a></li>
+                        {% endif %}
+                        <li><a href="/pricing">Pricing</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>Contact</h3>
+                    <ul class="footer-links">
+                        <li><a href="mailto:support@proofkit.net">support@proofkit.net</a></li>
+                        <li><a href="mailto:privacy@proofkit.net">Privacy</a></li>
+                        <li><a href="mailto:legal@proofkit.net">Legal</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2024 ProofKit. All rights reserved. Domain: proofkit.net</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Cookie Banner -->
+    <div id="cookie-banner" class="cookie-banner">
+        <div class="cookie-content">
+            <p class="cookie-text">
+                We use cookies to enhance your experience. By continuing, you agree to our use of cookies.
+            </p>
+            <div class="cookie-actions">
+                <button id="accept-cookies-btn" class="btn btn-primary">
+                    Accept All
+                </button>
+                <button id="decline-cookies-btn" class="btn btn-secondary">
+                    Necessary Only
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script{% if get_nonce(request) %} nonce="{{ get_nonce(request) }}"{% endif %}>
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-btn').addEventListener('click', function() {
+            const menu = document.getElementById('mobile-menu');
+            if (menu) {
+                menu.classList.toggle('hidden');
+            }
+        });
+
+        // Cookie banner
+        window.addEventListener('load', function() {
+            if (!localStorage.getItem('cookiesAccepted')) {
+                setTimeout(() => {
+                    const banner = document.getElementById('cookie-banner');
+                    if (banner) {
+                        banner.classList.add('show');
+                    }
+                }, 1000);
+            }
+        });
+
+        function acceptCookies() {
+            localStorage.setItem('cookie_consent', 'analytics');
+            localStorage.setItem('cookiesAccepted', 'all');
+            const banner = document.getElementById('cookie-banner');
+            if (banner) {
+                banner.classList.remove('show');
+            }
+            
+            // Enable GA4 tracking if available
+            if (window.gtag) {
+                gtag('consent', 'update', {
+                    'analytics_storage': 'granted',
+                    'ad_storage': 'denied'
+                });
+            }
+            
+            // Trigger analytics consent update if function exists
+            if (typeof updateAnalyticsConsent === 'function') {
+                updateAnalyticsConsent(true);
+            }
+        }
+
+        function declineCookies() {
+            localStorage.setItem('cookie_consent', 'essential');
+            localStorage.setItem('cookiesAccepted', 'necessary');
+            const banner = document.getElementById('cookie-banner');
+            if (banner) {
+                banner.classList.remove('show');
+            }
+            
+            // Disable GA4 tracking if available
+            if (window.gtag) {
+                gtag('consent', 'update', {
+                    'analytics_storage': 'denied',
+                    'ad_storage': 'denied'
+                });
+            }
+            
+            // Trigger analytics consent update if function exists
+            if (typeof updateAnalyticsConsent === 'function') {
+                updateAnalyticsConsent(false);
+            }
+        }
+        
+        // Add event listeners for cookie buttons
+        var acceptBtn = document.getElementById('accept-cookies-btn');
+        if (acceptBtn) {
+            acceptBtn.addEventListener('click', function() {
+                acceptCookies();
+            });
+        }
+        
+        var declineBtn = document.getElementById('decline-cookies-btn');
+        if (declineBtn) {
+            declineBtn.addEventListener('click', function() {
+                declineCookies();
+            });
+        }
+    </script>
+
+    <!-- HTMX -->
+    <script src="/static/js/htmx.min.js"></script>
+    
+    <!-- Main JavaScript -->
+    <script src="/static/js/app.js"></script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

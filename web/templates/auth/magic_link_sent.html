@@ -1,0 +1,421 @@
+{% extends "modern_base.html" %}
+
+{% block title %}Check Your Email - ProofKit{% endblock %}
+{% block description %}We've sent you a magic link to complete your signup.{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-container">
+        <!-- Success Header -->
+        <div class="auth-header success">
+            <div class="success-icon">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+            </div>
+            <h1>Check Your Email!</h1>
+            <p class="subtitle">We've sent a magic link to:<br><strong>{{ email }}</strong></p>
+        </div>
+        
+        <!-- Instructions -->
+        <div class="auth-content">
+            <div class="instructions-card">
+                <h3>Next Steps:</h3>
+                <ol class="steps-list">
+                    <li>
+                        <div class="step-icon">📧</div>
+                        <div class="step-content">
+                            <strong>Open your email</strong>
+                            <p>Look for an email from ProofKit (no-reply@proofkit.net)</p>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="step-icon">🔗</div>
+                        <div class="step-content">
+                            <strong>Click the magic link</strong>
+                            <p>The link will log you in automatically</p>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="step-icon">✨</div>
+                        <div class="step-content">
+                            <strong>Start using ProofKit</strong>
+                            <p>You'll have instant access to all features</p>
+                        </div>
+                    </li>
+                </ol>
+            </div>
+            
+            {% if dev_mode and dev_link %}
+            <!-- Development Mode Link -->
+            <div class="dev-mode-card">
+                <h4>🔧 Development Mode</h4>
+                <p>For testing purposes, you can use this direct link:</p>
+                <div class="dev-link-container">
+                    <a href="{{ dev_link }}" class="dev-link">{{ dev_link }}</a>
+                    <button onclick="copyDevLink()" class="copy-btn">📋 Copy</button>
+                </div>
+                <p class="dev-note">Link expires in {{ expires_in }} seconds</p>
+            </div>
+            {% endif %}
+            
+            <!-- Timer -->
+            <div class="timer-section">
+                <p>Magic link expires in:</p>
+                <div class="timer" id="timer">{{ expires_in_minutes }} minutes</div>
+            </div>
+            
+            <!-- Troubleshooting -->
+            <details class="troubleshooting">
+                <summary>Didn't receive the email?</summary>
+                <div class="troubleshooting-content">
+                    <ul>
+                        <li>Check your spam or junk folder</li>
+                        <li>Make sure you entered the correct email address</li>
+                        <li>Add <strong>no-reply@proofkit.net</strong> to your contacts</li>
+                    </ul>
+                    <form method="POST" action="/api/resend-magic-link" style="margin-top: 1rem;">
+                        <input type="hidden" name="email" value="{{ email }}">
+                        <button type="submit" class="resend-btn">
+                            Send New Magic Link
+                        </button>
+                    </form>
+                </div>
+            </details>
+            
+            <!-- Alternative Actions -->
+            <div class="alternative-actions">
+                <a href="/auth/signup" class="alt-link">← Try different email</a>
+                <span class="separator">|</span>
+                <a href="/auth/login" class="alt-link">Already have an account?</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.auth-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+}
+
+.auth-container {
+    max-width: 540px;
+    width: 100%;
+    background: white;
+    border-radius: 1.5rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+}
+
+.auth-header {
+    text-align: center;
+    padding: 3rem 2rem;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+.success-icon {
+    display: inline-flex;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    margin-bottom: 1.5rem;
+}
+
+.auth-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+}
+
+.subtitle {
+    font-size: 1.125rem;
+    opacity: 0.95;
+    margin: 0;
+    line-height: 1.6;
+}
+
+.subtitle strong {
+    display: inline-block;
+    margin-top: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 0.5rem;
+    word-break: break-all;
+}
+
+.auth-content {
+    padding: 2rem;
+}
+
+.instructions-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.instructions-card h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1.125rem;
+    color: #1f2937;
+}
+
+.steps-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    counter-reset: step-counter;
+}
+
+.steps-list li {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.steps-list li:last-child {
+    margin-bottom: 0;
+}
+
+.step-icon {
+    font-size: 1.5rem;
+    width: 3rem;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.step-content {
+    flex: 1;
+}
+
+.step-content strong {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: #1f2937;
+}
+
+.step-content p {
+    margin: 0;
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+/* Development Mode Card */
+.dev-mode-card {
+    background: #fef3c7;
+    border: 2px solid #fbbf24;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.dev-mode-card h4 {
+    margin: 0 0 0.5rem 0;
+    color: #92400e;
+}
+
+.dev-mode-card p {
+    margin: 0.5rem 0;
+    color: #78350f;
+    font-size: 0.875rem;
+}
+
+.dev-link-container {
+    display: flex;
+    gap: 0.5rem;
+    margin: 1rem 0;
+}
+
+.dev-link {
+    flex: 1;
+    padding: 0.75rem;
+    background: white;
+    border: 1px solid #fbbf24;
+    border-radius: 0.5rem;
+    font-family: monospace;
+    font-size: 0.75rem;
+    word-break: break-all;
+    color: #92400e;
+    text-decoration: none;
+}
+
+.dev-link:hover {
+    background: #fef3c7;
+}
+
+.copy-btn {
+    padding: 0.75rem 1rem;
+    background: white;
+    border: 1px solid #fbbf24;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: background 0.2s;
+}
+
+.copy-btn:hover {
+    background: #fef3c7;
+}
+
+.dev-note {
+    font-size: 0.75rem;
+    color: #92400e;
+    opacity: 0.8;
+}
+
+/* Timer Section */
+.timer-section {
+    text-align: center;
+    margin: 2rem 0;
+}
+
+.timer-section p {
+    margin: 0 0 0.5rem 0;
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.timer {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #667eea;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Troubleshooting */
+.troubleshooting {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    margin: 1.5rem 0;
+}
+
+.troubleshooting summary {
+    cursor: pointer;
+    font-weight: 500;
+    color: #374151;
+    padding: 0.5rem;
+}
+
+.troubleshooting-content {
+    padding-top: 1rem;
+}
+
+.troubleshooting-content ul {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.resend-btn {
+    width: 100%;
+    padding: 0.75rem;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.resend-btn:hover {
+    transform: translateY(-2px);
+}
+
+/* Alternative Actions */
+.alternative-actions {
+    text-align: center;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+    font-size: 0.875rem;
+}
+
+.alt-link {
+    color: #667eea;
+    text-decoration: none;
+}
+
+.alt-link:hover {
+    text-decoration: underline;
+}
+
+.separator {
+    margin: 0 1rem;
+    color: #d1d5db;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .auth-container {
+        border-radius: 1rem;
+    }
+    
+    .auth-header {
+        padding: 2rem 1.5rem;
+    }
+    
+    .auth-header h1 {
+        font-size: 1.75rem;
+    }
+    
+    .auth-content {
+        padding: 1.5rem;
+    }
+}
+</style>
+
+<script>
+// Timer countdown
+{% if expires_in %}
+let secondsRemaining = {{ expires_in }};
+const timerElement = document.getElementById('timer');
+
+function updateTimer() {
+    if (secondsRemaining <= 0) {
+        timerElement.textContent = 'Expired';
+        timerElement.style.color = '#dc2626';
+        return;
+    }
+    
+    const minutes = Math.floor(secondsRemaining / 60);
+    const seconds = secondsRemaining % 60;
+    timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    
+    secondsRemaining--;
+}
+
+setInterval(updateTimer, 1000);
+{% endif %}
+
+// Copy dev link function
+function copyDevLink() {
+    const devLink = document.querySelector('.dev-link');
+    if (devLink) {
+        navigator.clipboard.writeText(devLink.textContent).then(() => {
+            const copyBtn = document.querySelector('.copy-btn');
+            const originalText = copyBtn.textContent;
+            copyBtn.textContent = '✓ Copied!';
+            setTimeout(() => {
+                copyBtn.textContent = originalText;
+            }, 2000);
+        });
+    }
+}
+</script>
+{% endblock %}

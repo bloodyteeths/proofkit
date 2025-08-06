@@ -1,0 +1,220 @@
+{% extends "industry_base.html" %}
+
+{% set headline = "Heat Sterilization Validation" %}
+{% set subline = "Generate USP-compliant proof PDFs for moist heat sterilization processes. Meet pharmaceutical, medical device, and laboratory sterilization standards with traceable validation." %}
+
+{% set trust_badges = [
+    {"icon": "💊", "text": "USP <121> Ready"},
+    {"icon": "🏥", "text": "ISO 11134 Compliant"},
+    {"icon": "🔬", "text": "FDA 21 CFR 820"},
+    {"icon": "✅", "text": "GMP Validated"}
+] %}
+
+{% set examples = {
+    "title": "Need sterilization example data to test with?",
+    "description": "Download example temperature log files from autoclave validation runs:",
+    "files": [
+        {
+            "name": "instrument_cycle.csv",
+            "description": "Laboratory instruments - 121°C for 15 min (wrapped goods)",
+            "icon": "✅",
+            "bg_color": "#f8f9ff",
+            "border_color": "#4CAF50",
+            "url": "/examples/autoclave/instrument_cycle.csv"
+        },
+        {
+            "name": "media_prep.csv",
+            "description": "Culture media - 121°C for 15 min (liquid sterilization)",
+            "icon": "⚠️",
+            "bg_color": "#fff8f0",
+            "border_color": "#f59e0b",
+            "url": "/examples/autoclave/media_prep.csv"
+        },
+        {
+            "name": "load_failure.csv",
+            "description": "Large load failure - cold spot detected, insufficient penetration",
+            "icon": "❌",
+            "bg_color": "#fef2f2",
+            "border_color": "#ef4444",
+            "url": "/examples/autoclave/load_failure.csv"
+        }
+    ],
+    "format_requirements": [
+        "<strong>Timestamp column:</strong> High precision timing (second resolution minimum)",
+        "<strong>Temperature columns:</strong> Chamber temp, load temp, drain temp (e.g., chamber_temp, load_probe_1)",
+        "<strong>Pressure data:</strong> Optional pressure sensor readings for correlation",
+        "<strong>Load info:</strong> Load configuration, cycle type in CSV metadata (#)",
+        "<strong>Calibration:</strong> Include sensor calibration dates in comments"
+    ]
+} %}
+
+{% set faq = {
+    "title": "Heat Sterilization Validation FAQ",
+    "items": [
+        {
+            "question": "What sterilization standards does ProofKit support?",
+            "answer": "ProofKit supports all major sterilization standards including USP <1211> Sterilization and Sterility Assurance, ISO 11134 for steam sterilization, AAMI ST79 for healthcare facilities, and FDA 21 CFR Part 820 for medical devices. Default F₀ calculations follow pharmacopeial standards."
+        },
+        {
+            "question": "How do I validate different load configurations (porous, non-porous, liquids)?",
+            "answer": "Different load types require specific validation approaches:<br><strong>Porous loads:</strong> 134°C for 3-4 min or 121°C for 15 min<br><strong>Non-porous:</strong> 134°C for 3 min or 121°C for 15 min<br><strong>Liquids:</strong> 121°C for 15 min (no pre-vacuum)<br>Set temperature and time according to your load type and use multiple temperature probes for load mapping."
+        },
+        {
+            "question": "Can ProofKit calculate F₀ values for sterilization efficacy?",
+            "answer": "Yes! ProofKit calculates lethality values including F₀ (steam sterilization at 121°C, Z=10°C) and equivalent sterilization times. The system integrates time-temperature data to provide total lethality achieved, comparing against your minimum F₀ requirement (typically F₀ ≥ 8 for pharmaceuticals)."
+        },
+        {
+            "question": "How do I handle air removal validation in pre-vacuum cycles?",
+            "answer": "For pre-vacuum cycles, monitor both temperature and pressure. Include pressure sensor data in your CSV. ProofKit will analyze temperature rise patterns to detect inadequate air removal - slow temperature rise or temperature lag indicates insufficient vacuum. Use multiple load probes to map heat penetration throughout the chamber."
+        },
+        {
+            "question": "What documentation is required for regulatory compliance?",
+            "answer": "ProofKit generates comprehensive validation packages including:<br>• USP-compliant temperature distribution studies<br>• Heat penetration validation with F₀ calculations<br>• Process deviation reports with corrective actions<br>• Tamper-evident records with digital signatures<br>• Certificate of sterility with batch traceability<br>All documentation meets 21 CFR Part 11 requirements."
+        }
+    ]
+} %}
+
+{% block spec_form %}
+<div style="margin-top: 3rem;">
+    <h4 style="color: #4c51bf; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+        🔥 Heat Sterilization Specification
+    </h4>
+    <p style="margin: 0 0 2rem 0; color: #64748b; font-size: 0.95rem;">
+        Configure your moist heat sterilization requirements. Default values follow USP <1211> and ISO 11134 standards for steam sterilization.
+    </p>
+    
+    <div style="background: white; padding: 2rem; border-radius: 1rem; box-shadow: var(--card-shadow); border: 2px solid #e2e8f0;">
+        <div class="form-grid" style="margin-bottom: 2rem;">
+            <!-- Job Information -->
+            <div>
+                <label for="job_id" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                    📋 Cycle/Load ID
+                </label>
+                <input type="text" id="job_id" value="CYCLE_2024_001" 
+                       placeholder="e.g., CYCLE_2024_001, LOAD_A123">
+                <small style="color: #6b7280; font-size: 0.85rem;">Sterilization cycle identifier for batch records</small>
+            </div>
+            
+            <!-- Target Temperature -->
+            <div>
+                <label for="target_temp" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                    🌡️ Target Temperature (°C)
+                </label>
+                <input type="number" id="target_temp" value="121" min="110" max="140" step="1">
+                <small style="color: #6b7280; font-size: 0.85rem;">Standard: 121°C (15 min), 132°C (4 min), 134°C (3 min)</small>
+            </div>
+        </div>
+        
+        <div class="form-grid" style="margin-bottom: 2rem;">
+            <!-- Hold Time -->
+            <div>
+                <label for="hold_time" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                    ⏱️ Hold Time (seconds)
+                </label>
+                <input type="number" id="hold_time" value="900" min="180" max="1800" step="60">
+                <small style="color: #6b7280; font-size: 0.85rem;">900s = 15 min (121°C), 240s = 4 min (132°C), 180s = 3 min (134°C)</small>
+            </div>
+            
+            <!-- Sensor Uncertainty -->
+            <div>
+                <label for="sensor_uncertainty" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                    📊 Sensor Uncertainty (°C)
+                </label>
+                <input type="number" id="sensor_uncertainty" value="0.5" min="0.1" max="2.0" step="0.1">
+                <small style="color: #6b7280; font-size: 0.85rem;">±0.5°C for validated RTD probes, ±1.0°C for thermocouples</small>
+            </div>
+        </div>
+        
+        <!-- Advanced Settings Toggle -->
+        <details style="margin-top: 2rem;">
+            <summary style="font-weight: 600; color: #4c51bf; cursor: pointer; margin-bottom: 1rem;">
+                🔧 Advanced Sterilization Settings
+            </summary>
+            
+            <div style="background: #f8f9ff; padding: 1.5rem; border-radius: 0.75rem; margin-top: 1rem;">
+                <div class="form-grid" style="margin-bottom: 1.5rem;">
+                    <!-- Max Ramp Rate -->
+                    <div>
+                        <label for="max_ramp_rate" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                            📈 Max Heat-up Rate (°C/min)
+                        </label>
+                        <input type="number" id="max_ramp_rate" value="8" min="2" max="20" step="1">
+                        <small style="color: #6b7280; font-size: 0.85rem;">Typical: 5-10°C/min for proper heat penetration</small>
+                    </div>
+                    
+                    <!-- Time to Threshold -->
+                    <div>
+                        <label for="max_time_to_threshold" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                            ⏰ Max Heat-up Time (seconds)
+                        </label>
+                        <input type="number" id="max_time_to_threshold" value="600" min="180" max="1800" step="60">
+                        <small style="color: #6b7280; font-size: 0.85rem;">Maximum time allowed to reach sterilization temperature</small>
+                    </div>
+                </div>
+                
+                <!-- Hold Logic -->
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="font-weight: 600; color: #374151; margin-bottom: 1rem; display: block;">
+                        🔄 Hold Time Logic
+                    </label>
+                    <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; white-space: nowrap;">
+                            <input type="radio" name="hold_logic" value="continuous" checked 
+                                   style="accent-color: #667eea; margin: 0;">
+                            <span><strong>Continuous</strong> - USP requirement</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; white-space: nowrap;">
+                            <input type="radio" name="hold_logic" value="cumulative" 
+                                   style="accent-color: #667eea; margin: 0;">
+                            <span><strong>Cumulative</strong> - Research only</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Sensor Configuration -->
+                <div>
+                    <label style="font-weight: 600; color: #374151; margin-bottom: 1rem; display: block;">
+                        📡 Load Mapping Logic
+                    </label>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; white-space: nowrap;">
+                            <input type="radio" name="sensor_mode" value="min_of_set" checked 
+                                   style="accent-color: #667eea; margin: 0;">
+                            <span><strong>Minimum</strong> (cold spot)</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; white-space: nowrap;">
+                            <input type="radio" name="sensor_mode" value="mean_of_set" 
+                                   style="accent-color: #667eea; margin: 0;">
+                            <span><strong>Average</strong> (load average)</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; white-space: nowrap;">
+                            <input type="radio" name="sensor_mode" value="majority_over_threshold" 
+                                   style="accent-color: #667eea; margin: 0;">
+                            <span><strong>Majority</strong> (statistical)</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </details>
+        
+        <!-- Industry Info Box -->
+        <div style="background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 0.75rem; padding: 1rem; margin-top: 2rem;">
+            <div style="display: flex; align-items: start; gap: 0.75rem;">
+                <div style="font-size: 1.25rem;">🏥</div>
+                <div>
+                    <strong style="color: #0c4a6e;">USP Sterilization Standards</strong>
+                    <p style="margin: 0.5rem 0 0 0; color: #0c4a6e; font-size: 0.9rem; line-height: 1.4;">
+                        Default values meet USP <1211> pharmacopeial requirements and ISO 11134 standards. 
+                        Sterilization hold time begins when ALL load sensors reach target temperature.
+                        F₀ calculations use Z-value of 10°C and reference temperature of 121°C. 
+                        Always perform heat distribution and penetration studies per regulatory guidance.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hidden JSON field for backend -->
+    <input type="hidden" id="spec_json" name="spec_json" value="">
+</div>
+{% endblock %}

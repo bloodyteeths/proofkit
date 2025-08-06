@@ -23,6 +23,7 @@ Example:
 import sys
 import argparse
 import xml.etree.ElementTree as ET
+import os
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 from dataclasses import dataclass
@@ -244,6 +245,10 @@ class CoverageGate:
             
             self.print_coverage_table()
             
+            # Check if we're on main branch - strict enforcement always applies
+            current_branch = os.getenv('GITHUB_REF_NAME', os.getenv('GITHUB_HEAD_REF', ''))
+            is_main_branch = current_branch == 'main'
+            
             if passed:
                 print(f"\n✅ All coverage thresholds met!")
                 return 0
@@ -251,7 +256,15 @@ class CoverageGate:
                 print(f"\n❌ Coverage gate failed:")
                 for failure in failures:
                     print(f"  - {failure}")
-                return 1
+                
+                # On main branch, always fail strictly regardless of labels
+                if is_main_branch:
+                    print(f"\n🔒 Main branch detected - strict enforcement enabled")
+                    print(f"   Coverage gates cannot be bypassed on main branch")
+                    return 1
+                else:
+                    print(f"\n💡 Non-main branch - coverage gates may be relaxed with 'coverage-increment' label")
+                    return 1
                 
         except FileNotFoundError:
             print(f"Error: Coverage file '{self.coverage_file}' not found.", file=sys.stderr)

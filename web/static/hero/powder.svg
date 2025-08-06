@@ -1,0 +1,96 @@
+<svg width="550" height="320" viewBox="0 0 550 320" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="550" height="320" fill="#f8fafc"/>
+  
+  <!-- Factory floor -->
+  <rect x="0" y="280" width="550" height="40" fill="#e2e8f0"/>
+  
+  <!-- Oven/Curing chamber -->
+  <rect x="350" y="120" width="180" height="120" rx="8" fill="#64748b" stroke="#475569" stroke-width="2"/>
+  <rect x="360" y="130" width="160" height="100" rx="4" fill="#1e293b"/>
+  
+  <!-- Oven door -->
+  <rect x="345" y="140" width="15" height="80" fill="#374151"/>
+  <circle cx="352" cy="180" r="3" fill="#9ca3af"/>
+  
+  <!-- Heat lines from oven -->
+  <path d="M 370 150 Q 375 145 380 150" stroke="#ef4444" stroke-width="2" fill="none"/>
+  <path d="M 390 155 Q 395 150 400 155" stroke="#ef4444" stroke-width="2" fill="none"/>
+  <path d="M 410 150 Q 415 145 420 150" stroke="#ef4444" stroke-width="2" fill="none"/>
+  <path d="M 370 170 Q 375 165 380 170" stroke="#ef4444" stroke-width="2" fill="none"/>
+  <path d="M 390 175 Q 395 170 400 175" stroke="#ef4444" stroke-width="2" fill="none"/>
+  
+  <!-- Temperature display on oven -->
+  <rect x="480" y="140" width="40" height="25" rx="3" fill="#0050FF"/>
+  <text x="500" y="157" font-family="Arial, sans-serif" font-size="12" fill="white" text-anchor="middle">200°C</text>
+  
+  <!-- Spray gun -->
+  <ellipse cx="150" cy="160" rx="25" ry="8" fill="#374151"/>
+  <rect x="120" y="155" width="30" height="10" rx="2" fill="#6b7280"/>
+  <rect x="90" y="157" width="30" height="6" rx="1" fill="#4b5563"/>
+  
+  <!-- Spray gun trigger -->
+  <path d="M 130 165 L 125 175 L 135 175 Z" fill="#374151"/>
+  
+  <!-- Powder spray particles -->
+  <circle cx="180" cy="150" r="2" fill="#0050FF" opacity="0.6"/>
+  <circle cx="190" cy="145" r="1.5" fill="#0050FF" opacity="0.4"/>
+  <circle cx="200" cy="155" r="1" fill="#0050FF" opacity="0.3"/>
+  <circle cx="185" cy="165" r="1.5" fill="#0050FF" opacity="0.5"/>
+  <circle cx="195" cy="170" r="1" fill="#0050FF" opacity="0.3"/>
+  <circle cx="210" cy="160" r="2" fill="#0050FF" opacity="0.4"/>
+  
+  <!-- Part being coated -->
+  <rect x="220" y="140" width="60" height="40" rx="4" fill="#e5e7eb" stroke="#9ca3af" stroke-width="2"/>
+  <rect x="225" y="145" width="50" height="30" rx="2" fill="#d1d5db"/>
+  
+  <!-- Conveyor belt -->
+  <rect x="200" y="200" width="200" height="15" fill="#6b7280"/>
+  <circle cx="210" cy="207" r="6" fill="#374151"/>
+  <circle cx="240" cy="207" r="6" fill="#374151"/>
+  <circle cx="270" cy="207" r="6" fill="#374151"/>
+  <circle cx="300" cy="207" r="6" fill="#374151"/>
+  <circle cx="330" cy="207" r="6" fill="#374151"/>
+  <circle cx="360" cy="207" r="6" fill="#374151"/>
+  <circle cx="390" cy="207" r="6" fill="#374151"/>
+  
+  <!-- Temperature sensor on part -->
+  <rect x="240" y="130" width="20" height="8" rx="2" fill="#23C48E"/>
+  <line x1="250" y1="130" x2="250" y2="120" stroke="#15803d" stroke-width="2"/>
+  <circle cx="250" cy="118" r="3" fill="#15803d"/>
+  
+  <!-- Temperature reading -->
+  <rect x="240" y="100" width="35" height="18" rx="3" fill="#ffffff" stroke="#d1d5db"/>
+  <text x="257" y="112" font-family="Arial, sans-serif" font-size="10" fill="#374151" text-anchor="middle">180°C</text>
+  
+  <!-- Monitoring graph -->
+  <rect x="50" y="50" width="120" height="80" rx="4" fill="#ffffff" stroke="#d1d5db" stroke-width="2"/>
+  <text x="110" y="45" font-family="Arial, sans-serif" font-size="12" fill="#374151" text-anchor="middle">Cure Monitoring</text>
+  
+  <!-- Graph axes -->
+  <line x1="60" y1="120" x2="160" y2="120" stroke="#9ca3af" stroke-width="1"/>
+  <line x1="60" y1="60" x2="60" y2="120" stroke="#9ca3af" stroke-width="1"/>
+  
+  <!-- Temperature curve -->
+  <path d="M 60 115 Q 80 100 100 85 Q 120 80 140 82 Q 150 85 160 88" stroke="#0050FF" stroke-width="3" fill="none"/>
+  
+  <!-- Target line -->
+  <line x1="60" y1="85" x2="160" y2="85" stroke="#23C48E" stroke-width="2" stroke-dasharray="3,3"/>
+  
+  <!-- Process control panel -->
+  <rect x="20" y="180" width="100" height="60" rx="6" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="70" y="175" font-family="Arial, sans-serif" font-size="10" fill="#475569" text-anchor="middle">Control Panel</text>
+  
+  <!-- Control buttons -->
+  <circle cx="40" cy="200" r="8" fill="#ef4444"/>
+  <circle cx="60" cy="200" r="8" fill="#22c55e"/>
+  <circle cx="80" cy="200" r="8" fill="#eab308"/>
+  
+  <!-- Status indicator -->
+  <rect x="30" y="215" width="60" height="15" rx="3" fill="#0050FF"/>
+  <text x="60" y="226" font-family="Arial, sans-serif" font-size="8" fill="white" text-anchor="middle">CURING</text>
+  
+  <!-- ProofKit logo/branding -->
+  <text x="450" y="40" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#0050FF">ProofKit</text>
+  <text x="450" y="55" font-family="Arial, sans-serif" font-size="10" fill="#64748b">Powder Coat Validation</text>
+</svg>

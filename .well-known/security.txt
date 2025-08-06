@@ -1,0 +1,29 @@
+Contact: mailto:security@proofkit.com
+Expires: 2026-08-05T00:00:00.000Z
+Encryption: https://proofkit.com/pgp-key.txt
+Preferred-Languages: en
+Policy: https://proofkit.com/security-policy
+Acknowledgments: https://proofkit.com/security-hall-of-fame
+
+# ProofKit Security Contact Information
+# 
+# ProofKit provides temperature proof generation services for
+# compliance-critical industries including powder coating, HACCP, 
+# autoclave sterilization, and concrete curing validation.
+#
+# We take security seriously given the regulatory nature of our 
+# evidence bundles and the trust placed in our tamper-evident PDFs.
+#
+# Please report security vulnerabilities responsibly:
+# - Use the contact email above for initial contact
+# - Include detailed reproduction steps
+# - Allow reasonable time for response and remediation
+# - Do not publicly disclose until we've had time to address
+#
+# We commit to:
+# - Acknowledge receipt within 48 hours
+# - Provide initial assessment within 1 week  
+# - Keep you informed of remediation progress
+# - Recognize responsible disclosure in our hall of fame
+#
+# Thank you for helping keep ProofKit secure!

@@ -28,6 +28,21 @@ error() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: $*" | tee -a "$LOG_FILE" >&2
 }
 
+# Emit success metric (StatsD format)
+emit_success_metric() {
+    # Send StatsD metric for backup success
+    log "Emitting success metric: backup_success:1|c"
+    # This would typically go to a metrics endpoint, but for now just log it
+    echo "backup_success:1|c" | logger -t proofkit-backup || true
+}
+
+# Parse command line arguments (after logging functions are defined)
+DRY_RUN=false
+if [[ "${1:-}" == "--dry-run" ]]; then
+    DRY_RUN=true
+    log "Running in DRY-RUN mode - no actual uploads will be performed"
+fi
+
 # Validate required environment variables
 validate_config() {
     log "Validating configuration..."
@@ -62,21 +77,20 @@ validate_config() {
 
 # Create tar.gz backup of storage directory
 create_backup_archive() {
-    log "Creating backup archive: $BACKUP_NAME"
-    
+    # Don't log inside this function to avoid output contamination
     local temp_dir=$(mktemp -d)
     local archive_path="$temp_dir/$BACKUP_NAME"
     
     # Change to project directory and create tar.gz
     cd "$PROJECT_DIR"
     
-    if tar -czf "$archive_path" -C . storage/; then
-        log "Archive created successfully: $archive_path"
-        echo "$archive_path"
+    if tar -czf "$archive_path" -C . storage/ 2>/dev/null; then
+        # Return only the path, no log messages
+        printf "%s" "$archive_path"
     else
-        error "Failed to create backup archive"
+        echo "ERROR: Failed to create backup archive" >&2
         rm -rf "$temp_dir"
-        exit 1
+        return 1
     fi
 }
 
@@ -84,16 +98,20 @@ create_backup_archive() {
 calculate_hash() {
     local archive_path="$1"
     
-    log "Calculating SHA-256 hash..."
-    
+    # Don't log inside this function to avoid output contamination
+    local hash_result=""
     if command -v sha256sum &> /dev/null; then
-        sha256sum "$archive_path" | awk '{print $1}'
+        hash_result=$(sha256sum "$archive_path" 2>/dev/null | awk '{print $1}')
     elif command -v shasum &> /dev/null; then
-        shasum -a 256 "$archive_path" | awk '{print $1}'
+        hash_result=$(shasum -a 256 "$archive_path" 2>/dev/null | awk '{print $1}')
     else
-        error "No SHA-256 utility found (sha256sum or shasum)"
-        exit 1
+        # Log error to stderr, not stdout
+        echo "ERROR: No SHA-256 utility found (sha256sum or shasum)" >&2
+        return 1
     fi
+    
+    # Return only the hash value, no additional output
+    printf "%s" "$hash_result"
 }
 
 # Upload backup to S3
@@ -104,15 +122,30 @@ upload_to_s3() {
     log "Uploading backup to S3 bucket: $S3_BUCKET"
     
     # Set AWS region if not already set
-    export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-us-east-1}"
+    export AWS_DEFAULT_REGION="${S3_REGION:-us-east-1}"
     
-    # Upload archive to S3
-    if aws s3 cp "$archive_path" "s3://$S3_BUCKET/$BACKUP_NAME" --metadata "sha256=$hash_value"; then
-        log "Upload successful: s3://$S3_BUCKET/$BACKUP_NAME"
-        log "SHA-256: $hash_value"
+    # Build AWS CLI command with optional endpoint
+    local aws_cmd="aws s3 cp \"$archive_path\" \"s3://$S3_BUCKET/$BACKUP_NAME\" --metadata \"sha256=$hash_value\""
+    
+    # Add S3_ENDPOINT if provided (for non-AWS S3-compatible services)
+    if [[ -n "${S3_ENDPOINT:-}" ]]; then
+        aws_cmd="$aws_cmd --endpoint-url=\"$S3_ENDPOINT\""
+        log "Using custom S3 endpoint: $S3_ENDPOINT"
+    fi
+    
+    # Execute upload command (or simulate in dry-run mode)
+    if [[ "$DRY_RUN" == "true" ]]; then
+        log "DRY-RUN: Would execute: $aws_cmd"
+        log "DRY-RUN: Upload simulated successfully: s3://$S3_BUCKET/$BACKUP_NAME"
+        log "DRY-RUN: SHA-256: $hash_value"
     else
-        error "Failed to upload backup to S3"
-        exit 1
+        if eval "$aws_cmd"; then
+            log "Upload successful: s3://$S3_BUCKET/$BACKUP_NAME"
+            log "SHA-256: $hash_value"
+        else
+            error "Failed to upload backup to S3"
+            exit 1
+        fi
     fi
 }
 
@@ -124,9 +157,12 @@ main() {
     validate_config
     
     # Create backup archive
+    log "Creating backup archive: $BACKUP_NAME"
     local archive_path=$(create_backup_archive)
+    log "Archive created successfully: $archive_path"
     
     # Calculate hash
+    log "Calculating SHA-256 hash..."
     local hash_value=$(calculate_hash "$archive_path")
     log "Backup SHA-256 hash: $hash_value"
     
@@ -140,6 +176,9 @@ main() {
     log "Backup file: $BACKUP_NAME"
     log "S3 location: s3://$S3_BUCKET/$BACKUP_NAME"
     log "SHA-256: $hash_value"
+    
+    # Emit success metric only on successful completion
+    emit_success_metric
     
     return 0
 }

@@ -1,0 +1,14 @@
+{
+  "pass_": false,
+  "job_id": "usp_797_cold_storage_validation",
+  "target_temp_C": 5.0,
+  "conservative_threshold_C": 5.5,
+  "actual_hold_time_s": 0.0,
+  "required_hold_time_s": 82800,
+  "max_temp_C": 0.0,
+  "min_temp_C": 0.0,
+  "reasons": [
+    "Insufficient data points for reliable analysis: 288 points, need at least 2762"
+  ],
+  "warnings": []
+}

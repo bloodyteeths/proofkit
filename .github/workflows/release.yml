@@ -1,0 +1,428 @@
+name: Release Validation
+
+on:
+  # Trigger on PR to main (pre-release validation)
+  pull_request:
+    branches: [ main ]
+  
+  # Trigger on release tags (full release validation)
+  push:
+    tags:
+      - 'v*'
+  
+  # Manual trigger with mode selection
+  workflow_dispatch:
+    inputs:
+      validation_mode:
+        description: 'Validation mode (development/production)'
+        required: true
+        default: 'development'
+        type: choice
+        options:
+          - development
+          - production
+      regenerate_golden:
+        description: 'Regenerate golden output files'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  PYTHON_VERSION: "3.11"
+  COVERAGE_THRESHOLD: 92
+
+jobs:
+  # Fast validation for PRs and development
+  fast-validation:
+    if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && github.event.inputs.validation_mode == 'development')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
+    
+    - name: Run development release validation
+      run: |
+        python -m cli.release_check --mode development --output-json release-report-dev.json --verbose
+    
+    - name: Upload development validation report
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: release-validation-development
+        path: |
+          release-report-dev.json
+          htmlcov/
+          pytest-results.xml
+        retention-days: 7
+    
+    - name: Comment PR with validation results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          
+          try {
+            const reportData = fs.readFileSync('release-report-dev.json', 'utf8');
+            const report = JSON.parse(reportData);
+            
+            let comment = `## 🚀 Release Validation Results (Development Mode)\n\n`;
+            comment += `**Overall Status:** ${report.overall_passed ? '✅ PASSED' : '❌ FAILED'}\n`;
+            comment += `**Duration:** ${report.total_duration.toFixed(2)}s\n`;
+            comment += `**Coverage:** ${report.coverage_summary.total_coverage || 'N/A'}%\n\n`;
+            
+            comment += `### Validation Results\n`;
+            for (const result of report.validation_results) {
+              const status = result.passed ? '✅' : '❌';
+              comment += `- ${status} **${result.name}** (${result.duration.toFixed(2)}s)\n`;
+              
+              if (result.warnings && result.warnings.length > 0) {
+                for (const warning of result.warnings.slice(0, 3)) {
+                  comment += `  - ⚠️ ${warning}\n`;
+                }
+              }
+              
+              if (result.errors && result.errors.length > 0) {
+                for (const error of result.errors.slice(0, 3)) {
+                  comment += `  - ❌ ${error}\n`;
+                }
+              }
+            }
+            
+            if (report.performance_metrics && report.performance_metrics.normalize_time) {
+              comment += `\n### Performance\n`;
+              comment += `- Normalize: ${report.performance_metrics.normalize_time.toFixed(3)}s\n`;
+              comment += `- Decision: ${report.performance_metrics.decide_time.toFixed(3)}s\n`;
+            }
+            
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+          } catch (error) {
+            console.log('Could not create PR comment:', error);
+          }
+
+  # Full validation for releases and production
+  production-validation:
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && github.event.inputs.validation_mode == 'production')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        # Fetch full history for proper version detection
+        fetch-depth: 0
+    
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
+        
+        # Install system dependencies for PDF processing
+        sudo apt-get update
+        sudo apt-get install -y libmagic1
+    
+    - name: Regenerate golden files (if requested)
+      if: github.event.inputs.regenerate_golden == 'true'
+      run: |
+        python -m cli.release_check --golden-regen
+        
+        # Commit updated golden files
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add examples/outputs/
+        git diff --staged --quiet || git commit -m "chore: regenerate golden output files"
+    
+    - name: Run production release validation
+      run: |
+        python -m cli.release_check --mode production --output-json release-report-prod.json --output-html release-report.html --verbose
+    
+    - name: Check coverage meets threshold
+      run: |
+        python -c "
+        import json
+        with open('release-report-prod.json', 'r') as f:
+            report = json.load(f)
+        coverage = report.get('coverage_summary', {}).get('total_coverage', 0)
+        threshold = ${{ env.COVERAGE_THRESHOLD }}
+        print(f'Coverage: {coverage}%, Threshold: {threshold}%')
+        if coverage < threshold:
+            print(f'ERROR: Coverage {coverage}% is below threshold {threshold}%')
+            exit(1)
+        else:
+            print(f'SUCCESS: Coverage {coverage}% meets threshold {threshold}%')
+        "
+    
+    - name: Performance regression check
+      run: |
+        python -c "
+        import json
+        with open('release-report-prod.json', 'r') as f:
+            report = json.load(f)
+        
+        # Check performance thresholds
+        perf = report.get('performance_metrics', {})
+        normalize_time = perf.get('normalize_time', 0)
+        decide_time = perf.get('decide_time', 0)
+        total_time = perf.get('total_time', 0)
+        
+        print(f'Performance metrics:')
+        print(f'  Normalize: {normalize_time:.3f}s')
+        print(f'  Decision: {decide_time:.3f}s')
+        print(f'  Total: {total_time:.3f}s')
+        
+        # Performance thresholds (fail on excessive times)
+        if normalize_time > 5.0:
+            print(f'ERROR: Normalize time {normalize_time:.3f}s exceeds 5.0s threshold')
+            exit(1)
+        if decide_time > 3.0:
+            print(f'ERROR: Decision time {decide_time:.3f}s exceeds 3.0s threshold')
+            exit(1)
+        if total_time > 10.0:
+            print(f'ERROR: Total time {total_time:.3f}s exceeds 10.0s threshold')
+            exit(1)
+        
+        print('Performance check passed')
+        "
+    
+    - name: Upload production validation artifacts
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: release-validation-production
+        path: |
+          release-report-prod.json
+          release-report.html
+          htmlcov/
+          pytest-results.xml
+          coverage.xml
+        retention-days: 30
+    
+    - name: Upload release report to GitHub Pages (on tag)
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: .
+        destination_dir: releases/${{ github.ref_name }}
+        keep_files: true
+        user_name: 'github-actions[bot]'
+        user_email: 'github-actions[bot]@users.noreply.github.com'
+        commit_message: 'Deploy release validation report for ${{ github.ref_name }}'
+    
+    - name: Create GitHub Release with validation report
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          release-report-prod.json
+          release-report.html
+        body: |
+          ## ProofKit Release ${{ github.ref_name }}
+          
+          This release has been validated with comprehensive testing including:
+          
+          - ✅ Code quality checks (flake8, mypy, formatting)
+          - ✅ Full test suite with ${{ env.COVERAGE_THRESHOLD }}%+ coverage
+          - ✅ Example validation (all CSV/spec pairs)
+          - ✅ Golden output verification
+          - ✅ Performance regression testing
+          
+          **Validation Report:** [View HTML Report](https://your-org.github.io/proofkit/releases/${{ github.ref_name }}/release-report.html)
+          
+          See attached artifacts for detailed validation results.
+        draft: false
+        prerelease: false
+
+  # Matrix testing across Python versions (for comprehensive validation)
+  matrix-validation:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: ["3.9", "3.10", "3.11"]
+        exclude:
+          # Skip some combinations to save CI time
+          - os: macos-latest
+            python-version: "3.9"
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install system dependencies (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libmagic1
+    
+    - name: Install system dependencies (macOS)
+      if: matrix.os == 'macos-latest'
+      run: |
+        brew install libmagic
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
+    
+    - name: Run core validation (fast)
+      run: |
+        python -m cli.release_check --mode development --output-json matrix-report-${{ matrix.os }}-${{ matrix.python-version }}.json
+    
+    - name: Upload matrix validation results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: matrix-validation-${{ matrix.os }}-${{ matrix.python-version }}
+        path: matrix-report-${{ matrix.os }}-${{ matrix.python-version }}.json
+        retention-days: 7
+
+  # Security and dependency audit
+  security-audit:
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install safety bandit semgrep
+        pip install -r requirements.txt
+    
+    - name: Run safety check (dependency vulnerabilities)
+      run: |
+        safety check --json --output safety-report.json || true
+        safety check --short-report
+    
+    - name: Run bandit security linting
+      run: |
+        bandit -r . -f json -o bandit-report.json || true
+        bandit -r . -ll
+    
+    - name: Run semgrep security analysis
+      run: |
+        semgrep --config=auto --json --output=semgrep-report.json . || true
+        semgrep --config=auto --error .
+    
+    - name: Upload security reports
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: security-audit
+        path: |
+          safety-report.json
+          bandit-report.json
+          semgrep-report.json
+        retention-days: 30
+
+  # Docker image validation
+  docker-validation:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Build Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: false
+        tags: proofkit:release-test
+        load: true
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    
+    - name: Test Docker image functionality
+      run: |
+        # Start container and test basic functionality
+        docker run -d --name proofkit-test -p 8000:8000 proofkit:release-test
+        
+        # Wait for startup
+        sleep 10
+        
+        # Basic health check
+        curl -f http://localhost:8000/health || exit 1
+        
+        # Test file upload endpoint exists
+        curl -f http://localhost:8000/ || exit 1
+        
+        # Stop container
+        docker stop proofkit-test
+        docker rm proofkit-test
+    
+    - name: Analyze image size and security
+      run: |
+        # Get image info
+        docker images proofkit:release-test --format "table {{.Repository}}:{{.Tag}}\t{{.Size}}\t{{.CreatedAt}}"
+        
+        # Basic security scan (if available)
+        if command -v trivy &> /dev/null; then
+          trivy image --exit-code 1 --severity HIGH,CRITICAL proofkit:release-test
+        else
+          echo "Trivy not available for security scanning"
+        fi

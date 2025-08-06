@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+
+{% block title %}ProofKit - Professional Temperature Log Validation & Compliance{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero" style="background: linear-gradient(135deg, #0F1222 0%, #1A1B2E 100%); color: white; padding: 4rem 0; margin: -1rem -1rem 0 -1rem;">
+    <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 1.5rem;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center;">
+            <div style="text-align: left;">
+                <h1 style="font-size: 3rem; font-weight: 700; margin-bottom: 1.5rem; line-height: 1.1;">
+                    Generate inspector-ready proof from any temperature log.
+                </h1>
+                <p style="font-size: 1.25rem; margin-bottom: 2rem; opacity: 0.9; line-height: 1.6;">
+                    Upload CSV → apply the standard → download a tamper-evident PDF/A-3 with embedded manifest.
+                </p>
+                <div style="display: flex; gap: 1rem;">
+                    <a href="/powder-coat" class="button primary" style="background: #0050FF; color: white; padding: 1rem 2rem; border-radius: 0.75rem; text-decoration: none; font-weight: 600; transition: all 0.2s;">
+                        Upload log
+                    </a>
+                    <a href="/examples" class="button outline" style="background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255, 255, 255, 0.2); padding: 1rem 2rem; border-radius: 0.75rem; text-decoration: none; font-weight: 600; transition: all 0.2s;">
+                        See a sample certificate
+                    </a>
+                </div>
+                <p style="font-size: 0.875rem; margin-top: 1rem; opacity: 0.7; font-weight: 500;">
+                    No sign-up required for your first 3 certificates.
+                </p>
+            </div>
+            <div style="text-align: center;">
+                <div style="background: white; border-radius: 1rem; padding: 2rem; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); color: #374151; max-width: 400px; margin-left: auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <div style="background: #10B981; color: white; padding: 0.5rem 1rem; border-radius: 999px; font-weight: 600; font-size: 0.875rem;">PASS</div>
+                        <div style="font-size: 0.875rem; color: #6B7280;">2025-08-05</div>
+                    </div>
+                    <div style="height: 0.5rem; background: #E5E7EB; border-radius: 0.25rem; margin-bottom: 0.5rem;"></div>
+                    <div style="height: 0.5rem; background: #E5E7EB; border-radius: 0.25rem; margin-bottom: 0.5rem; width: 70%;"></div>
+                    <div style="height: 6rem; background: #F9FAFB; border-radius: 0.5rem; margin: 1.5rem 0; position: relative; overflow: hidden;">
+                        <div style="position: absolute; bottom: 1rem; left: 1rem; right: 1rem; height: 2px; background: linear-gradient(90deg, #EF4444 0%, #10B981 100%);"></div>
+                        <div style="position: absolute; top: 2rem; left: 1rem; right: 1rem; height: 1px; background: #6B7280; opacity: 0.5;"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem;">
+                        <div style="height: 0.25rem; width: 60%; background: #E5E7EB; border-radius: 0.125rem;"></div>
+                        <div style="width: 2rem; height: 2rem; background: #374151; border-radius: 0.25rem;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Trust Badges -->
+<section class="trust-section" style="padding: 3rem 0; background: #F9FAFB;">
+    <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 1.5rem;">
+        {% set trust_badges = [
+            {src: '/static/badges/iso-2368.svg', alt: 'ISO 2368 Paints and Varnishes', href: '/powder-coat'},
+            {src: '/static/badges/qualicoat.svg', alt: 'Qualicoat Quality Label', href: 'https://www.qualicoat.net/main/specifications.html'},
+            {src: '/static/badges/fda-21cfr-part11.svg', alt: 'FDA 21 CFR Part 11', href: 'https://www.fda.gov/about-fda/website-policies/fda-name-and-logo-policy'},
+            {src: '/static/badges/iso-13485.svg', alt: 'ISO 13485 Medical Devices', href: 'https://www.iso.org/iso-13485-medical-devices.html'},
+            {src: '/static/badges/astm-c31.svg', alt: 'ASTM C31', href: 'https://www.astm.org/Standards/C31.htm'},
+            {src: '/static/badges/usp-797.svg', alt: 'USP 797', href: 'https://www.usp.org/compounding/general-chapter-797'},
+            {src: '/static/badges/iso-27001.svg', alt: 'ISO 27001', href: 'https://www.iso.org/isoiec-27001-information-security.html'},
+            {src: '/static/badges/soc2.svg', alt: 'SOC 2 Type II', href: 'https://www.aicpa-cima.com/resources/landing/system-and-organization-controls-soc-suite-of-services'}
+        ] %}
+        {% include 'components/badge_strip.html' %}
+    </div>
+</section>
+
+<!-- Features Section -->
+<section style="padding: 4rem 0; background: #f8f9fa;">
+    <div class="container">
+        <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 3rem; color: #2d3748;">
+            Why Choose ProofKit?
+        </h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+            <div style="background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">⚡</div>
+                <h3 style="font-size: 1.5rem; margin-bottom: 1rem; color: #2d3748;">Lightning Fast</h3>
+                <p style="color: #4a5568; line-height: 1.6;">
+                    Process temperature logs in under 3 seconds. No more waiting for manual validation.
+                </p>
+            </div>
+            <div style="background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🔒</div>
+                <h3 style="font-size: 1.5rem; margin-bottom: 1rem; color: #2d3748;">Compliance Ready</h3>
+                <p style="color: #4a5568; line-height: 1.6;">
+                    PDF/A-3 compliant certificates with RFC 3161 timestamps. Pass any audit.
+                </p>
+            </div>
+            <div style="background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🎯</div>
+                <h3 style="font-size: 1.5rem; margin-bottom: 1rem; color: #2d3748;">Industry Specific</h3>
+                <p style="color: #4a5568; line-height: 1.6;">
+                    Built-in specs for powder coating, HACCP, autoclave, sterile processing, and more.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Industries Section -->
+<section style="padding: 4rem 0;">
+    <div class="container">
+        <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 3rem; color: #2d3748;">
+            Trusted by Industry Leaders
+        </h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+            <a href="/app?industry=powder-coat" style="text-decoration: none; color: inherit;">
+                <div style="background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; transition: all 0.3s ease; border: 2px solid transparent;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🎨</div>
+                    <h3 style="font-size: 1.3rem; margin-bottom: 0.5rem; color: #2d3748;">Powder Coating</h3>
+                    <p style="color: #4a5568; font-size: 0.9rem;">Cure validation for automotive & industrial coatings</p>
+                </div>
+            </a>
+            <a href="/app?industry=haccp" style="text-decoration: none; color: inherit;">
+                <div style="background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; transition: all 0.3s ease; border: 2px solid transparent;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🍽️</div>
+                    <h3 style="font-size: 1.3rem; margin-bottom: 0.5rem; color: #2d3748;">HACCP</h3>
+                    <p style="color: #4a5568; font-size: 0.9rem;">Food safety cooling curve compliance</p>
+                </div>
+            </a>
+            <a href="/app?industry=autoclave" style="text-decoration: none; color: inherit;">
+                <div style="background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; transition: all 0.3s ease; border: 2px solid transparent;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🏥</div>
+                    <h3 style="font-size: 1.3rem; margin-bottom: 0.5rem; color: #2d3748;">Autoclave</h3>
+                    <p style="color: #4a5568; font-size: 0.9rem;">Medical device sterilization validation</p>
+                </div>
+            </a>
+            <a href="/app?industry=sterile" style="text-decoration: none; color: inherit;">
+                <div style="background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; transition: all 0.3s ease; border: 2px solid transparent;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🧪</div>
+                    <h3 style="font-size: 1.3rem; margin-bottom: 0.5rem; color: #2d3748;">Sterile Processing</h3>
+                    <p style="color: #4a5568; font-size: 0.9rem;">EtO sterilization cycle validation</p>
+                </div>
+            </a>
+            <a href="/app?industry=concrete" style="text-decoration: none; color: inherit;">
+                <div style="background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; transition: all 0.3s ease; border: 2px solid transparent;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🏗️</div>
+                    <h3 style="font-size: 1.3rem; margin-bottom: 0.5rem; color: #2d3748;">Concrete</h3>
+                    <p style="color: #4a5568; font-size: 0.9rem;">ASTM C31 curing compliance</p>
+                </div>
+            </a>
+            <a href="/app?industry=coldchain" style="text-decoration: none; color: inherit;">
+                <div style="background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; transition: all 0.3s ease; border: 2px solid transparent;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">❄️</div>
+                    <h3 style="font-size: 1.3rem; margin-bottom: 0.5rem; color: #2d3748;">Cold Chain</h3>
+                    <p style="color: #4a5568; font-size: 0.9rem;">USP <797> pharmaceutical storage</p>
+                </div>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section style="padding: 4rem 0; background: #f8f9fa;">
+    <div class="container">
+        <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 3rem; color: #2d3748;">
+            How It Works
+        </h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem;">
+            <div style="text-align: center;">
+                <div style="background: #667eea; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; margin: 0 auto 1rem;">
+                    1
+                </div>
+                <h3 style="font-size: 1.3rem; margin-bottom: 1rem; color: #2d3748;">Upload Your Data</h3>
+                <p style="color: #4a5568; line-height: 1.6;">
+                    Upload your CSV temperature log and select your industry specification
+                </p>
+            </div>
+            <div style="text-align: center;">
+                <div style="background: #667eea; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; margin: 0 auto 1rem;">
+                    2
+                </div>
+                <h3 style="font-size: 1.3rem; margin-bottom: 1rem; color: #2d3748;">Instant Analysis</h3>
+                <p style="color: #4a5568; line-height: 1.6;">
+                    Our AI analyzes your data against industry standards in seconds
+                </p>
+            </div>
+            <div style="text-align: center;">
+                <div style="background: #667eea; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; margin: 0 auto 1rem;">
+                    3
+                </div>
+                <h3 style="font-size: 1.3rem; margin-bottom: 1rem; color: #2d3748;">Get Your Certificate</h3>
+                <p style="color: #4a5568; line-height: 1.6;">
+                    Download your compliance-ready PDF certificate and evidence bundle
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section style="padding: 4rem 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-align: center;">
+    <div class="container">
+        <h2 style="font-size: 2.5rem; margin-bottom: 1.5rem;">
+            Ready to Transform Your Validation Process?
+        </h2>
+        <p style="font-size: 1.2rem; margin-bottom: 2rem; opacity: 0.9;">
+            Join hundreds of companies using ProofKit for compliance validation
+        </p>
+        <a href="/app" class="button primary" style="background: white; color: #667eea; padding: 1rem 2rem; border-radius: 0.5rem; text-decoration: none; font-weight: 600; font-size: 1.2rem; transition: all 0.3s ease;">
+            🚀 Start Free Trial
+        </a>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer style="background: #2d3748; color: white; padding: 2rem 0; margin: 0 -1rem -1rem -1rem;">
+    <div class="container">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem;">
+            <div>
+                <h3 style="font-size: 1.2rem; margin-bottom: 1rem;">ProofKit</h3>
+                <p style="opacity: 0.8; line-height: 1.6;">
+                    Professional temperature log validation and compliance certification.
+                </p>
+            </div>
+            <div>
+                <h4 style="font-size: 1rem; margin-bottom: 1rem;">Product</h4>
+                <ul style="list-style: none; padding: 0; opacity: 0.8;">
+                    <li style="margin-bottom: 0.5rem;"><a href="/app" style="color: white; text-decoration: none;">Try ProofKit</a></li>
+                    <li style="margin-bottom: 0.5rem;"><a href="/examples" style="color: white; text-decoration: none;">Examples</a></li>
+                    <li style="margin-bottom: 0.5rem;"><a href="/docs" style="color: white; text-decoration: none;">API Docs</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 style="font-size: 1rem; margin-bottom: 1rem;">Support</h4>
+                <ul style="list-style: none; padding: 0; opacity: 0.8;">
+                    <li style="margin-bottom: 0.5rem;"><a href="/trust" style="color: white; text-decoration: none;">Security</a></li>
+                    <li style="margin-bottom: 0.5rem;"><a href="/docs" style="color: white; text-decoration: none;">Documentation</a></li>
+                </ul>
+            </div>
+        </div>
+        <div style="border-top: 1px solid rgba(255,255,255,0.1); margin-top: 2rem; padding-top: 1rem; text-align: center; opacity: 0.8;">
+            <p>&copy; 2024 ProofKit. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+
+<style>
+/* Hover effects for industry cards */
+.hero .button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.hero .button.outline:hover {
+    background: white;
+    color: #667eea;
+}
+
+/* Industry card hover effects */
+section a div:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    border-color: #667eea;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .hero h1 {
+        font-size: 2.5rem;
+    }
+    
+    .hero p {
+        font-size: 1.2rem;
+    }
+    
+    .hero .button {
+        padding: 0.8rem 1.5rem;
+        font-size: 1rem;
+    }
+}
+</style>
+{% endblock %} 

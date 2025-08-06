@@ -1,0 +1,128 @@
+<svg width="550" height="320" viewBox="0 0 550 320" xmlns="http://www.web3.org/2000/svg">
+  <!-- Background -->
+  <rect width="550" height="320" fill="#f8fafc"/>
+  
+  <!-- Facility floor -->
+  <rect x="0" y="280" width="550" height="40" fill="#e2e8f0"/>
+  
+  <!-- EtO sterilization chamber -->
+  <rect x="180" y="70" width="240" height="180" rx="20" fill="#64748b" stroke="#475569" stroke-width="3"/>
+  <rect x="190" y="80" width="220" height="160" rx="15" fill="#374151"/>
+  
+  <!-- Chamber door -->
+  <rect x="170" y="120" width="20" height="100" rx="5" fill="#9ca3af"/>
+  <circle cx="180" cy="170" r="5" fill="#6b7280"/>
+  
+  <!-- Door seals -->
+  <rect x="188" y="115" width="4" height="110" fill="#ef4444"/>
+  
+  <!-- EtO gas visualization -->
+  <circle cx="250" cy="120" r="8" fill="#fbbf24" opacity="0.4"/>
+  <circle cx="280" cy="130" r="6" fill="#fbbf24" opacity="0.3"/>
+  <circle cx="320" cy="125" r="7" fill="#fbbf24" opacity="0.4"/>
+  <circle cx="350" cy="140" r="5" fill="#fbbf24" opacity="0.3"/>
+  <circle cx="270" cy="160" r="6" fill="#fbbf24" opacity="0.4"/>
+  <circle cx="310" cy="170" r="8" fill="#fbbf24" opacity="0.3"/>
+  <circle cx="340" cy="180" r="5" fill="#fbbf24" opacity="0.4"/>
+  <circle cx="260" cy="190" r="7" fill="#fbbf24" opacity="0.3"/>
+  
+  <!-- Medical devices inside chamber -->
+  <!-- Catheters -->
+  <path d="M 230 150 Q 250 155 270 150" stroke="#e5e7eb" stroke-width="3" fill="none"/>
+  <path d="M 240 170 Q 260 175 280 170" stroke="#e5e7eb" stroke-width="3" fill="none"/>
+  
+  <!-- Surgical tubing -->
+  <path d="M 300 140 Q 320 145 340 140 Q 360 145 380 140" stroke="#d1d5db" stroke-width="4" fill="none"/>
+  
+  <!-- Implants -->
+  <ellipse cx="320" cy="180" rx="15" ry="8" fill="#f3f4f6"/>
+  <ellipse cx="350" cy="190" rx="12" ry="6" fill="#f3f4f6"/>
+  
+  <!-- Temperature sensors -->
+  <rect x="270" y="110" width="18" height="8" rx="3" fill="#23C48E"/>
+  <line x1="279" y1="110" x2="279" y2="95" stroke="#15803d" stroke-width="2"/>
+  <circle cx="279" cy="92" r="4" fill="#15803d"/>
+  
+  <rect x="340" y="200" width="18" height="8" rx="3" fill="#23C48E"/>  
+  <line x1="349" y1="208" x2="349" y2="220" stroke="#15803d" stroke-width="2"/>
+  <circle cx="349" cy="223" r="4" fill="#15803d"/>
+  
+  <!-- Control system -->
+  <rect x="450" y="80" width="90" height="140" rx="8" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="495" y="75" font-family="Arial, sans-serif" font-size="12" fill="#374151" text-anchor="middle">EtO Controller</text>
+  
+  <!-- Main display -->
+  <rect x="460" y="90" width="70" height="40" rx="4" fill="#1f2937"/>
+  <text x="495" y="105" font-family="Arial, sans-serif" font-size="11" fill="#fbbf24" text-anchor="middle">55°C</text>
+  <text x="495" y="115" font-family="Arial, sans-serif" font-size="9" fill="#23C48E" text-anchor="middle">12 hrs</text>
+  <text x="495" y="125" font-family="Arial, sans-serif" font-size="9" fill="#0050FF" text-anchor="middle">600 ppm</text>
+  
+  <!-- Parameter gauges -->
+  <circle cx="470" cy="150" r="15" fill="#ffffff" stroke="#9ca3af" stroke-width="2"/>
+  <path d="M 470 135 A 15 15 0 0 1 485 150" stroke="#fbbf24" stroke-width="3" fill="none"/>
+  <text x="470" y="170" font-family="Arial, sans-serif" font-size="7" fill="#374151" text-anchor="middle">TEMP</text>
+  
+  <circle cx="510" cy="150" r="15" fill="#ffffff" stroke="#9ca3af" stroke-width="2"/>
+  <path d="M 510 135 A 15 15 0 0 1 522 155" stroke="#0050FF" stroke-width="3" fill="none"/>
+  <text x="510" y="170" font-family="Arial, sans-serif" font-size="7" fill="#374151" text-anchor="middle">GAS</text>
+  
+  <!-- Status indicators -->
+  <rect x="460" y="185" width="70" height="25" rx="4" fill="#fbbf24"/>
+  <text x="495" y="200" font-family="Arial, sans-serif" font-size="10" fill="white" text-anchor="middle">EXPOSING</text>
+  
+  <!-- Gas supply system -->
+  <rect x="50" y="120" width="60" height="80" rx="8" fill="#6b7280"/>
+  <circle cx="80" cy="160" r="20" fill="#fbbf24"/>
+  <text x="80" y="155" font-family="Arial, sans-serif" font-size="8" fill="#92400e" text-anchor="middle">EtO</text>
+  <text x="80" y="165" font-family="Arial, sans-serif" font-size="7" fill="#92400e" text-anchor="middle">GAS</text>
+  
+  <!-- Gas lines -->
+  <rect x="110" y="155" width="60" height="10" fill="#9ca3af"/>
+  <circle cx="125" cy="150" r="3" fill="#fbbf24" opacity="0.6"/>
+  <circle cx="140" cy="150" r="3" fill="#fbbf24" opacity="0.4"/>
+  <circle cx="155" cy="150" r="3" fill="#fbbf24" opacity="0.6"/>
+  
+  <!-- Monitoring workstation -->
+  <rect x="30" y="40" width="120" height="60" rx="6" fill="#1f2937"/>
+  <rect x="35" y="45" width="110" height="40" rx="3" fill="#ffffff"/>
+  
+  <!-- Screen content -->
+  <text x="90" y="40" font-family="Arial, sans-serif" font-size="10" fill="#374151" text-anchor="middle">EtO Process Monitor</text>
+  
+  <!-- Process graph -->
+  <rect x="40" y="50" width="100" height="25" fill="#f9fafb" stroke="#e5e7eb"/>
+  <path d="M 45 70 Q 65 60 85 55 Q 105 55 135 58" stroke="#fbbf24" stroke-width="2" fill="none"/>
+  <line x1="45" y1="58" x2="135" y2="58" stroke="#23C48E" stroke-width="1" stroke-dasharray="2,2"/>
+  
+  <!-- Cycle timer -->
+  <rect x="40" y="80" width="60" height="15" rx="3" fill="#0050FF"/>
+  <text x="70" y="90" font-family="Arial, sans-serif" font-size="9" fill="white" text-anchor="middle">8:42:15</text>
+  
+  <!-- Aeration phase indicator -->
+  <rect x="110" y="80" width="30" height="15" rx="3" fill="#ef4444"/>
+  <text x="125" y="90" font-family="Arial, sans-serif" font-size="8" fill="white" text-anchor="middle">AERATE</text>
+  
+  <!-- Biological indicators -->
+  <rect x="200" y="250" width="40" height="20" rx="3" fill="#ffffff" stroke="#d1d5db"/>
+  <circle cx="210" cy="260" r="4" fill="#22c55e"/>
+  <text x="225" y="265" font-family="Arial, sans-serif" font-size="9" fill="#15803d">BI Pass</text>
+  
+  <!-- Chemical indicators -->
+  <rect x="260" y="250" width="35" height="8" fill="#0050FF"/>
+  <rect x="300" y="250" width="35" height="8" fill="#23C48E"/>
+  <text x="317" y="245" font-family="Arial, sans-serif" font-size="8" fill="#374151" text-anchor="middle">Chemical IDs</text>
+  
+  <!-- Parametric release data -->
+  <rect x="360" y="250" width="100" height="25" rx="3" fill="#ffffff" stroke="#d1d5db"/>
+  <text x="410" y="265" font-family="Arial, sans-serif" font-size="9" fill="#374151" text-anchor="middle">Batch #ETO-2024-089</text>
+  <text x="410" y="275" font-family="Arial, sans-serif" font-size="8" fill="#22c55e" text-anchor="middle">VALIDATED</text>
+  
+  <!-- Ventilation system -->
+  <rect x="480" y="240" width="50" height="30" rx="4" fill="#9ca3af"/>
+  <circle cx="505" cy="255" r="8" fill="#64748b"/>
+  <path d="M 500 250 L 510 260 M 510 250 L 500 260" stroke="#f1f5f9" stroke-width="2"/>
+  
+  <!-- ProofKit logo/branding -->
+  <text x="350" y="40" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#0050FF">ProofKit</text>
+  <text x="350" y="55" font-family="Arial, sans-serif" font-size="10" fill="#64748b">EtO Sterilization</text>
+</svg>

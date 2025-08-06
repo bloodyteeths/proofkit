@@ -1,0 +1,186 @@
+{% extends "modern_base.html" %}
+
+{% block title %}{{ title }} - ProofKit Blog{% endblock %}
+{% block description %}{{ excerpt if excerpt else "Expert insights on temperature validation and compliance from the ProofKit team." }}{% endblock %}
+
+{% block content %}
+<!-- Blog Header -->
+<section class="section" style="background: #f7fafc; padding-top: 3rem; padding-bottom: 2rem;">
+    <div class="section-container">
+        <nav style="margin-bottom: 2rem;">
+            <a href="/blog" style="color: #667eea; text-decoration: none; font-weight: 500; display: inline-flex; align-items: center; gap: 0.5rem; transition: color 0.2s;" onmouseover="this.style.color='#4338ca'" onmouseout="this.style.color='#667eea'">
+                ← Back to Blog
+            </a>
+        </nav>
+        
+        <div style="max-width: 800px; margin: 0 auto; text-align: center;">
+            <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(103, 126, 234, 0.1); padding: 0.5rem 1rem; border-radius: 2rem; margin-bottom: 1.5rem;">
+                <span style="font-size: 1.25rem;">📝</span>
+                <span style="font-weight: 600; color: #667eea;">Article</span>
+            </div>
+            
+            <h1 style="font-size: 2.5rem; font-weight: 700; line-height: 1.2; margin-bottom: 1.5rem; color: #1a1a1a;">
+                {{ title }}
+            </h1>
+            
+            <div style="display: flex; align-items: center; justify-content: center; gap: 1.5rem; color: #6b7280; font-size: 0.95rem; margin-bottom: 2rem;">
+                <span style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span>👥</span>
+                    ProofKit Technical Team
+                </span>
+                <span>•</span>
+                <span style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span>📅</span>
+                    {{ date if date else "Recently Published" }}
+                </span>
+                {% if reading_time %}
+                <span>•</span>
+                <span style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span>⏱️</span>
+                    {{ reading_time }} min read
+                </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Blog Content -->
+<section class="section">
+    <div class="section-container">
+        <article style="max-width: 800px; margin: 0 auto;">
+            <div class="card" style="padding: 3rem;">
+                <div style="line-height: 1.8; color: #374151; font-size: 1.1rem;">
+                    {% if content %}{{ content | safe }}{% else %}<p style="margin-bottom: 1.5rem;">
+                        Welcome to ProofKit's technical blog. This is where we share expert insights on temperature validation, 
+                        compliance requirements, and best practices across various industries.
+                    </p>
+                    
+                    <h2 style="color: #1a1a1a; font-size: 1.5rem; font-weight: 600; margin: 2rem 0 1rem 0;">Temperature Validation Best Practices</h2>
+                    
+                    <p style="margin-bottom: 1.5rem;">
+                        Proper temperature validation is crucial for maintaining product quality and regulatory compliance. 
+                        Whether you're working with powder coating cures, medical device sterilization, or cold chain storage, 
+                        understanding the fundamental principles of temperature monitoring can make the difference between 
+                        passing and failing inspections.
+                    </p>
+                    
+                    <h3 style="color: #1a1a1a; font-size: 1.25rem; font-weight: 600; margin: 1.5rem 0 0.75rem 0;">Key Considerations</h3>
+                    
+                    <ul style="margin-bottom: 1.5rem; padding-left: 1.5rem;">
+                        <li style="margin-bottom: 0.5rem;"><strong>Sensor Accuracy:</strong> Ensure your temperature sensors are properly calibrated and meet industry standards.</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Data Integrity:</strong> Maintain tamper-evident records with cryptographic verification.</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Compliance Documentation:</strong> Generate inspector-ready proof PDFs with complete chain of custody.</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Regular Audits:</strong> Implement continuous monitoring and validation processes.</li>
+                    </ul>
+                    
+                    <div style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 1.5rem; border-radius: 0.5rem; margin: 2rem 0;">
+                        <p style="margin: 0; color: #0c4a6e;">
+                            <strong>ProofKit Tip:</strong> Use our validation platform to automatically generate compliant 
+                            documentation for all your temperature-critical processes. Our system ensures deterministic 
+                            outputs and cryptographic verification for audit-ready proof packages.
+                        </p>
+                    </div>
+                    
+                    <p style="margin-bottom: 1.5rem;">
+                        For more detailed guidance on implementing temperature validation in your specific industry, 
+                        explore our comprehensive documentation and industry-specific examples.
+                    </p>{% endif %}
+                </div>
+                
+                <!-- Article Footer -->
+                <div style="margin-top: 3rem; padding-top: 2rem; border-top: 2px solid #e2e8f0;">
+                    <div style="display: flex; justify-content: between; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            {% if tags %}
+                                {% for tag in tags %}
+                                <span style="background: #e0e7ff; color: #4338ca; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.75rem; font-weight: 600;">{{ tag }}</span>
+                                {% endfor %}
+                            {% else %}
+                                <span style="background: #e0e7ff; color: #4338ca; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.75rem; font-weight: 600;">Temperature Validation</span>
+                                <span style="background: #dcfce7; color: #16a34a; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.75rem; font-weight: 600;">Compliance</span>
+                                <span style="background: #fef3c7; color: #92400e; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.75rem; font-weight: 600;">Best Practices</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </div>
+</section>
+
+<!-- Related Articles -->
+<section class="section" style="background: #f7fafc;">
+    <div class="section-container">
+        <div class="section-header" style="text-align: center;">
+            <h2>Continue Reading</h2>
+            <p class="section-subtitle">Explore more validation insights and best practices</p>
+        </div>
+        
+        <div class="grid-3">
+            <div class="card">
+                <div style="margin-bottom: 1.5rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                        <span style="font-size: 1.5rem;">📚</span>
+                        <span style="background: #e0e7ff; color: #4338ca; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.75rem; font-weight: 600;">Documentation</span>
+                    </div>
+                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem; color: #1a1a1a; line-height: 1.4;">
+                        Complete Documentation
+                    </h3>
+                    <p style="color: #718096; line-height: 1.6; margin-bottom: 1rem;">
+                        Comprehensive guide to using ProofKit for temperature validation and compliance documentation.
+                    </p>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
+                    <span style="color: #9ca3af; font-size: 0.875rem;">Documentation</span>
+                    <a href="/docs" class="btn btn-sm" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                        Read Docs →
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div style="margin-bottom: 1.5rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                        <span style="font-size: 1.5rem;">📊</span>
+                        <span style="background: #dcfce7; color: #16a34a; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.75rem; font-weight: 600;">Examples</span>
+                    </div>
+                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem; color: #1a1a1a; line-height: 1.4;">
+                        Real-World Examples
+                    </h3>
+                    <p style="color: #718096; line-height: 1.6; margin-bottom: 1rem;">
+                        Download sample data and see validation examples across multiple industries and use cases.
+                    </p>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
+                    <span style="color: #9ca3af; font-size: 0.875rem;">Examples</span>
+                    <a href="/examples" class="btn btn-sm" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                        View Examples →
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div style="margin-bottom: 1.5rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                        <span style="font-size: 1.5rem;">🚀</span>
+                        <span style="background: #fef3c7; color: #92400e; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.75rem; font-weight: 600;">Try ProofKit</span>
+                    </div>
+                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem; color: #1a1a1a; line-height: 1.4;">
+                        Start Validating
+                    </h3>
+                    <p style="color: #718096; line-height: 1.6; margin-bottom: 1rem;">
+                        Ready to generate your own validation certificates? Try ProofKit with your temperature data.
+                    </p>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
+                    <span style="color: #9ca3af; font-size: 0.875rem;">Free Trial</span>
+                    <a href="/app" class="btn btn-primary btn-sm" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                        Try Now →
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

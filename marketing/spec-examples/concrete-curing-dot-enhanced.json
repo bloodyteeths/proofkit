@@ -1,0 +1,41 @@
+{
+  "version": "1.0",
+  "job": {
+    "job_id": "concrete_curing_dot_enhanced_requirements"
+  },
+  "spec": {
+    "method": "TEMPERATURE_CONTROL",
+    "target_temp_C": 21.1,
+    "hold_time_s": 172800,
+    "temp_band_C": {
+      "min": 16.7,
+      "max": 25.6
+    },
+    "sensor_uncertainty_C": 0.3
+  },
+  "data_requirements": {
+    "max_sample_period_s": 600.0,
+    "allowed_gaps_s": 1200.0
+  },
+  "sensor_selection": {
+    "mode": "mean_of_set",
+    "sensors": ["curing_temp_F", "backup_temp_F"],
+    "require_at_least": 1
+  },
+  "logic": {
+    "continuous": false,
+    "max_total_dips_s": 3600,
+    "excursion_tolerance": 0.02
+  },
+  "preconditions": {
+    "max_ramp_rate_C_per_min": 1.5,
+    "max_time_to_threshold_s": 1800
+  },
+  "reporting": {
+    "units": "F",
+    "language": "en",
+    "timezone": "UTC",
+    "astm_c31_compliant": true,
+    "dot_enhanced": true
+  }
+}

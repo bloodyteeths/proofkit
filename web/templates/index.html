@@ -1,73 +1,275 @@
-{% extends "base.html" %}
+{% extends "modern_base.html" %}
+
+{% block title %}
+    {% if selected_industry %}
+        {{ selected_industry | title }} Validation - ProofKit
+    {% else %}
+        Temperature Validation Tool - ProofKit
+    {% endif %}
+{% endblock %}
 
 {% block content %}
-<section>
-    <h2>Upload Temperature Log</h2>
-    <p>Upload your CSV temperature log file and configure the specification below to generate a proof PDF and evidence bundle.</p>
-    
-    <form id="upload-form" hx-post="/api/compile" hx-encoding="multipart/form-data" hx-target="#results" hx-indicator="#progress">
-        <!-- CSV File Upload -->
-        <div class="upload-area" id="upload-area">
-            <label for="csv_file">
-                <h4>CSV Temperature Log</h4>
-                <p>Click to select or drag and drop your CSV file here</p>
-                <input type="file" id="csv_file" name="csv_file" accept=".csv,text/csv" required style="display: none;">
-                <small>Maximum file size: 10MB</small>
-            </label>
-            <div id="file-info" style="display: none; margin-top: 1rem;">
-                <strong>Selected file:</strong> <span id="file-name"></span>
-                <br>
-                <small>Size: <span id="file-size"></span></small>
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-container">
+        <div style="text-align: center; max-width: 800px; margin: 0 auto;">
+            {% if selected_industry %}
+                <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(255, 255, 255, 0.2); padding: 0.5rem 1rem; border-radius: 2rem; margin-bottom: 1.5rem;">
+                    <span style="font-size: 1.5rem;">
+                        {% if selected_industry == 'powder-coating' %}🎨
+                        {% elif selected_industry == 'autoclave' %}🏥
+                        {% elif selected_industry == 'cold-chain' %}❄️
+                        {% elif selected_industry == 'concrete' %}🏗️
+                        {% elif selected_industry == 'eto' %}🧪
+                        {% elif selected_industry == 'haccp' %}🍖
+                        {% else %}⚙️{% endif %}
+                    </span>
+                    <span style="font-weight: 600;">{{ selected_industry | title }} Validation</span>
+                </div>
+            {% endif %}
+            
+            <h1>
+                {% if selected_industry %}
+                    {{ selected_industry | title }}<br>
+                    <span class="highlight">Validation Tool</span>
+                {% else %}
+                    Temperature Log<br>
+                    <span class="highlight">Validation Tool</span>
+                {% endif %}
+            </h1>
+            
+            <p style="font-size: 1.25rem; opacity: 0.9; margin-bottom: 2rem; line-height: 1.6;">
+                {% if selected_industry %}
+                    Upload your {{ selected_industry | title }} temperature log and generate compliant proof documents with pre-configured industry standards.
+                {% else %}
+                    Upload your CSV temperature log file and configure the specification to generate inspector-ready proof PDFs and evidence bundles.
+                {% endif %}
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Main Form Section -->
+<section class="section">
+    <div class="section-container">
+        <form id="upload-form" role="form" aria-label="Temperature log validation form" 
+              hx-post="/api/compile" hx-encoding="multipart/form-data" hx-target="#results" hx-indicator="#progress">
+              
+            <!-- Hidden field for JSON specification -->
+            <input type="hidden" id="spec_json" name="spec_json" value="">
+            
+            <!-- Hidden fields for advanced options with defaults -->
+            <input type="hidden" id="max_ramp_rate" name="max_ramp_rate" value="15.0">
+            <input type="hidden" id="max_time_to_threshold" name="max_time_to_threshold" value="900">
+            <input type="hidden" name="hold_logic" value="continuous" checked>
+            <input type="hidden" name="sensor_mode" value="min_of_set" checked>
+              
+            <!-- File Upload Area -->
+            <div class="card" style="margin-bottom: 2rem; padding: 3rem; text-align: center; border: 2px dashed #cbd5e0; background: #f7fafc;">
+                <div class="upload-area" id="upload-area" aria-label="File upload area">
+                    <label for="csv_file" style="cursor: pointer; display: block; width: 100%; height: 100%;">
+                        <div style="font-size: 4rem; margin-bottom: 1rem; color: #667eea;">📊</div>
+                        <h3 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; color: #1a1a1a;">CSV Temperature Log</h3>
+                        <p style="margin: 0.5rem 0 1rem 0; color: #718096; font-size: 1.1rem;">Click to select or drag and drop your CSV file here</p>
+                        <input type="file" id="csv_file" name="csv_file" accept=".csv,text/csv" required style="display: none;" aria-describedby="file-help">
+                        <small id="file-help" style="color: #a0aec0;">Maximum file size: 10MB | Supported formats: .csv</small>
+                    </label>
+                    
+                    <div id="file-info" style="display: none; margin-top: 1.5rem; padding: 1rem; background: #d1fae5; border-radius: 0.5rem; border: 1px solid #a7f3d0;">
+                        <div style="color: #065f46; font-weight: 600; margin-bottom: 0.5rem;">
+                            ✅ <span id="file-name"></span>
+                        </div>
+                        <small style="color: #047857;">Size: <span id="file-size"></span></small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Specification Section -->
+            <div class="card">
+                <h3 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; color: #1a1a1a; display: flex; align-items: center; gap: 0.5rem;">
+                    ⚙️ {% if selected_industry %}{{ selected_industry | title }} Process Specification{% else %}Process Specification{% endif %}
+                </h3>
+                <p style="margin: 0 0 2rem 0; color: #718096; font-size: 1rem; line-height: 1.6;">
+                    {% if selected_industry %}
+                        Pre-configured with {{ selected_industry | title }} industry standards. Modify as needed for your specific requirements.
+                    {% else %}
+                        Configure your process validation requirements. Default values follow industry standards for typical applications.
+                    {% endif %}
+                </p>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                    <!-- Job Information -->
+                    <div>
+                        <label for="job_id" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                            📋 Job ID
+                        </label>
+                        <input type="text" id="job_id" name="job_id" value="batch_001" 
+                               placeholder="e.g., batch_001, job_2024_001" aria-describedby="job_id_help"
+                               style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 0.5rem; font-size: 1rem;">
+                        <small id="job_id_help" style="color: #6b7280; font-size: 0.875rem;">Unique identifier for this validation job</small>
+                    </div>
+                    
+                    <!-- Target Temperature -->
+                    <div>
+                        <label for="target_temp" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                            🌡️ Target Temperature (°C)
+                        </label>
+                        <input type="number" id="target_temp" name="target_temp" value="180" min="100" max="300" step="1" aria-describedby="target_temp_help"
+                               style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 0.5rem; font-size: 1rem;">
+                        <small id="target_temp_help" style="color: #6b7280; font-size: 0.875rem;">
+                            {% if selected_industry == 'autoclave' %}Typical: 121°C for sterilization
+                            {% elif selected_industry == 'cold-chain' %}Typical: 2-8°C for pharmaceuticals
+                            {% elif selected_industry == 'concrete' %}Typical: 16-27°C for curing
+                            {% else %}Typical: 160-220°C for powder coats{% endif %}
+                        </small>
+                    </div>
+                    
+                    <!-- Hold Time -->
+                    <div>
+                        <label for="hold_time" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                            ⏱️ Hold Time (seconds)
+                        </label>
+                        <input type="number" id="hold_time" name="hold_time" value="600" min="60" max="3600" step="30" aria-describedby="hold_time_help"
+                               style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 0.5rem; font-size: 1rem;">
+                        <small id="hold_time_help" style="color: #6b7280; font-size: 0.875rem;">
+                            {% if selected_industry == 'autoclave' %}900s = 15 min (typical sterilization)
+                            {% elif selected_industry == 'cold-chain' %}Continuous monitoring period
+                            {% elif selected_industry == 'concrete' %}86400s = 24 hours (critical period)
+                            {% else %}600s = 10 min (typical cure time){% endif %}
+                        </small>
+                    </div>
+                    
+                    <!-- Sensor Uncertainty -->
+                    <div>
+                        <label for="sensor_uncertainty" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                            📊 Sensor Uncertainty (°C)
+                        </label>
+                        <input type="number" id="sensor_uncertainty" name="sensor_uncertainty" value="2.0" min="0.5" max="10" step="0.5" aria-describedby="sensor_uncertainty_help"
+                               style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 0.5rem; font-size: 1rem;">
+                        <small id="sensor_uncertainty_help" style="color: #6b7280; font-size: 0.875rem;">±2°C is typical for industrial sensors</small>
+                    </div>
+                </div>
+                
+                <!-- Submit Button -->
+                <div style="text-align: center; padding-top: 2rem; border-top: 1px solid #e2e8f0;">
+                    <button type="submit" class="btn btn-primary" style="font-size: 1.1rem; padding: 1rem 2rem;">
+                        Generate Validation Report →
+                    </button>
+                    <p style="margin-top: 1rem; color: #718096; font-size: 0.875rem;">
+                        Processing typically takes 5-15 seconds
+                    </p>
+                </div>
+            </div>
+        </form>
+        
+        <!-- Progress Indicator -->
+        <div id="progress" class="htmx-indicator" style="text-align: center; margin-top: 2rem;">
+            <div class="card" style="padding: 2rem;">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">⚡</div>
+                <h3 style="color: #1a1a1a; margin-bottom: 0.5rem;">Processing Your Data...</h3>
+                <p style="color: #718096;">Validating temperature data and generating compliance report</p>
+                <div style="width: 200px; height: 4px; background: #e2e8f0; border-radius: 2px; margin: 1rem auto; overflow: hidden;">
+                    <div style="width: 100%; height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); animation: loading 2s linear infinite;"></div>
+                </div>
             </div>
         </div>
         
-        <!-- Specification JSON -->
-        <div style="margin-top: 2rem;">
-            <label for="spec_json">
-                <h4>Specification (JSON)</h4>
-                <small>Pre-populated with default powder-coat cure specification. Edit as needed.</small>
-            </label>
-            <textarea id="spec_json" name="spec_json" class="spec-textarea" placeholder="Specification JSON..." required>{{ default_spec | safe }}</textarea>
-        </div>
-        
-        <!-- Submit Button -->
-        <div style="margin-top: 2rem;">
-            <button type="submit" class="primary">Generate Proof</button>
-            <button type="button" onclick="resetForm()" style="margin-left: 1rem;">Reset</button>
-        </div>
-    </form>
-    
-    <!-- Progress Indicator -->
-    <div id="progress" class="progress-indicator">
-        <p>Processing your temperature log... This may take a few moments.</p>
-        <progress></progress>
+        <!-- Results Area -->
+        <div id="results" style="margin-top: 2rem;"></div>
     </div>
+</section>
+
+<style>
+@keyframes loading {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.htmx-indicator {
+    display: none;
+}
+
+.htmx-request .htmx-indicator {
+    display: block;
+}
+
+.upload-area:hover {
+    background: #edf2f7;
+    border-color: #a0aec0;
+}
+
+.upload-area.dragover {
+    background: #f0f4ff;
+    border-color: #667eea;
+    transform: scale(1.02);
+}
+
+input:focus, textarea:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+button[type="submit"]:hover {
+    transform: translateY(-2px);
+}
+
+.error-message {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin: 1rem 0;
+    font-weight: 500;
+}
+</style>
+
+{% block scripts %}
+<script{% if get_nonce(request) %} nonce="{{ get_nonce(request) }}"{% endif %}>
+// Industry-specific defaults
+{% if selected_industry %}
+document.addEventListener('DOMContentLoaded', function() {
+    const industry = '{{ selected_industry }}';
+    const targetTemp = document.getElementById('target_temp');
+    const holdTime = document.getElementById('hold_time');
+    const jobId = document.getElementById('job_id');
     
-    <!-- Results will be inserted here by HTMX -->
-    <div id="results"></div>
-</section>
-
-<!-- Example Data Section -->
-<section style="margin-top: 3rem;">
-    <details>
-        <summary><strong>Need example data?</strong></summary>
-        <p>If you don't have a CSV file ready, you can download example files:</p>
-        <ul>
-            <li><a href="/examples/ok_run.csv" download>ok_run.csv</a> - Example passing temperature log</li>
-            <li><a href="/examples/short_hold.csv" download>short_hold.csv</a> - Example failing temperature log (insufficient hold time)</li>
-            <li><a href="/examples/gaps.csv" download>gaps.csv</a> - Example with data gaps</li>
-        </ul>
-        <p><strong>CSV Format Requirements:</strong></p>
-        <ul>
-            <li>First column: timestamp (ISO format or Unix timestamp)</li>
-            <li>Additional columns: temperature readings from sensors</li>
-            <li>Optional metadata lines starting with # at the beginning</li>
-        </ul>
-    </details>
-</section>
-
-<script>
-// Make default spec available to JavaScript for reset functionality
-window.defaultSpec = `{{ default_spec | safe }}`;
+    // Set industry-specific defaults
+    switch(industry) {
+        case 'autoclave':
+            targetTemp.value = '121';
+            holdTime.value = '900'; // 15 minutes
+            jobId.value = 'autoclave_cycle_001';
+            break;
+        case 'cold-chain':
+            targetTemp.value = '5';
+            holdTime.value = '86400'; // 24 hours
+            jobId.value = 'coldchain_storage_001';
+            break;
+        case 'concrete':
+            targetTemp.value = '21';
+            holdTime.value = '86400'; // 24 hours
+            jobId.value = 'concrete_cure_001';
+            break;
+        case 'powder-coating':
+            targetTemp.value = '180';
+            holdTime.value = '600'; // 10 minutes
+            jobId.value = 'powder_cure_001';
+            break;
+        case 'eto':
+            targetTemp.value = '55';
+            holdTime.value = '14400'; // 4 hours
+            jobId.value = 'eto_sterilization_001';
+            break;
+        case 'haccp':
+            targetTemp.value = '74';
+            holdTime.value = '1800'; // 30 minutes
+            jobId.value = 'haccp_cook_001';
+            break;
+    }
+});
+{% endif %}
 </script>
+{% endblock %}
 {% endblock %}

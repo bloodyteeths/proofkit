@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Authentication Successful - ProofKit{% endblock %}
+
+{% block content %}
+<main class="container">
+    <article>
+        <header>
+            <h1>✅ Authentication Successful</h1>
+            <p>Welcome to ProofKit!</p>
+        </header>
+
+        <div class="success-banner">
+            <h3>🎉 You're now logged in</h3>
+            <p><strong>Email:</strong> {{ email }}</p>
+            <p><strong>Role:</strong> {{ role.upper() }}</p>
+            <p><small>Your session will remain active for 24 hours.</small></p>
+        </div>
+
+        <div style="margin-top: 2rem;">
+            <h3>What's Next?</h3>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem;">
+                <a href="/" class="primary" role="button">
+                    🚀 Start Processing Files
+                </a>
+                <a href="/examples" class="secondary" role="button">
+                    📋 View Examples
+                </a>
+                {% if role == "qa" %}
+                <a href="/trust" class="outline" role="button">
+                    🔒 QA Dashboard
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <details style="margin-top: 2rem;">
+            <summary>Session Information</summary>
+            <ul>
+                <li><strong>Login Time:</strong> <span id="login-time"></span></li>
+                <li><strong>Session Expires:</strong> <span id="expires-time"></span></li>
+                <li><strong>Role Permissions:</strong> 
+                    {% if role == "op" %}
+                        Process files, view results
+                    {% else %}
+                        Process files, view results, approve jobs
+                    {% endif %}
+                </li>
+            </ul>
+        </details>
+
+        <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--muted-border-color);">
+            <form method="POST" action="/auth/logout" style="display: inline;">
+                <button type="submit" class="outline">
+                    🚪 Logout
+                </button>
+            </form>
+        </div>
+    </article>
+</main>
+
+<script>
+// Set login time information
+document.addEventListener('DOMContentLoaded', function() {
+    const now = new Date();
+    const expires = new Date(now.getTime() + (24 * 60 * 60 * 1000)); // 24 hours
+    
+    document.getElementById('login-time').textContent = now.toLocaleString();
+    document.getElementById('expires-time').textContent = expires.toLocaleString();
+});
+</script>
+{% endblock %} 

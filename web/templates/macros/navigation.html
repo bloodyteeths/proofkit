@@ -1,0 +1,226 @@
+{#
+Navigation Macros for ProofKit
+Provides utilities for detecting active navigation states and applying appropriate styling.
+
+Usage:
+    {% from 'macros/navigation.html' import is_active_nav, nav_class %}
+    
+    <a href="/examples" class="{{ nav_class(request, '/examples') }}">Examples</a>
+    <a href="/?industry=powder-coat" class="{{ nav_class(request, '/', 'powder-coat') }}">Powder Coat</a>
+
+Author: ProofKit Team
+#}
+
+{#
+Determine if a navigation item should be marked as active based on the current request.
+
+Args:
+    request: The FastAPI Request object containing URL information
+    path: The path to check against (e.g., '/', '/examples', '/docs')
+    industry: Optional industry parameter for industry-specific routes
+    exact_match: Whether to require exact path matching (default: True)
+
+Returns:
+    bool: True if the navigation item should be marked as active
+
+Examples:
+    {{ is_active_nav(request, '/') }}                    # Home page
+    {{ is_active_nav(request, '/examples') }}            # Examples page
+    {{ is_active_nav(request, '/', 'powder-coat') }}     # Powder coat industry
+    {{ is_active_nav(request, '/docs', exact_match=False) }}  # Docs (with children)
+#}
+{% macro is_active_nav(request, path, industry=None, exact_match=True) -%}
+    {%- set current_path = request.url.path -%}
+    {%- set query_params = request.query_params -%}
+    
+    {# Handle industry-specific routes (home page with industry query param) #}
+    {%- if industry -%}
+        {%- if current_path == '/' and query_params.get('industry') == industry -%}
+            {{- True -}}
+        {%- else -%}
+            {{- False -}}
+        {%- endif -%}
+    
+    {# Handle exact path matching (default behavior) #}
+    {%- elif exact_match -%}
+        {%- if current_path == path -%}
+            {{- True -}}
+        {%- else -%}
+            {{- False -}}
+        {%- endif -%}
+    
+    {# Handle prefix matching for parent pages with children #}
+    {%- else -%}
+        {%- if current_path.startswith(path) -%}
+            {{- True -}}
+        {%- else -%}
+            {{- False -}}
+        {%- endif -%}
+    {%- endif -%}
+{%- endmacro %}
+
+{#
+Generate CSS classes for navigation items based on active state.
+
+Args:
+    request: The FastAPI Request object containing URL information
+    path: The path to check against
+    industry: Optional industry parameter for industry-specific routes
+    base_classes: Base CSS classes to always include
+    active_class: CSS class to add when item is active (default: 'active')
+    exact_match: Whether to require exact path matching (default: True)
+
+Returns:
+    str: Space-separated CSS classes
+
+Examples:
+    {{ nav_class(request, '/examples', base_classes='nav-link') }}
+    {{ nav_class(request, '/', 'powder-coat', base_classes='nav-dropdown-item') }}
+    {{ nav_class(request, '/docs', base_classes='nav-link', active_class='current') }}
+#}
+{% macro nav_class(request, path, industry=None, base_classes='', active_class='active', exact_match=True) -%}
+    {%- set is_active = is_active_nav(request, path, industry, exact_match) -%}
+    {%- if is_active -%}
+        {%- if base_classes -%}
+            {{- base_classes ~ ' ' ~ active_class -}}
+        {%- else -%}
+            {{- active_class -}}
+        {%- endif -%}
+    {%- else -%}
+        {%- if base_classes -%}
+            {{- base_classes -}}
+        {%- endif -%}
+    {%- endif -%}
+{%- endmacro %}
+
+{#
+Generate navigation link with automatic active state detection.
+
+Args:
+    request: The FastAPI Request object
+    href: The URL for the link
+    text: The text content of the link
+    industry: Optional industry parameter for industry-specific routes
+    base_classes: Base CSS classes for the link
+    active_class: CSS class when active
+    attributes: Additional HTML attributes as a dict
+    exact_match: Whether to require exact path matching
+
+Returns:
+    str: Complete HTML anchor tag
+
+Examples:
+    {{ nav_link(request, '/examples', 'Examples', base_classes='nav-link') }}
+    {{ nav_link(request, '/?industry=powder-coat', '🎨 Powder Coat', industry='powder-coat', base_classes='nav-dropdown-item') }}
+#}
+{% macro nav_link(request, href, text, industry=None, base_classes='', active_class='active', attributes={}, exact_match=True) -%}
+    {%- set path = href.split('?')[0] -%}
+    {%- set css_classes = nav_class(request, path, industry, base_classes, active_class, exact_match) -%}
+    <a href="{{ href }}" class="{{ css_classes }}"
+    {%- for attr, value in attributes.items() %} {{ attr }}="{{ value }}"{% endfor -%}>{{ text }}</a>
+{%- endmacro %}
+
+{#
+Check if any industry route is currently active (for dropdown state).
+
+Args:
+    request: The FastAPI Request object
+    industries: List of industry identifiers to check
+
+Returns:
+    bool: True if any of the specified industries is currently active
+
+Examples:
+    {{ is_industry_active(request, ['powder-coat', 'haccp', 'autoclave']) }}
+#}
+{% macro is_industry_active(request, industries) -%}
+    {%- set current_industry = request.query_params.get('industry') -%}
+    {%- if current_industry and current_industry in industries -%}
+        {{- True -}}
+    {%- else -%}
+        {{- False -}}
+    {%- endif -%}
+{%- endmacro %}
+
+{#
+Get the current industry from request parameters.
+
+Args:
+    request: The FastAPI Request object
+
+Returns:
+    str|None: The current industry identifier or None
+
+Examples:
+    {% set current_industry = get_current_industry(request) %}
+    {% if current_industry %}Current industry: {{ current_industry }}{% endif %}
+#}
+{% macro get_current_industry(request) -%}
+    {{- request.query_params.get('industry') -}}
+{%- endmacro %}
+
+{#
+Generate CSS classes for dropdown toggle based on whether any child is active.
+
+Args:
+    request: The FastAPI Request object
+    child_industries: List of industry identifiers in the dropdown
+    base_classes: Base CSS classes for the toggle
+    active_class: CSS class when any child is active
+
+Returns:
+    str: Space-separated CSS classes
+
+Examples:
+    {{ dropdown_toggle_class(request, ['powder-coat', 'haccp'], 'nav-dropdown-toggle') }}
+#}
+{% macro dropdown_toggle_class(request, child_industries, base_classes='', active_class='active') -%}
+    {%- set classes = [base_classes] if base_classes else [] -%}
+    {%- if is_industry_active(request, child_industries) -%}
+        {%- set _ = classes.append(active_class) -%}
+    {%- endif -%}
+    {{- classes | join(' ') -}}
+{%- endmacro %}
+
+{#
+Check if current route is the home page (root path with no industry).
+
+Args:
+    request: The FastAPI Request object
+
+Returns:
+    bool: True if on home page without industry parameter
+
+Examples:
+    {% if is_home_page(request) %}Welcome to ProofKit!{% endif %}
+#}
+{% macro is_home_page(request) -%}
+    {%- set current_path = request.url.path -%}
+    {%- set has_industry = request.query_params.get('industry') -%}
+    {%- if current_path == '/' and not has_industry -%}
+        {{- True -}}
+    {%- else -%}
+        {{- False -}}
+    {%- endif -%}
+{%- endmacro %}
+
+{#
+Debug helper to display current request information.
+Only renders in development/debug mode based on environment.
+
+Args:
+    request: The FastAPI Request object
+
+Examples:
+    {{ debug_nav_info(request) }}
+#}
+{% macro debug_nav_info(request) -%}
+    {%- if config and config.get('DEBUG', False) -%}
+        <div style="position: fixed; bottom: 10px; right: 10px; background: #333; color: white; padding: 10px; font-size: 12px; border-radius: 5px; z-index: 9999;">
+            <strong>Debug Navigation Info:</strong><br>
+            Path: {{ request.url.path }}<br>
+            Industry: {{ request.query_params.get('industry', 'None') }}<br>
+            Query: {{ request.url.query or 'None' }}
+        </div>
+    {%- endif -%}
+{%- endmacro %}

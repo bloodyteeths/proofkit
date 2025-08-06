@@ -1,0 +1,229 @@
+{% extends "../base.html" %}
+
+{% block title %}Turn cook/chill logs into an inspector-ready HACCP report - ProofKit{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section>
+    <div style="text-align: center; margin-bottom: 3rem; padding: 3rem 2rem; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); border-radius: 1rem; position: relative; overflow: hidden;">
+        <div style="position: relative; z-index: 1;">
+            <h1 style="color: #4c51bf; margin-bottom: 1rem; font-size: 2.5rem; font-weight: 700;">
+                Turn cook/chill logs into an inspector-ready HACCP report.
+            </h1>
+            <p style="font-size: 1.2rem; color: #64748b; max-width: 700px; margin: 0 auto 2rem auto; line-height: 1.6;">
+                Checks 135→70 °F ≤2 h, and 135→41 °F ≤6 h, with gaps highlighted.
+            </p>
+            
+            <!-- CTAs -->
+            <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; margin-top: 2rem;">
+                <a href="/app?industry=haccp" class="primary" style="font-size: 1.1rem; padding: 0.75rem 2rem; border-radius: 0.75rem; text-decoration: none; font-weight: 600;">
+                    Upload log
+                </a>
+                <a href="#examples" style="padding: 0.75rem 2rem; border-radius: 0.75rem; text-decoration: none; font-weight: 600; border: 2px solid #667eea; color: #667eea; background: white;">
+                    See example
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Badge Strip -->
+<section style="margin: 3rem 0;">
+    <div style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
+        <a href="https://www.fda.gov/about-fda/website-policies/fda-name-and-logo-policy" target="_blank" style="display: flex; align-items: center; padding: 1rem 1.5rem; background: white; border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); border: 1px solid #e2e8f0; text-decoration: none; transition: transform 0.3s ease;">
+            <img src="/static/badges/fda-21cfr-part11.svg" alt="FDA 21 CFR Part 11" style="height: 48px; width: auto;" loading="lazy">
+        </a>
+        <a href="https://www.usp.org/compounding/general-chapter-797" target="_blank" style="display: flex; align-items: center; padding: 1rem 1.5rem; background: white; border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); border: 1px solid #e2e8f0; text-decoration: none; transition: transform 0.3s ease;">
+            <img src="/static/badges/usp-797.svg" alt="USP 797" style="height: 48px; width: auto;" loading="lazy">
+        </a>
+    </div>
+</section>
+
+<!-- Quick Spec Card -->
+<section style="margin: 3rem 0;">
+    <div style="background: white; padding: 2rem; border-radius: 1rem; box-shadow: var(--card-shadow); max-width: 600px; margin: 0 auto;">
+        <h3 style="color: #4c51bf; margin-bottom: 1rem; text-align: center;">HACCP Cooling Validation Preset</h3>
+        <div style="background: #f8fafc; padding: 1.5rem; border-radius: 0.75rem; font-family: 'SF Mono', Monaco, monospace; font-size: 0.9rem; border: 1px solid #e2e8f0;">
+            <pre style="margin: 0; white-space: pre-wrap; color: #374151;">{
+  "job_id": "HACCP_cooling_001",
+  "process_type": "cooling",
+  "temp_unit": "fahrenheit",
+  "stages": [
+    {
+      "name": "hot_to_danger",
+      "start_temp": 135,
+      "end_temp": 70,
+      "max_time_seconds": 7200
+    },
+    {
+      "name": "danger_to_cold",
+      "start_temp": 70,
+      "end_temp": 41,
+      "max_time_seconds": 21600
+    }
+  ],
+  "sensor_uncertainty": 1.0,
+  "gap_tolerance_seconds": 300
+}</pre>
+        </div>
+        <div style="text-align: center; margin-top: 1.5rem;">
+            <a href="/app?industry=haccp" class="primary" style="text-decoration: none; padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600;">
+                Edit in tool
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- How we decide PASS/FAIL -->
+<section style="margin: 4rem 0;">
+    <div style="background: white; padding: 2rem; border-radius: 1rem; box-shadow: var(--card-shadow);">
+        <h3 style="color: #4c51bf; margin-bottom: 1.5rem; text-align: center;">How we decide PASS/FAIL</h3>
+        
+        <div style="background: #f1f5f9; padding: 1.5rem; border-radius: 0.75rem; margin-bottom: 2rem;">
+            <p style="font-size: 1.1rem; color: #374151; margin: 0; text-align: center;">
+                <strong>Math:</strong> We compute both segments and flag any plateau >30 min above 70 °F during chill.
+            </p>
+        </div>
+        
+        <details style="border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1.5rem;">
+            <summary style="cursor: pointer; font-weight: 600; color: #4c51bf; padding: 0.5rem; margin: -0.5rem; border-radius: 0.5rem; font-size: 1.1rem;">
+                🔍 HACCP-specific validation points
+            </summary>
+            
+            <div style="margin-top: 1.5rem; color: #64748b; line-height: 1.6;">
+                <ul style="padding-left: 1.5rem; margin: 0;">
+                    <li><strong>Stage 1 (135°F → 70°F):</strong> Must complete within 2 hours to minimize pathogen growth</li>
+                    <li><strong>Stage 2 (70°F → 41°F):</strong> Must complete within 6 hours total from start of cooling</li>
+                    <li><strong>Temperature gaps:</strong> Data gaps >5 minutes are flagged as potential compliance issues</li>
+                    <li><strong>Danger zone plateau:</strong> Any extended time above 70°F during stage 2 is highlighted</li>
+                    <li><strong>Sensor accuracy:</strong> ±1°F uncertainty typical for food-grade calibrated sensors</li>
+                    <li><strong>Documentation:</strong> Generates FDA-compliant records with tamper-evident verification</li>
+                </ul>
+            </div>
+        </details>
+    </div>
+</section>
+
+<!-- Examples table -->
+<section id="examples" style="margin: 4rem 0;">
+    <div style="background: white; padding: 2rem; border-radius: 1rem; box-shadow: var(--card-shadow);">
+        <h3 style="color: #4c51bf; margin-bottom: 2rem; text-align: center;">Kitchen Scenarios</h3>
+        
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; margin: 0;">
+                <thead>
+                    <tr style="background: #f8fafc;">
+                        <th style="padding: 1rem; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e2e8f0;">Scenario</th>
+                        <th style="padding: 1rem; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e2e8f0;">Stage 1 Time</th>
+                        <th style="padding: 1rem; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e2e8f0;">Stage 2 Time</th>
+                        <th style="padding: 1rem; text-align: center; font-weight: 600; color: #374151; border-bottom: 2px solid #e2e8f0;">Result</th>
+                        <th style="padding: 1rem; text-align: center; font-weight: 600; color: #374151; border-bottom: 2px solid #e2e8f0;">Download</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 1rem; color: #374151;">Restaurant soup cooling</td>
+                        <td style="padding: 1rem; color: #64748b;">1h 15min</td>
+                        <td style="padding: 1rem; color: #64748b;">4h 30min total</td>
+                        <td style="padding: 1rem; text-align: center;">
+                            <span style="background: #dcfce7; color: #166534; padding: 0.25rem 0.75rem; border-radius: 1rem; font-weight: 600; font-size: 0.9rem;">PASS</span>
+                        </td>
+                        <td style="padding: 1rem; text-align: center;">
+                            <a href="/examples/haccp/restaurant_soup_pass.csv" download style="color: #667eea; text-decoration: none; font-weight: 500;">CSV</a>
+                        </td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 1rem; color: #374151;">Cafeteria roast beef</td>
+                        <td style="padding: 1rem; color: #64748b;">2h 45min</td>
+                        <td style="padding: 1rem; color: #64748b;">8h 15min total</td>
+                        <td style="padding: 1rem; text-align: center;">
+                            <span style="background: #fecaca; color: #991b1b; padding: 0.25rem 0.75rem; border-radius: 1rem; font-weight: 600; font-size: 0.9rem;">FAIL</span>
+                        </td>
+                        <td style="padding: 1rem; text-align: center;">
+                            <a href="/examples/haccp/cafeteria_beef_fail.csv" download style="color: #667eea; text-decoration: none; font-weight: 500;">CSV</a>
+                        </td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 1rem; color: #374151;">Hotel banquet chicken</td>
+                        <td style="padding: 1rem; color: #64748b;">1h 50min</td>
+                        <td style="padding: 1rem; color: #64748b;">5h 45min total</td>
+                        <td style="padding: 1rem; text-align: center;">
+                            <span style="background: #dcfce7; color: #166534; padding: 0.25rem 0.75rem; border-radius: 1rem; font-weight: 600; font-size: 0.9rem;">PASS</span>
+                        </td>
+                        <td style="padding: 1rem; text-align: center;">
+                            <a href="/examples/haccp/hotel_chicken_pass.csv" download style="color: #667eea; text-decoration: none; font-weight: 500;">CSV</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 1rem; color: #374151;">Fast-casual chili</td>
+                        <td style="padding: 1rem; color: #64748b;">3h 20min</td>
+                        <td style="padding: 1rem; color: #64748b;">6h 45min total</td>
+                        <td style="padding: 1rem; text-align: center;">
+                            <span style="background: #fecaca; color: #991b1b; padding: 0.25rem 0.75rem; border-radius: 1rem; font-weight: 600; font-size: 0.9rem;">FAIL</span>
+                        </td>
+                        <td style="padding: 1rem; text-align: center;">
+                            <a href="/examples/haccp/fastcasual_chili_fail.csv" download style="color: #667eea; text-decoration: none; font-weight: 500;">CSV</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- Mini-FAQ -->
+<section style="margin: 4rem 0;">
+    <div style="background: white; padding: 2rem; border-radius: 1rem; box-shadow: var(--card-shadow);">
+        <h3 style="color: #4c51bf; margin-bottom: 2rem; text-align: center;">HACCP/Food Safety FAQ</h3>
+        
+        <div style="display: grid; gap: 1rem;">
+            <details style="border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 1rem;">
+                <summary style="cursor: pointer; font-weight: 600; color: #374151; padding: 0.5rem; margin: -0.5rem; border-radius: 0.5rem;">
+                    What makes a cooling log compliant with FDA HACCP requirements?
+                </summary>
+                <div style="margin-top: 1rem; color: #64748b; line-height: 1.6;">
+                    FDA requires food to cool from 135°F to 70°F within 2 hours, then from 70°F to 41°F within 6 hours total. Our validation checks both stages independently and flags any temperature plateaus in the danger zone (41-135°F) that exceed safe timeframes.
+                </div>
+            </details>
+            
+            <details style="border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 1rem;">
+                <summary style="cursor: pointer; font-weight: 600; color: #374151; padding: 0.5rem; margin: -0.5rem; border-radius: 0.5rem;">
+                    How do I handle temperature data gaps in my cooling logs?
+                </summary>
+                <div style="margin-top: 1rem; color: #64748b; line-height: 1.6;">
+                    Small gaps (&lt;5 minutes) are typically acceptable, but larger gaps create compliance uncertainty. ProofKit flags all gaps &gt;5 minutes and includes gap analysis in the audit report. For critical processes, continuous monitoring is recommended with redundant sensors.
+                </div>
+            </details>
+            
+            <details style="border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 1rem;">
+                <summary style="cursor: pointer; font-weight: 600; color: #374151; padding: 0.5rem; margin: -0.5rem; border-radius: 0.5rem;">
+                    Can ProofKit handle different food types with varying cooling requirements?
+                </summary>
+                <div style="margin-top: 1rem; color: #64748b; line-height: 1.6;">
+                    Yes! While the 2-hour/6-hour rule is standard, some foods have different requirements. You can customize the temperature thresholds and time limits in the specification editor. The system supports both Fahrenheit and Celsius, and handles various cooling curves from different food types and volumes.
+                </div>
+            </details>
+        </div>
+    </div>
+</section>
+
+<!-- Bottom CTA bar -->
+<section style="margin: 4rem 0;">
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 3rem 2rem; border-radius: 1rem; text-align: center; color: white;">
+        <h3 style="margin: 0 0 1rem 0; font-size: 1.8rem; font-weight: 700;">
+            Generate your certificate now
+        </h3>
+        <p style="margin: 0 0 2rem 0; font-size: 1.1rem; opacity: 0.9; max-width: 600px; margin-left: auto; margin-right: auto;">
+            Upload your temperature log and get inspector-ready HACCP documentation in minutes.
+        </p>
+        <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+            <a href="/app?industry=haccp" style="background: white; color: #667eea; padding: 0.75rem 2rem; border-radius: 0.75rem; text-decoration: none; font-weight: 600; font-size: 1.1rem; transition: transform 0.3s ease;">
+                Start validation
+            </a>
+            <a href="mailto:support@proofkit.net" style="background: rgba(255,255,255,0.2); color: white; padding: 0.75rem 2rem; border-radius: 0.75rem; text-decoration: none; font-weight: 600; border: 2px solid white;">
+                Talk to us
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,219 @@
+{% extends "industry_base.html" %}
+
+{% set headline = "Powder Coat Cure Validation" %}
+{% set subline = "Generate compliant proof PDFs for powder coating cure processes. Meet AAMA, ASTM, and automotive OEM requirements with traceable temperature validation." %}
+
+{% set trust_badges = [
+    {"icon": "🏆", "text": "AAMA Compliant"},
+    {"icon": "🔬", "text": "ASTM D523 Ready"},
+    {"icon": "🚗", "text": "Automotive OEM"},
+    {"icon": "✅", "text": "ISO 9001 Compatible"}
+] %}
+
+{% set examples = {
+    "title": "Need powder coating example data to test with?",
+    "description": "Download example temperature log files from actual powder coating ovens:",
+    "files": [
+        {
+            "name": "automotive_batch.csv",
+            "description": "Automotive parts - 180°C for 10 min (meets Ford WSS-M2P175-A1)",
+            "icon": "✅",
+            "bg_color": "#f8f9ff",
+            "border_color": "#4CAF50",
+            "url": "/examples/powder/automotive_batch.csv"
+        },
+        {
+            "name": "architectural_run.csv",
+            "description": "Architectural coating - 200°C for 15 min (AAMA 2604 standard)",
+            "icon": "⚠️",
+            "bg_color": "#fff8f0",
+            "border_color": "#f59e0b",
+            "url": "/examples/powder/architectural_run.csv"
+        },
+        {
+            "name": "appliance_cure.csv",
+            "description": "Appliance finish - 175°C for 12 min (typical white goods)",
+            "icon": "❌",
+            "bg_color": "#fef2f2",
+            "border_color": "#ef4444",
+            "url": "/examples/powder/appliance_cure.csv"
+        }
+    ],
+    "format_requirements": [
+        "<strong>Timestamp column:</strong> ISO format (2024-01-15T10:00:00Z) or Unix timestamp",
+        "<strong>Temperature columns:</strong> Oven zone sensors (e.g., zone_1_temp, zone_2_temp, part_temp)",
+        "<strong>Part tracking:</strong> Optional part ID or batch number in metadata",
+        "<strong>Coating spec:</strong> Include powder type and thickness in comments (#)",
+        "<strong>File size:</strong> Maximum 10MB, up to 200k data points supported"
+    ]
+} %}
+
+{% set faq = {
+    "title": "Powder Coating Validation FAQ",
+    "items": [
+        {
+            "question": "What temperature standards does ProofKit support for powder coating?",
+            "answer": "ProofKit supports all major powder coating standards including AAMA 2603/2604/2605 for architectural applications, ASTM D523 for gloss retention, and automotive OEM specifications (Ford WSS-M2P175-A1, GM 9984P, etc.). Default settings follow typical 180°C ± 2°C requirements."
+        },
+        {
+            "question": "How do I validate multi-zone convection ovens?",
+            "answer": "Upload CSV files with separate temperature columns for each oven zone (zone_1_temp, zone_2_temp, etc.). ProofKit will analyze all sensors and apply your specified logic (minimum, average, or majority consensus) to determine compliance across all zones."
+        },
+        {
+            "question": "Can I track different powder types and film thicknesses?",
+            "answer": "Yes! Include powder specifications in CSV comments (lines starting with #). Example:<br><code># Powder: RAL 9016 White Polyester<br># Film Thickness: 60-80 microns<br># Batch: PWD-2024-001</code><br>This metadata will be included in your proof PDF."
+        },
+        {
+            "question": "What's the difference between continuous and cumulative hold time?",
+            "answer": "<strong>Continuous:</strong> Part must maintain target temperature for the full duration without dropping below threshold (stricter, recommended for critical applications).<br><strong>Cumulative:</strong> Allows brief temperature dips - total time above threshold must meet requirement (more forgiving for older ovens)."
+        },
+        {
+            "question": "How does ProofKit handle oven ramp rates?",
+            "answer": "ProofKit calculates the maximum heating rate using central difference method. Typical powder coating ovens should ramp at 5-15°C/min. Excessive ramp rates (>20°C/min) can cause coating defects and will be flagged in the validation report."
+        }
+    ]
+} %}
+
+{% block spec_form %}
+<div style="margin-top: 3rem;">
+    <h4 style="color: #4c51bf; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+        🎨 Powder Coat Cure Specification
+    </h4>
+    <p style="margin: 0 0 2rem 0; color: #64748b; font-size: 0.95rem;">
+        Configure your powder coating cure requirements. Default values follow AAMA 2604 and automotive OEM standards for typical applications.
+    </p>
+    
+    <div style="background: white; padding: 2rem; border-radius: 1rem; box-shadow: var(--card-shadow); border: 2px solid #e2e8f0;">
+        <div class="form-grid" style="margin-bottom: 2rem;">
+            <!-- Job Information -->
+            <div>
+                <label for="job_id" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                    📋 Job/Batch ID
+                </label>
+                <input type="text" id="job_id" value="PWD_batch_001" 
+                       placeholder="e.g., PWD_batch_001, AUTO_24_001">
+                <small style="color: #6b7280; font-size: 0.85rem;">Unique identifier for this powder coating run</small>
+            </div>
+            
+            <!-- Target Temperature -->
+            <div>
+                <label for="target_temp" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                    🌡️ Target Temperature (°C)
+                </label>
+                <input type="number" id="target_temp" value="180" min="150" max="250" step="5">
+                <small style="color: #6b7280; font-size: 0.85rem;">Typical: 160-200°C (automotive), 180-220°C (architectural)</small>
+            </div>
+        </div>
+        
+        <div class="form-grid" style="margin-bottom: 2rem;">
+            <!-- Hold Time -->
+            <div>
+                <label for="hold_time" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                    ⏱️ Hold Time (seconds)
+                </label>
+                <input type="number" id="hold_time" value="600" min="300" max="1800" step="30">
+                <small style="color: #6b7280; font-size: 0.85rem;">600s = 10 min (typical automotive), 900s = 15 min (architectural)</small>
+            </div>
+            
+            <!-- Sensor Uncertainty -->
+            <div>
+                <label for="sensor_uncertainty" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                    📊 Sensor Uncertainty (°C)
+                </label>
+                <input type="number" id="sensor_uncertainty" value="2.0" min="1.0" max="5.0" step="0.5">
+                <small style="color: #6b7280; font-size: 0.85rem;">±2°C typical for oven sensors, ±1°C for calibrated thermocouples</small>
+            </div>
+        </div>
+        
+        <!-- Advanced Settings Toggle -->
+        <details style="margin-top: 2rem;">
+            <summary style="font-weight: 600; color: #4c51bf; cursor: pointer; margin-bottom: 1rem;">
+                🔧 Advanced Powder Coating Settings
+            </summary>
+            
+            <div style="background: #f8f9ff; padding: 1.5rem; border-radius: 0.75rem; margin-top: 1rem;">
+                <div class="form-grid" style="margin-bottom: 1.5rem;">
+                    <!-- Max Ramp Rate -->
+                    <div>
+                        <label for="max_ramp_rate" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                            📈 Max Ramp Rate (°C/min)
+                        </label>
+                        <input type="number" id="max_ramp_rate" value="12" min="5" max="25" step="1">
+                        <small style="color: #6b7280; font-size: 0.85rem;">5-15°C/min optimal, >20°C/min may cause defects</small>
+                    </div>
+                    
+                    <!-- Time to Threshold -->
+                    <div>
+                        <label for="max_time_to_threshold" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                            ⏰ Max Time to Threshold (seconds)
+                        </label>
+                        <input type="number" id="max_time_to_threshold" value="900" min="300" max="1800" step="60">
+                        <small style="color: #6b7280; font-size: 0.85rem;">Maximum heat-up time allowed</small>
+                    </div>
+                </div>
+                
+                <!-- Hold Logic -->
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="font-weight: 600; color: #374151; margin-bottom: 1rem; display: block;">
+                        🔄 Hold Time Logic
+                    </label>
+                    <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; white-space: nowrap;">
+                            <input type="radio" name="hold_logic" value="continuous" checked 
+                                   style="accent-color: #667eea; margin: 0;">
+                            <span><strong>Continuous</strong> - Critical applications</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; white-space: nowrap;">
+                            <input type="radio" name="hold_logic" value="cumulative" 
+                                   style="accent-color: #667eea; margin: 0;">
+                            <span><strong>Cumulative</strong> - General applications</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Sensor Configuration -->
+                <div>
+                    <label style="font-weight: 600; color: #374151; margin-bottom: 1rem; display: block;">
+                        📡 Multi-Zone Logic
+                    </label>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; white-space: nowrap;">
+                            <input type="radio" name="sensor_mode" value="min_of_set" checked 
+                                   style="accent-color: #667eea; margin: 0;">
+                            <span><strong>Minimum</strong> (most conservative)</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; white-space: nowrap;">
+                            <input type="radio" name="sensor_mode" value="mean_of_set" 
+                                   style="accent-color: #667eea; margin: 0;">
+                            <span><strong>Average</strong> (balanced)</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; white-space: nowrap;">
+                            <input type="radio" name="sensor_mode" value="majority_over_threshold" 
+                                   style="accent-color: #667eea; margin: 0;">
+                            <span><strong>Majority</strong> (flexible)</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </details>
+        
+        <!-- Industry Info Box -->
+        <div style="background: #e0f2fe; border: 1px solid #0891b2; border-radius: 0.75rem; padding: 1rem; margin-top: 2rem;">
+            <div style="display: flex; align-items: start; gap: 0.75rem;">
+                <div style="font-size: 1.25rem;">🏭</div>
+                <div>
+                    <strong style="color: #0e7490;">Powder Coating Standards Reference</strong>
+                    <p style="margin: 0.5rem 0 0 0; color: #164e63; font-size: 0.9rem; line-height: 1.4;">
+                        Default values meet AAMA 2604 architectural standards and typical automotive OEM requirements. 
+                        Conservative threshold = Target + Sensor Uncertainty (e.g., 180°C + 2°C = 182°C minimum).
+                        Always consult your powder supplier's technical data sheet for specific cure schedules.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hidden JSON field for backend -->
+    <input type="hidden" id="spec_json" name="spec_json" value="">
+</div>
+{% endblock %}

@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}ProofKit Login{% endblock %}
+
+{% block content %}
+<main class="container">
+    <article>
+        <header>
+            <h1>🔐 ProofKit Authentication</h1>
+            <p>Enter your email to receive a secure magic link for access.</p>
+        </header>
+
+        <form method="POST" action="/auth/request-link" id="login-form">
+            <fieldset>
+                <label for="email">
+                    Email Address
+                    <input type="email" id="email" name="email" placeholder="your.email@company.com" required>
+                </label>
+
+                <label for="role">
+                    Access Role
+                    <select id="role" name="role" required>
+                        <option value="op">Operator (OP)</option>
+                        <option value="qa">Quality Assurance (QA)</option>
+                    </select>
+                </label>
+
+                <button type="submit" class="primary">
+                    📧 Send Magic Link
+                </button>
+            </fieldset>
+        </form>
+
+        <div id="status-message" style="display: none; margin-top: 1rem;"></div>
+
+        <details style="margin-top: 2rem;">
+            <summary>About Magic Link Authentication</summary>
+            <ul>
+                <li><strong>Secure:</strong> No passwords stored - each link is single-use and time-limited</li>
+                <li><strong>Fast:</strong> Click the link in your email to instantly access ProofKit</li>
+                <li><strong>Role-based:</strong> Operators can process files, QA can approve results</li>
+                <li><strong>Expires:</strong> Links expire after 15 minutes for security</li>
+            </ul>
+        </details>
+    </article>
+</main>
+
+<script>
+document.getElementById('login-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const form = e.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const statusDiv = document.getElementById('status-message');
+    
+    // Disable form and show loading
+    submitBtn.disabled = true;
+    submitBtn.textContent = '📧 Sending...';
+    statusDiv.style.display = 'none';
+    
+    try {
+        const formData = new FormData(form);
+        const response = await fetch('/auth/request-link', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            let statusHtml = `
+                <div class="success">
+                    <h4>✅ Magic Link Sent!</h4>
+                    <p>${result.message}</p>
+            `;
+            
+            // Show actual link in development mode
+            if (result.dev_link) {
+                statusHtml += `
+                    <div style="margin: 1rem 0; padding: 1rem; background: #f0f0f0; border-radius: 4px; word-break: break-all;">
+                        <strong>🔗 Development Magic Link:</strong><br>
+                        <a href="${result.dev_link}" target="_blank">${result.dev_link}</a>
+                        <br><small>⚠️ This link expires in 15 minutes</small>
+                    </div>
+                `;
+            } else {
+                statusHtml += `<p><small>Check your email and click the link to access ProofKit.</small></p>`;
+            }
+            
+            statusHtml += `</div>`;
+            statusDiv.innerHTML = statusHtml;
+            form.reset();
+        } else {
+            throw new Error(result.detail || 'Failed to send magic link');
+        }
+    } catch (error) {
+        statusDiv.innerHTML = `
+            <div class="error">
+                <h4>❌ Error</h4>
+                <p>${error.message}</p>
+            </div>
+        `;
+    } finally {
+        statusDiv.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = '📧 Send Magic Link';
+    }
+});
+</script>
+{% endblock %} 

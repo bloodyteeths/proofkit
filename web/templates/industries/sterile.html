@@ -1,0 +1,361 @@
+{% extends "modern_base.html" %}
+
+{% block title %}EtO Sterilization Validation - Document gas sterilization cycles without spreadsheet pain{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section" style="background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%); color: white; padding: 4rem 0 6rem; margin: -2rem -1rem 4rem -1rem; border-radius: 0 0 2rem 2rem; text-align: center; position: relative; overflow: hidden;">
+    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" patternUnits="userSpaceOnUse" width="2" height="2"><circle cx="1" cy="1" r="0.3" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>'); opacity: 0.3;"></div>
+    
+    <div class="container" style="position: relative; z-index: 2;">
+        <h1 style="font-size: 3.2rem; font-weight: 700; margin: 0 0 1.5rem 0; text-shadow: 0 2px 8px rgba(0,0,0,0.3); line-height: 1.1;">
+            Document EtO sterilization cycles without spreadsheet pain.
+        </h1>
+        
+        <p style="font-size: 1.3rem; margin: 0 auto 3rem auto; max-width: 600px; opacity: 0.95; line-height: 1.4;">
+            Time-in-chamber, humidity, and gas-flow steps summarized for QA.
+        </p>
+        
+        <div style="display: flex; gap: 1.5rem; justify-content: center; align-items: center; flex-wrap: wrap;">
+            <a href="/app?industry=eto-sterile" 
+               class="primary-cta" 
+               style="background: rgba(255,255,255,0.95); color: #7c3aed; padding: 1rem 2.5rem; border-radius: 0.75rem; text-decoration: none; font-weight: 700; font-size: 1.1rem; box-shadow: 0 4px 20px rgba(0,0,0,0.15); transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 0.75rem;">
+                <span style="font-size: 1.25rem;">📤</span>
+                Upload log
+            </a>
+            
+            <a href="#examples" 
+               class="secondary-cta" 
+               style="background: rgba(255,255,255,0.1); color: white; padding: 1rem 2rem; border-radius: 0.75rem; text-decoration: none; font-weight: 600; border: 2px solid rgba(255,255,255,0.3); transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 0.5rem;">
+                <span style="font-size: 1.1rem;">👁️</span>
+                See example
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Badge Strip -->
+<section class="badge-section" style="margin: -2rem 0 4rem 0;">
+    {% include 'components/badge_strip.html' with badges=[
+        {src: '/static/badges/iso-13485.svg', alt: 'ISO 13485 Medical Devices', href: 'https://www.iso.org/standard/59752.html'},
+        {src: '/static/badges/fda-21cfr-part11.svg', alt: 'FDA 21 CFR Part 11 Electronic Records', href: 'https://www.fda.gov/regulatory-information/search-fda-guidance-documents/part-11-electronic-records-electronic-signatures-scope-and-application'}
+    ] %}
+</section>
+
+<!-- Quick Spec Card -->
+<section class="spec-preview" style="background: white; border-radius: 1.5rem; padding: 2.5rem; box-shadow: 0 8px 32px rgba(0,0,0,0.08); margin-bottom: 4rem; border: 1px solid #e2e8f0;">
+    <div style="display: grid; grid-template-columns: 1fr auto; gap: 2rem; align-items: start;">
+        <div>
+            <h3 style="color: #7c3aed; margin: 0 0 1rem 0; font-size: 1.4rem; display: flex; align-items: center; gap: 0.75rem;">
+                <span style="font-size: 1.5rem;">⚗️</span>
+                Quick Spec: EtO Gas Sterilization
+            </h3>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1.5rem; font-family: 'SF Mono', Monaco, monospace; font-size: 0.9rem; line-height: 1.6;">
+                <pre style="margin: 0; color: #374151; white-space: pre-wrap;">{
+  "job_id": "ETO_batch_001",
+  "target_temperature_c": 55,
+  "hold_time_seconds": 7200,
+  "sensor_uncertainty_c": 2.0,
+  "hold_logic": "continuous",
+  "min_relative_humidity_pct": 45,
+  "min_eto_concentration_mg_l": 600,
+  "max_time_to_threshold_seconds": 3600,
+  "sensor_mode": "min_of_set"
+}</pre>
+            </div>
+        </div>
+        <div style="text-align: center;">
+            <a href="/app?industry=eto-sterile" 
+               class="edit-button" 
+               style="background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%); color: white; padding: 1rem 1.5rem; border-radius: 0.75rem; text-decoration: none; font-weight: 600; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3); transition: all 0.3s ease; display: inline-block;">
+                Edit in tool →
+            </a>
+            <p style="margin: 1rem 0 0 0; font-size: 0.85rem; color: #6b7280;">
+                55°C for 2 hours<br>
+                EtO + humidity validation
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- How we decide PASS/FAIL -->
+<section class="decision-logic" style="background: linear-gradient(145deg, #faf5ff 0%, #ffffff 100%); border-radius: 1.5rem; padding: 2.5rem; margin-bottom: 4rem; border: 1px solid #e2e8f0;">
+    <h3 style="color: #7c3aed; margin: 0 0 1.5rem 0; font-size: 1.6rem; display: flex; align-items: center; gap: 0.75rem;">
+        <span style="font-size: 1.75rem;">🧮</span>
+        How we decide PASS/FAIL
+    </h3>
+    
+    <div style="background: white; border-radius: 1rem; padding: 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 2rem;">
+        <p style="font-size: 1.1rem; color: #374151; margin: 0; font-weight: 500;">
+            <strong>Math:</strong> Temperature ≥ target; RH ≥ 45%; EtO concentration ≥ 600 mg/L; continuous exposure ≥ N hours.
+        </p>
+    </div>
+    
+    <details style="border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1.5rem; background: white;">
+        <summary style="cursor: pointer; font-weight: 600; color: #7c3aed; padding: 0.5rem; margin: -0.5rem; border-radius: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+            <span style="font-size: 1.1rem;">📋</span>
+            Detailed validation criteria
+        </summary>
+        
+        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #f1f5f9;">
+            <ul style="margin: 0; padding-left: 1.5rem; color: #374151; line-height: 1.8;">
+                <li><strong>Temperature control:</strong> Chamber temperature must reach and maintain 50-60°C throughout exposure phase. Higher temperatures improve gas penetration and reduce cycle time.</li>
+                <li><strong>Humidity validation:</strong> Relative humidity 45-85% required for proper microbial kill. Too low reduces efficacy; too high causes condensation problems.</li>
+                <li><strong>Gas concentration:</strong> EtO levels monitored continuously. Minimum 600 mg/L typical for medical devices, with leakage compensation calculated automatically.</li>
+                <li><strong>Exposure time calculation:</strong> Begins when all parameters (temperature, humidity, gas concentration) simultaneously reach target values and continues until aeration phase.</li>
+                <li><strong>Pressure monitoring:</strong> Sub-atmospheric pressure maintenance validated to prevent gas leaks and ensure uniform distribution throughout load.</li>
+                <li><strong>Aeration validation:</strong> Post-exposure air changes and residual EtO levels tracked to ensure safe handling of sterilized items.</li>
+            </ul>
+        </div>
+    </details>
+</section>
+
+<!-- Examples Table -->
+<section id="examples" class="examples-section" style="margin-bottom: 4rem;">
+    <h3 style="color: #7c3aed; margin: 0 0 2rem 0; font-size: 1.6rem; display: flex; align-items: center; gap: 0.75rem;">
+        <span style="font-size: 1.75rem;">📊</span>
+        Example EtO sterilization cycles
+    </h3>
+    
+    <div style="background: white; border-radius: 1.5rem; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
+        <table style="width: 100%; margin: 0; border-collapse: separate; border-spacing: 0;">
+            <thead style="background: linear-gradient(135deg, #faf5ff 0%, #ede9fe 100%);">
+                <tr>
+                    <th style="padding: 1.25rem 1.5rem; text-align: left; font-weight: 700; color: #7c3aed; border: none; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">Result</th>
+                    <th style="padding: 1.25rem 1.5rem; text-align: left; font-weight: 700; color: #7c3aed; border: none; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">Application</th>
+                    <th style="padding: 1.25rem 1.5rem; text-align: left; font-weight: 700; color: #7c3aed; border: none; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">Profile</th>
+                    <th style="padding: 1.25rem 1.5rem; text-align: center; font-weight: 700; color: #7c3aed; border: none; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">Files</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                    <td style="padding: 1.25rem 1.5rem; border: none;">
+                        <span style="background: #22c55e; color: white; padding: 0.375rem 0.75rem; border-radius: 1rem; font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em;">✅ PASS</span>
+                    </td>
+                    <td style="padding: 1.25rem 1.5rem; border: none; color: #374151;">
+                        <strong>Orthopedic implants</strong><br>
+                        <small style="color: #6b7280;">Complex geometry devices</small>
+                    </td>
+                    <td style="padding: 1.25rem 1.5rem; border: none; color: #374151; font-family: monospace;">
+                        55°C × 2hr<br>
+                        <small style="color: #6b7280;">RH: 62%, EtO: 650mg/L</small>
+                    </td>
+                    <td style="padding: 1.25rem 1.5rem; border: none; text-align: center;">
+                        <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
+                            <a href="/examples/eto/orthopedic_batch.pdf" style="color: #dc2626; text-decoration: none; font-size: 0.85rem; font-weight: 500;">PDF</a>
+                            <a href="/examples/eto/orthopedic_batch.csv" style="color: #059669; text-decoration: none; font-size: 0.85rem; font-weight: 500;">CSV</a>
+                            <a href="/examples/eto/orthopedic_batch.json" style="color: #7c2d12; text-decoration: none; font-size: 0.85rem; font-weight: 500;">Spec</a>
+                        </div>
+                    </td>
+                </tr>
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                    <td style="padding: 1.25rem 1.5rem; border: none;">
+                        <span style="background: #ef4444; color: white; padding: 0.375rem 0.75rem; border-radius: 1rem; font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em;">❌ FAIL</span>
+                    </td>
+                    <td style="padding: 1.25rem 1.5rem; border: none; color: #374151;">
+                        <strong>Pharmaceutical tubing</strong><br>
+                        <small style="color: #6b7280;">PVC components</small>
+                    </td>
+                    <td style="padding: 1.25rem 1.5rem; border: none; color: #374151; font-family: monospace;">
+                        50°C × 4hr<br>
+                        <small style="color: #ef4444;">RH drop to 35% @ 90min</small>
+                    </td>
+                    <td style="padding: 1.25rem 1.5rem; border: none; text-align: center;">
+                        <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
+                            <a href="/examples/eto/pharma_tubing.pdf" style="color: #dc2626; text-decoration: none; font-size: 0.85rem; font-weight: 500;">PDF</a>
+                            <a href="/examples/eto/pharma_tubing.csv" style="color: #059669; text-decoration: none; font-size: 0.85rem; font-weight: 500;">CSV</a>
+                            <a href="/examples/eto/pharma_tubing.json" style="color: #7c2d12; text-decoration: none; font-size: 0.85rem; font-weight: 500;">Spec</a>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 1.25rem 1.5rem; border: none;">
+                        <span style="background: #22c55e; color: white; padding: 0.375rem 0.75rem; border-radius: 1rem; font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em;">✅ PASS</span>
+                    </td>
+                    <td style="padding: 1.25rem 1.5rem; border: none; color: #374151;">
+                        <strong>Surgical kits</strong><br>
+                        <small style="color: #6b7280;">Mixed materials</small>
+                    </td>
+                    <td style="padding: 1.25rem 1.5rem; border: none; color: #374151; font-family: monospace;">
+                        52°C × 3hr<br>
+                        <small style="color: #6b7280;">RH: 58%, EtO: 720mg/L</small>
+                    </td>
+                    <td style="padding: 1.25rem 1.5rem; border: none; text-align: center;">
+                        <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
+                            <a href="/examples/eto/surgical_kits.pdf" style="color: #dc2626; text-decoration: none; font-size: 0.85rem; font-weight: 500;">PDF</a>
+                            <a href="/examples/eto/surgical_kits.csv" style="color: #059669; text-decoration: none; font-size: 0.85rem; font-weight: 500;">CSV</a>
+                            <a href="/examples/eto/surgical_kits.json" style="color: #7c2d12; text-decoration: none; font-size: 0.85rem; font-weight: 500;">Spec</a>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- Mini-FAQ -->
+<section class="faq-section" style="margin-bottom: 4rem;">
+    <h3 style="color: #7c3aed; margin: 0 0 2rem 0; font-size: 1.6rem; display: flex; align-items: center; gap: 0.75rem;">
+        <span style="font-size: 1.75rem;">❓</span>
+        EtO sterilization FAQ
+    </h3>
+    
+    <div style="display: grid; gap: 1.5rem;">
+        <details style="background: white; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+            <summary style="cursor: pointer; font-weight: 600; color: #374151; margin-bottom: 1rem; display: flex; align-items: start; gap: 0.75rem;">
+                <span style="color: #7c3aed; font-size: 1.1rem;">🎯</span>
+                Why is EtO sterilization used instead of steam autoclaving?
+            </summary>
+            <p style="color: #6b7280; line-height: 1.6; margin: 0; padding-left: 2rem;">
+                EtO sterilization operates at low temperatures (50-60°C) making it ideal for heat-sensitive materials like plastics, electronics, and complex medical devices. It penetrates packaging and reaches all surfaces, including lumens and crevices that steam cannot access effectively.
+            </p>
+        </details>
+        
+        <details style="background: white; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+            <summary style="cursor: pointer; font-weight: 600; color: #374151; margin-bottom: 1rem; display: flex; align-items: start; gap: 0.75rem;">
+                <span style="color: #7c3aed; font-size: 1.1rem;">🏭</span>
+                How does ProofKit handle the preconditioning and aeration phases?
+            </summary>
+            <p style="color: #6b7280; line-height: 1.6; margin: 0; padding-left: 2rem;">
+                ProofKit automatically detects and validates preconditioning (temperature and humidity equilibration), gas injection, exposure, and aeration phases. Each phase is time-stamped and parameters verified against your specifications. Residual EtO levels are tracked during aeration to ensure safe handling.
+            </p>
+        </details>
+        
+        <details style="background: white; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+            <summary style="cursor: pointer; font-weight: 600; color: #374151; margin-bottom: 1rem; display: flex; align-items: start; gap: 0.75rem;">
+                <span style="color: #7c3aed; font-size: 1.1rem;">📈</span>
+                What safety and environmental monitoring does ProofKit include?
+            </summary>
+            <p style="color: #6b7280; line-height: 1.6; margin: 0; padding-left: 2rem;">
+                ProofKit validates chamber leak rates, gas concentration stability, and emission control systems. Environmental monitoring includes workplace EtO levels during aeration and chamber venting. All data is timestamped and archived for occupational safety compliance and EPA reporting requirements.
+            </p>
+        </details>
+    </div>
+</section>
+
+<!-- Bottom CTA Bar -->
+<section class="bottom-cta" style="background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%); color: white; padding: 3rem 0; margin: 4rem -1rem -3rem -1rem; border-radius: 1.5rem 1.5rem 0 0; text-align: center; position: relative; overflow: hidden;">
+    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="dots" patternUnits="userSpaceOnUse" width="10" height="10"><circle cx="5" cy="5" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23dots)"/></svg>'); opacity: 0.4;"></div>
+    
+    <div class="container" style="position: relative; z-index: 2;">
+        <h3 style="font-size: 2rem; font-weight: 700; margin: 0 0 1rem 0; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+            Ready to validate your EtO sterilization cycle?
+        </h3>
+        
+        <p style="font-size: 1.1rem; margin: 0 0 2rem 0; opacity: 0.9; max-width: 500px; margin-left: auto; margin-right: auto;">
+            Join medical device companies using ProofKit for compliant EtO sterilization documentation.
+        </p>
+        
+        <div style="display: flex; gap: 1.5rem; justify-content: center; align-items: center; flex-wrap: wrap;">
+            <a href="/app?industry=eto-sterile" 
+               style="background: white; color: #7c3aed; padding: 1rem 2.5rem; border-radius: 0.75rem; text-decoration: none; font-weight: 700; font-size: 1.1rem; box-shadow: 0 4px 20px rgba(0,0,0,0.15); transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 0.75rem;">
+                <span style="font-size: 1.25rem;">🚀</span>
+                Generate your certificate now
+            </a>
+            
+            <a href="mailto:support@proofkit.net?subject=EtO%20Sterilization%20Discussion" 
+               style="background: rgba(255,255,255,0.1); color: white; padding: 1rem 2rem; border-radius: 0.75rem; text-decoration: none; font-weight: 600; border: 2px solid rgba(255,255,255,0.3); transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 0.5rem;">
+                <span style="font-size: 1.1rem;">💬</span>
+                Talk to us
+            </a>
+        </div>
+    </div>
+</section>
+
+<style>
+/* Additional styles for this page */
+.primary-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    background: white;
+}
+
+.secondary-cta:hover {
+    background: rgba(255,255,255,0.2);
+    border-color: rgba(255,255,255,0.5);
+    transform: translateY(-1px);
+}
+
+.edit-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(124, 58, 237, 0.4);
+}
+
+.badge-strip {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    padding: 2rem 0;
+}
+
+.badge-container {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.badge-card {
+    background: white;
+    padding: 1rem;
+    border-radius: 1rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+.badge-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+}
+
+.badge-image {
+    display: block;
+    max-width: 120px;
+    height: auto;
+}
+
+.muted-note {
+    text-align: center;
+    margin-top: 1rem;
+    color: #6b7280;
+}
+
+.muted-link {
+    color: #7c3aed;
+    text-decoration: none;
+}
+
+.muted-link:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .hero-section h1 {
+        font-size: 2.2rem;
+    }
+    
+    .hero-section p {
+        font-size: 1.1rem;
+    }
+    
+    .badge-container {
+        gap: 1rem;
+    }
+    
+    .badge-image {
+        max-width: 100px;
+    }
+    
+    .spec-preview > div {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .spec-preview .edit-button {
+        align-self: start;
+    }
+}
+</style>
+{% endblock %}

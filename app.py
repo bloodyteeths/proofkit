@@ -24,6 +24,7 @@ import threading
 import magic
 import secrets
 import re
+import html
 from pathlib import Path
 from typing import Dict, Any, Optional
 import mimetypes
@@ -31,7 +32,7 @@ from datetime import datetime, timezone
 from io import StringIO
 
 from fastapi import FastAPI, Request, Form, File, UploadFile, HTTPException, Depends, Response
-from fastapi.responses import JSONResponse, HTMLResponse, FileResponse
+from fastapi.responses import JSONResponse, HTMLResponse, FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
@@ -61,6 +62,10 @@ from core.validation import create_validation_pack, get_validation_pack_info
 # Import auth modules
 from auth.magic import auth_handler, AuthMiddleware, get_current_user, require_auth, require_qa
 from auth.models import UserRole
+
+# Import API routes
+from api.routes.pay import router as payment_router
+from api.routes.auth import router as auth_api_router
 
 # Base directory for the application
 BASE_DIR = Path(__file__).resolve().parent
@@ -155,8 +160,12 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         Returns:
             Response with security headers added
         """
-        # Generate a nonce for this request
-        nonce = secrets.token_urlsafe(16)
+        # Check if this is Googlebot for Search Console verification
+        user_agent = request.headers.get('user-agent', '').lower()
+        is_googlebot = 'googlebot' in user_agent or 'google-site-verification' in user_agent
+        
+        # Generate a nonce for this request (skip for Googlebot to allow verification)
+        nonce = '' if is_googlebot else secrets.token_urlsafe(16)
         request.state.nonce = nonce
         
         response = await call_next(request)
@@ -175,12 +184,18 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         
         # Content Security Policy - Allow inline scripts with nonce, unsafe-inline for event handlers
         # Note: unsafe-inline for scripts is needed for onclick handlers, but nonce provides better security for script blocks
+        # For Googlebot, we skip nonce to allow Search Console verification
+        if is_googlebot:
+            script_src = "'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com"
+        else:
+            script_src = f"'self' 'nonce-{nonce}' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com"
+            
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
             "img-src 'self' data: https:; "
-            "font-src 'self' data:; "
-            "style-src 'self' 'unsafe-inline'; "
-            f"script-src 'self' 'nonce-{nonce}' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com; "
+            "font-src 'self' data: https://fonts.gstatic.com; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+            f"script-src {script_src}; "
             "connect-src 'self' https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com;"
         )
         
@@ -286,6 +301,10 @@ def create_app() -> FastAPI:
     # Add rate limiting
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    
+    # Include API routers
+    app.include_router(payment_router)
+    app.include_router(auth_api_router, prefix="/api")
     
     # Mount static files
     app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
@@ -684,7 +703,8 @@ def process_csv_and_spec(csv_content: bytes, spec_data: Dict[str, Any],
             plot_path=str(plot_path),
             normalized_csv_path=str(normalized_csv_path),
             verification_hash=verification_hash,
-            output_path=str(pdf_path)
+            output_path=str(pdf_path),
+            user_plan=creator.plan if creator else 'free'
         )
         
     except Exception as e:
@@ -737,7 +757,8 @@ def process_csv_and_spec(csv_content: bytes, spec_data: Dict[str, Any],
         },
         "creator": {
             "email": creator.email if creator else None,
-            "role": creator.role.value if creator else None
+            "role": creator.role.value if creator else None,
+            "plan": creator.plan if creator else "free"
         } if creator else None
     }
     save_job_metadata(job_dir, job_id, job_metadata)
@@ -800,10 +821,14 @@ async def marketing_page(request: Request) -> HTMLResponse:
     Example:
         Browser GET / returns marketing landing page
     """
+    # Get user from request state if authenticated
+    user = getattr(request.state, 'user', None)
+    
     return templates.TemplateResponse(
         "modern_home.html",
         {
-            "request": request
+            "request": request,
+            "user": user
         }
     )
 
@@ -811,7 +836,8 @@ async def marketing_page(request: Request) -> HTMLResponse:
 @app.get("/app", response_class=HTMLResponse, tags=["compile"])
 async def app_page(
     request: Request,
-    industry: Optional[str] = None
+    industry: Optional[str] = None,
+    current_user: dict = Depends(require_auth)
 ) -> HTMLResponse:
     """
     Main application page with form for CSV file and specification JSON.
@@ -898,7 +924,8 @@ async def get_industry_preset(industry: str) -> JSONResponse:
 async def compile_csv_html(
     request: Request,
     csv_file: UploadFile = File(...),
-    spec_json: str = Form(...)
+    spec_json: str = Form(...),
+    current_user: dict = Depends(require_auth)
 ) -> HTMLResponse:
     """
     Process CSV file and specification JSON to generate proof PDF and evidence bundle.
@@ -953,16 +980,10 @@ async def compile_csv_html(
             job_dir = create_job_storage_path(job_id)
             logger.info(f"[{request_id}] Created storage path: {job_dir}")
         
-        # Get current user for approval status and job creator
-        current_user = get_current_user(request)
-        
         # Process through complete pipeline
         try:
             result = process_csv_and_spec(csv_content, spec_data, job_dir, job_id, creator=current_user)
             logger.info(f"[{request_id}] Processing completed: {'PASS' if result['pass'] else 'FAIL'}")
-            
-            # Get current user for approval status
-            current_user = get_current_user(request)
             
             # Check approval status
             meta_path = job_dir / "meta.json"
@@ -1293,7 +1314,12 @@ async def verify_bundle(request: Request, bundle_id: str) -> HTMLResponse:
 
 
 @app.get("/download/{bundle_id}/{file_type}", tags=["download"])
-async def download_file(bundle_id: str, file_type: str, request: Request) -> FileResponse:
+async def download_file(
+    bundle_id: str, 
+    file_type: str, 
+    request: Request,
+    current_user: dict = Depends(require_auth)
+) -> FileResponse:
     """
     Download files from an evidence bundle.
     
@@ -1648,6 +1674,32 @@ async def trust_page(request: Request) -> HTMLResponse:
     )
 
 
+@app.get("/pricing", response_class=HTMLResponse, tags=["compile"])
+async def pricing_page(request: Request) -> HTMLResponse:
+    """
+    Pricing page showing all available subscription tiers and features.
+    
+    Returns:
+        HTMLResponse: Pricing page with tier comparison and signup options
+        
+    Example:
+        Browser GET /pricing returns pricing page with all subscription tiers
+    """
+    from core.billing import PLANS
+    
+    # Get user from request state if authenticated
+    user = getattr(request.state, 'user', None)
+    
+    return templates.TemplateResponse(
+        "pricing.html",
+        {
+            "request": request,
+            "plans": PLANS,
+            "user": user
+        }
+    )
+
+
 # Blog routes
 @app.get("/blog", response_class=HTMLResponse, tags=["blog"])
 async def blog_index(request: Request) -> HTMLResponse:
@@ -1716,65 +1768,73 @@ async def blog_post(request: Request, slug: str) -> HTMLResponse:
         lines = content.split('\n')
         title = lines[0].replace('# ', '') if lines else slug.replace('-', ' ').title()
         
-        # Simple markdown to HTML conversion with proper escaping
+        # Proper markdown to HTML conversion with Jinja2 safety
         def markdown_to_html(md_text):
-            """Basic markdown to HTML conversion with Jinja2 safety"""
+            """Convert markdown to HTML with proper escaping for Jinja2 safety"""
             lines = md_text.split('\n')
             html_lines = []
-            in_code_block = False
+            in_list = False
             
             for line in lines:
-                # Handle code blocks
-                if line.strip().startswith('```'):
-                    in_code_block = not in_code_block
-                    continue
-                    
-                if in_code_block:
-                    html_lines.append(f'<code>{line}</code>')
-                    continue
+                stripped = line.strip()
                 
                 # Handle headers
-                if line.startswith('### '):
-                    html_lines.append(f'<h3>{line[4:]}</h3>')
-                elif line.startswith('## '):
-                    html_lines.append(f'<h2>{line[3:]}</h2>')
-                elif line.startswith('# '):
-                    html_lines.append(f'<h1>{line[2:]}</h1>')
+                if stripped.startswith('### '):
+                    if in_list:
+                        html_lines.append('</ul>')
+                        in_list = False
+                    content = html.escape(stripped[4:])
+                    html_lines.append(f'<h3 style="color: #1a1a1a; font-size: 1.25rem; font-weight: 600; margin: 2rem 0 1rem 0;">{content}</h3>')
+                elif stripped.startswith('## '):
+                    if in_list:
+                        html_lines.append('</ul>')
+                        in_list = False
+                    content = html.escape(stripped[3:])
+                    html_lines.append(f'<h2 style="color: #1a1a1a; font-size: 1.5rem; font-weight: 600; margin: 2rem 0 1rem 0;">{content}</h2>')
+                elif stripped.startswith('# '):
+                    if in_list:
+                        html_lines.append('</ul>')
+                        in_list = False
+                    # Skip the title as it's handled separately
+                    continue
+                    
                 # Handle bullet points
-                elif line.strip().startswith('- '):
-                    content = line.strip()[2:]
+                elif stripped.startswith('- '):
+                    if not in_list:
+                        html_lines.append('<ul style="margin-bottom: 1.5rem; padding-left: 1.5rem;">')
+                        in_list = True
+                    content = html.escape(stripped[2:])
                     # Handle bold text in bullet points
                     content = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', content)
-                    html_lines.append(f'<li>{content}</li>')
+                    html_lines.append(f'<li style="margin-bottom: 0.5rem;">{content}</li>')
+                    
                 # Handle empty lines
-                elif line.strip() == '':
-                    html_lines.append('<br>')
+                elif stripped == '':
+                    if in_list:
+                        html_lines.append('</ul>')
+                        in_list = False
+                    html_lines.append('')
+                    
                 # Handle regular paragraphs
                 else:
-                    # Handle bold text
-                    line = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', line)
-                    if line.strip():
-                        html_lines.append(f'<p>{line}</p>')
-            
-            # Wrap consecutive li elements in ul
-            result = []
-            in_list = False
-            for line in html_lines:
-                if line.startswith('<li>'):
-                    if not in_list:
-                        result.append('<ul>')
-                        in_list = True
-                    result.append(line)
-                else:
                     if in_list:
-                        result.append('</ul>')
+                        html_lines.append('</ul>')
                         in_list = False
-                    result.append(line)
+                    
+                    if stripped:
+                        # Escape HTML to prevent Jinja2 conflicts
+                        content = html.escape(stripped)
+                        # Handle bold text
+                        content = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', content)
+                        # Handle links
+                        content = re.sub(r'\[(.*?)\]\((.*?)\)', r'<a href="\2" style="color: #667eea; text-decoration: none;">\1</a>', content)
+                        html_lines.append(f'<p style="margin-bottom: 1.5rem;">{content}</p>')
             
+            # Close any open list
             if in_list:
-                result.append('</ul>')
+                html_lines.append('</ul>')
             
-            return '\n'.join(result)
+            return '\n'.join(html_lines)
         
         html_content = markdown_to_html(content)
         
@@ -1879,6 +1939,86 @@ async def login_page(request: Request) -> HTMLResponse:
         "auth/login.html",
         {"request": request}
     )
+
+
+@app.get("/auth/signup", response_class=HTMLResponse, tags=["auth"])
+async def signup_page(request: Request) -> HTMLResponse:
+    """
+    Signup page for new users.
+    
+    Returns:
+        HTMLResponse: Signup form for new user registration
+    """
+    return templates.TemplateResponse(
+        "signup.html",
+        {"request": request}
+    )
+
+
+@app.post("/auth/signup", response_class=HTMLResponse, tags=["auth"])
+async def signup_submit(
+    request: Request,
+    email: str = Form(...),
+    company: Optional[str] = Form(None),
+    industry: Optional[str] = Form(None),
+    terms: bool = Form(...),
+    marketing: bool = Form(False)
+) -> HTMLResponse:
+    """
+    Handle signup form submission and show magic link sent page.
+    
+    Args:
+        request: FastAPI request object
+        email: User email address
+        company: Optional company name
+        industry: Optional industry selection
+        terms: Terms acceptance
+        marketing: Marketing consent
+    
+    Returns:
+        HTMLResponse: Magic link sent confirmation page
+    """
+    try:
+        # Generate magic link using auth handler
+        magic_token = auth_handler.generate_magic_link(email, "op")
+        
+        # In development mode, include the link
+        dev_mode = os.environ.get("ENV", "development") == "development"
+        dev_link = None
+        if dev_mode:
+            base_url = os.environ.get("BASE_URL", "https://www.proofkit.net")
+            dev_link = f"{base_url}/auth/verify?token={magic_token}"
+        
+        # Send magic link email
+        email_sent = auth_handler.send_magic_link_email(email, magic_token, "op")
+        
+        if not email_sent:
+            logger.error(f"Failed to send magic link email to {email}")
+            # Still show the page but with a warning
+        
+        logger.info(f"Signup successful for {email}, company: {company}, industry: {industry}")
+        
+        return templates.TemplateResponse(
+            "auth/magic_link_sent.html",
+            {
+                "request": request,
+                "email": email,
+                "expires_in": 900,  # 15 minutes
+                "expires_in_minutes": 15,
+                "dev_mode": dev_mode,
+                "dev_link": dev_link
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Signup error for {email}: {e}")
+        return templates.TemplateResponse(
+            "auth/error.html",
+            {
+                "request": request,
+                "error": "Failed to process signup. Please try again."
+            }
+        )
 
 
 @app.post("/auth/request-link", tags=["auth"])
@@ -2003,6 +2143,19 @@ async def logout(request: Request) -> JSONResponse:
     return response
 
 
+@app.get("/auth/logout", tags=["auth"])
+async def logout_get(request: Request) -> RedirectResponse:
+    """
+    Logout user via GET request and redirect to home.
+    
+    Returns:
+        RedirectResponse: Redirect to home page after logout
+    """
+    response = RedirectResponse(url="/", status_code=302)
+    response.delete_cookie("auth_token")
+    return response
+
+
 # QA Approval routes
 @app.get("/approve/{job_id}", tags=["auth"])
 async def approve_job_page(request: Request, job_id: str) -> HTMLResponse:
@@ -2114,6 +2267,10 @@ async def approve_job(request: Request, job_id: str) -> JSONResponse:
                     f"{job_id}{decision_data['pass']}{decision_data['actual_hold_time_s']}".encode()
                 ).hexdigest()
                 
+                # Get original creator's plan from metadata
+                creator_info = job_meta.get("creator", {})
+                creator_plan = creator_info.get("plan", "free")
+                
                 # Regenerate PDF without draft watermark
                 pdf_path = job_dir / "proof.pdf"
                 generate_proof_pdf(
@@ -2123,7 +2280,8 @@ async def approve_job(request: Request, job_id: str) -> JSONResponse:
                     normalized_csv_path=str(normalized_csv_path),
                     verification_hash=verification_hash,
                     output_path=str(pdf_path),
-                    is_draft=False  # No draft watermark
+                    is_draft=False,  # No draft watermark
+                    user_plan=creator_plan
                 )
                 
                 logger.info(f"Job {job_id} approved by {user.email} and PDF regenerated")
@@ -2165,14 +2323,99 @@ def save_job_metadata(job_dir: Path, job_id: str, metadata: Dict[str, Any]) -> N
         json.dump(metadata, f, indent=2)
 
 
+@app.get("/dashboard", response_class=HTMLResponse, tags=["auth"])
+async def dashboard_page(
+    request: Request,
+    current_user: dict = Depends(require_auth)
+) -> HTMLResponse:
+    """
+    User dashboard showing subscription, usage, and recent jobs.
+    """
+    user = current_user
+    
+    try:
+        # Get user's quota information
+        from middleware.quota import get_user_usage_summary
+        quota_data = get_user_usage_summary(user.email)
+        
+        # Get user's recent jobs
+        recent_jobs = []
+        for job_dir in STORAGE_DIR.iterdir():
+            if not job_dir.is_dir():
+                continue
+            meta_path = job_dir / "meta.json"
+            if not meta_path.exists():
+                continue
+            try:
+                with open(meta_path, "r") as f:
+                    meta = json.load(f)
+                creator = meta.get("creator", {})
+                
+                # Only show user's own jobs
+                if creator.get("email") == user.email:
+                    decision_path = job_dir / "decision.json"
+                    pass_fail = False
+                    if decision_path.exists():
+                        with open(decision_path, "r") as f:
+                            decision = json.load(f)
+                            pass_fail = decision.get("pass", False)
+                    
+                    recent_jobs.append({
+                        "job_id": meta.get("job_id"),
+                        "created_at": meta.get("created_at"),
+                        "approved": meta.get("approved", False),
+                        "pass": pass_fail,
+                        "meta": meta
+                    })
+            except Exception:
+                continue
+        
+        # Sort by created_at desc and take top 5
+        recent_jobs.sort(key=lambda j: j["created_at"] or "", reverse=True)
+        recent_jobs = recent_jobs[:5]
+        
+        # Get pricing info for the user's plan
+        from core.billing import get_plan
+        plan_info = get_plan(quota_data.get('plan', 'free'))
+        
+        # Prepare template context
+        context = {
+            "request": request,
+            "user": user,
+            "quota": {
+                "plan": quota_data.get('plan', 'free'),
+                "plan_name": plan_info.get('name', 'Free'),
+                "price": plan_info.get('price_eur', 0),
+                "monthly_used": quota_data.get('monthly_used', 0),
+                "monthly_limit": quota_data.get('monthly_limit'),
+                "monthly_remaining": quota_data.get('monthly_remaining'),
+                "total_used": quota_data.get('total_used', 0),
+                "total_remaining": quota_data.get('total_remaining', 2),
+                "single_cert_price": plan_info.get('single_cert_price_eur', 7),
+                "subscription": quota_data.get('subscription'),
+                "next_billing_date": quota_data.get('next_billing_date', 'N/A')
+            },
+            "recent_jobs": recent_jobs
+        }
+        
+        return templates.TemplateResponse("dashboard.html", context)
+        
+    except Exception as e:
+        logger.error(f"Dashboard error for {user.email}: {e}")
+        return templates.TemplateResponse("auth/error.html", {
+            "request": request, 
+            "error": "Failed to load dashboard data"
+        })
+
 @app.get("/my-jobs", response_class=HTMLResponse, tags=["auth"])
-async def my_jobs_page(request: Request) -> HTMLResponse:
+async def my_jobs_page(
+    request: Request,
+    current_user: dict = Depends(require_auth)
+) -> HTMLResponse:
     """
     Show jobs for the current user (OP: jobs submitted, QA: jobs awaiting approval).
     """
-    user = get_current_user(request)
-    if not user:
-        return templates.TemplateResponse("auth/error.html", {"request": request, "error": "Authentication required"})
+    user = current_user
     # Scan storage for jobs
     jobs = []
     for root, dirs, files in os.walk(str(STORAGE_DIR)):
@@ -2253,7 +2496,11 @@ async def get_validation_pack(job_id: str, request: Request) -> JSONResponse:
 
 
 @app.get("/download/{job_id}/validation-pack", tags=["validation"])
-async def download_validation_pack(job_id: str, request: Request) -> FileResponse:
+async def download_validation_pack(
+    job_id: str, 
+    request: Request,
+    current_user: dict = Depends(require_auth)
+) -> FileResponse:
     """
     Download the validation pack ZIP file for a job.
     

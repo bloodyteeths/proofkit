@@ -1,0 +1,48 @@
+{
+  "version": "1.0",
+  "job": {
+    "job_id": "autoclave_medical_device_iso17665"
+  },
+  "spec": {
+    "method": "STEAM_STERILIZATION",
+    "target_temp_C": 134.0,
+    "hold_time_s": 180,
+    "temp_band_C": {
+      "min": 133.0,
+      "max": 136.0
+    },
+    "sensor_uncertainty_C": 0.3,
+    "fo_requirement": 25.0,
+    "z_value_C": 10.0
+  },
+  "data_requirements": {
+    "max_sample_period_s": 15.0,
+    "allowed_gaps_s": 30.0
+  },
+  "sensor_selection": {
+    "mode": "min_of_set",
+    "sensors": ["temp_C", "temp_backup_C"],
+    "require_at_least": 2
+  },
+  "pressure_requirements": {
+    "sensor": "pressure_bar",
+    "min_pressure_bar": 3.0,
+    "correlation_threshold": 0.98
+  },
+  "logic": {
+    "continuous": true,
+    "max_total_dips_s": 0,
+    "fo_calculation": true
+  },
+  "preconditions": {
+    "max_ramp_rate_C_per_min": 8.0,
+    "max_time_to_threshold_s": 600
+  },
+  "reporting": {
+    "units": "C",
+    "language": "en",
+    "timezone": "UTC",
+    "cfr11_compliant": true,
+    "iso17665_compliant": true
+  }
+}

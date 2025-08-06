@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block title %}Terms of Service - ProofKit{% endblock %}
+
+{% block content %}
+<article style="max-width: 800px; margin: 0 auto; padding: 2rem; background: white; border-radius: 1rem; box-shadow: var(--card-shadow);">
+    <header style="margin-bottom: 2rem;">
+        <h1 style="color: #4c51bf; margin-bottom: 0.5rem;">Terms of Service</h1>
+        <p style="color: #6b7280; font-size: 0.95rem;">Last updated: {{ "now" | strftime("%B %d, %Y") }}</p>
+    </header>
+
+    <section style="margin-bottom: 2rem;">
+        <h2 style="color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem;">1. Service Description</h2>
+        <p style="line-height: 1.6;">
+            ProofKit provides temperature log validation services for industrial compliance applications. 
+            Our service processes CSV temperature data files and generates compliance certificates and reports 
+            according to industry standards including ASTM, FDA CFR, and other regulatory frameworks.
+        </p>
+        <div style="background: #f0f9ff; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem; border-left: 4px solid #0ea5e9;">
+            <strong>Service Scope:</strong> We validate temperature logs for powder coating, sterilization, concrete curing, 
+            HACCP food safety, and cold chain applications. Generated certificates are for documentation purposes only.
+        </div>
+    </section>
+
+    <section style="margin-bottom: 2rem;">
+        <h2 style="color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem;">2. Acceptance of Terms</h2>
+        <p style="line-height: 1.6;">
+            By accessing or using ProofKit services, you agree to be bound by these Terms of Service and our Privacy Policy. 
+            If you do not agree to these terms, please do not use our service.
+        </p>
+        <div style="background: #fffbeb; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem; border-left: 4px solid #f59e0b;">
+            <strong>Legal Capacity:</strong> You must be at least 18 years old and have the legal capacity to enter into agreements. 
+            If using the service on behalf of an organization, you represent that you have authority to bind that organization.
+        </div>
+    </section>
+
+    <section style="margin-bottom: 2rem;">
+        <h2 style="color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem;">3. Permitted Use</h2>
+        <p style="line-height: 1.6;">You may use ProofKit for legitimate business purposes, including:</p>
+        <ul style="margin-left: 1.5rem; line-height: 1.6; margin-top: 0.5rem;">
+            <li>Temperature log validation for regulatory compliance</li>
+            <li>Quality assurance documentation</li>
+            <li>Industrial process verification</li>
+            <li>Audit preparation and record-keeping</li>
+        </ul>
+        
+        <h3 style="color: #dc2626; margin-top: 1.5rem;">Prohibited Activities</h3>
+        <div style="background: #fef2f2; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid #dc2626;">
+            <p style="margin: 0; line-height: 1.6;">You must not:</p>
+            <ul style="margin: 0.5rem 0 0 1.5rem; line-height: 1.6;">
+                <li>Upload malicious files or attempt to compromise system security</li>
+                <li>Reverse engineer, decompile, or attempt to extract source code</li>
+                <li>Use the service for fraudulent or illegal activities</li>
+                <li>Overload our systems through automated or excessive requests</li>
+                <li>Share access credentials or allow unauthorized use</li>
+                <li>Use certificates for purposes beyond compliance documentation</li>
+            </ul>
+        </div>
+    </section>
+
+    <section style="margin-bottom: 2rem;">
+        <h2 style="color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem;">4. Data and Content</h2>
+        
+        <h3 style="color: #4b5563; margin-top: 1.5rem;">Your Data</h3>
+        <p style="line-height: 1.6;">
+            You retain ownership of all temperature data and content you upload. By using ProofKit, you grant us 
+            a limited license to process your data solely for providing validation services.
+        </p>
+        
+        <h3 style="color: #4b5563; margin-top: 1.5rem;">Data Quality Requirements</h3>
+        <div style="background: #f0fdf4; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid #22c55e;">
+            <p style="margin: 0; line-height: 1.6;"><strong>Your Responsibilities:</strong></p>
+            <ul style="margin: 0.5rem 0 0 1.5rem; line-height: 1.6;">
+                <li>Ensure uploaded data is accurate and from calibrated instruments</li>
+                <li>Provide data in the required CSV format with proper timestamps</li>
+                <li>Comply with applicable industry standards and regulations</li>
+                <li>Verify certificate accuracy before using for compliance purposes</li>
+            </ul>
+        </div>
+
+        <h3 style="color: #4b5563; margin-top: 1.5rem;">Generated Content</h3>
+        <p style="line-height: 1.6;">
+            ProofKit generates validation certificates, reports, and analysis based on your data. 
+            While we use industry-standard algorithms, you are responsible for verifying that 
+            generated content meets your specific regulatory requirements.
+        </p>
+    </section>
+
+    <section style="margin-bottom: 2rem;">
+        <h2 style="color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem;">5. Service Availability</h2>
+        <p style="line-height: 1.6;">
+            We strive to maintain high service availability but cannot guarantee uninterrupted access. 
+            Service may be temporarily unavailable due to maintenance, updates, or unforeseen technical issues.
+        </p>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1rem;">
+            <div style="background: #f0f9ff; padding: 1rem; border-radius: 0.5rem;">
+                <h4 style="margin: 0 0 0.5rem 0; color: #1e40af;">Maintenance Windows</h4>
+                <p style="margin: 0; font-size: 0.9rem; line-height: 1.5;">
+                    Scheduled maintenance typically occurs during low-usage periods with advance notice.
+                </p>
+            </div>
+            <div style="background: #fffbeb; padding: 1rem; border-radius: 0.5rem;">
+                <h4 style="margin: 0 0 0.5rem 0; color: #d97706;">Service Limits</h4>
+                <p style="margin: 0; font-size: 0.9rem; line-height: 1.5;">
+                    File size limited to 10MB, 200k rows maximum. Rate limiting may apply during peak usage.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section style="margin-bottom: 2rem;">
+        <h2 style="color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem;">6. Disclaimers and Limitations</h2>
+        
+        <div style="background: #fef2f2; padding: 1.5rem; border-radius: 0.5rem; border: 2px solid #dc2626; margin: 1rem 0;">
+            <h3 style="color: #dc2626; margin: 0 0 1rem 0;">Important Legal Notice</h3>
+            <p style="line-height: 1.6; margin: 0;">
+                <strong>ProofKit provides validation tools for compliance documentation purposes only.</strong> 
+                Our certificates and reports do not constitute official regulatory approval, certification, 
+                or guarantee of compliance with any specific standard or regulation.
+            </p>
+        </div>
+
+        <h3 style="color: #4b5563; margin-top: 1.5rem;">Service Disclaimer</h3>
+        <p style="line-height: 1.6;">
+            The service is provided "as is" without warranties of any kind, either express or implied. 
+            We do not warrant that the service will be error-free, secure, or continuously available.
+        </p>
+
+        <h3 style="color: #4b5563; margin-top: 1.5rem;">Limitation of Liability</h3>
+        <p style="line-height: 1.6;">
+            To the maximum extent permitted by law, ProofKit shall not be liable for any indirect, 
+            incidental, special, consequential, or punitive damages, including but not limited to 
+            loss of profits, data, or business opportunities.
+        </p>
+
+        <div style="background: #f9fafb; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem;">
+            <strong>Professional Responsibility:</strong> Users are responsible for ensuring compliance 
+            with applicable regulations and standards. Consult qualified professionals for regulatory guidance.
+        </div>
+    </section>
+
+    <section style="margin-bottom: 2rem;">
+        <h2 style="color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem;">7. Privacy and Data Protection</h2>
+        <p style="line-height: 1.6;">
+            Your privacy is important to us. Our data processing practices are detailed in our 
+            <a href="/legal/privacy" style="color: #4c51bf; text-decoration: underline;">Privacy Policy</a>, 
+            which forms part of these terms.
+        </p>
+        
+        <h3 style="color: #4b5563; margin-top: 1.5rem;">Data Retention</h3>
+        <ul style="margin-left: 1.5rem; line-height: 1.6;">
+            <li>Uploaded CSV files are deleted immediately after processing</li>
+            <li>Generated certificates are retained for 30 days for verification</li>
+            <li>Analytics data is retained according to our Privacy Policy</li>
+        </ul>
+    </section>
+
+    <section style="margin-bottom: 2rem;">
+        <h2 style="color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem;">8. Termination</h2>
+        <p style="line-height: 1.6;">
+            Either party may terminate use of the service at any time. We reserve the right to 
+            suspend or terminate access for violations of these terms or for any reason with reasonable notice.
+        </p>
+        
+        <h3 style="color: #4b5563; margin-top: 1.5rem;">Effect of Termination</h3>
+        <p style="line-height: 1.6;">
+            Upon termination, your right to use the service ceases immediately. 
+            Provisions regarding disclaimers, limitations of liability, and data protection survive termination.
+        </p>
+    </section>
+
+    <section style="margin-bottom: 2rem;">
+        <h2 style="color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem;">9. Governing Law</h2>
+        <p style="line-height: 1.6;">
+            These terms are governed by the laws of the jurisdiction where ProofKit is operated, 
+            without regard to conflict of law principles. Any disputes will be resolved through 
+            binding arbitration or in the appropriate courts of that jurisdiction.
+        </p>
+        
+        <div style="background: #f0f9ff; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem;">
+            <strong>EU Users:</strong> Nothing in these terms affects your statutory rights under 
+            applicable European Union consumer protection laws.
+        </div>
+    </section>
+
+    <section style="margin-bottom: 2rem;">
+        <h2 style="color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem;">10. Changes to Terms</h2>
+        <p style="line-height: 1.6;">
+            We may update these terms from time to time to reflect changes in our service or legal requirements. 
+            Material changes will be posted with reasonable notice. Continued use after changes constitutes acceptance.
+        </p>
+        
+        <div style="background: #fffbeb; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem; border-left: 4px solid #f59e0b;">
+            <strong>Notification:</strong> We will notify users of significant changes via email (if provided) 
+            or prominent notice on our website at least 30 days before implementation.
+        </div>
+    </section>
+
+    <footer style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #e5e7eb; text-align: center;">
+        <p style="color: #6b7280; margin-bottom: 1rem;">
+            Questions about these terms? Contact our team for clarification.
+        </p>
+        <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+            <a href="mailto:legal@proofkit.net" 
+               style="background: #4c51bf; color: white; padding: 0.75rem 1.5rem; border-radius: 0.5rem; text-decoration: none; font-weight: 500; transition: all 0.3s ease;"
+               onmouseover="this.style.background='#3730a3'"
+               onmouseout="this.style.background='#4c51bf'">
+                Legal Questions
+            </a>
+            <a href="/legal/privacy" 
+               style="background: #f3f4f6; color: #374151; padding: 0.75rem 1.5rem; border-radius: 0.5rem; text-decoration: none; font-weight: 500; transition: all 0.3s ease;"
+               onmouseover="this.style.background='#e5e7eb'"
+               onmouseout="this.style.background='#f3f4f6'">
+                Privacy Policy
+            </a>
+        </div>
+        
+        <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #f3f4f6; font-size: 0.9rem; color: #9ca3af;">
+            <p>ProofKit Terms of Service v1.0 - Effective {{ "now" | strftime("%B %d, %Y") }}</p>
+        </div>
+    </footer>
+</article>
+{% endblock %}

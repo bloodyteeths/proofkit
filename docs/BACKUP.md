@@ -10,15 +10,41 @@ The backup system consists of:
 - SHA-256 hash verification
 - AWS S3 upload using AWS CLI
 
+## Quick Start with AWS CLI
+
+Create S3 bucket and lifecycle policy in eu-central-1 region:
+
+```bash
+# Create bucket
+aws s3api create-bucket --bucket proofkit-backups --region eu-central-1 --create-bucket-configuration LocationConstraint=eu-central-1
+
+# Add 14-day lifecycle policy
+cat > lifecycle_14d.json <<EOF
+{
+  "Rules": [
+    {
+      "ID": "exp",
+      "Status": "Enabled", 
+      "Expiration": {"Days": 14},
+      "Filter": {"Prefix": ""}
+    }
+  ]
+}
+EOF
+
+aws s3api put-bucket-lifecycle-configuration --bucket proofkit-backups --lifecycle-configuration file://lifecycle_14d.json
+```
+
 ## Environment Variables
 
 Set these environment variables in your production environment:
 
 ```bash
-export S3_BUCKET="proofkit-backups-prod"
+export S3_BUCKET="proofkit-backups"
 export AWS_ACCESS_KEY_ID="your_aws_access_key_id"
 export AWS_SECRET_ACCESS_KEY="your_aws_secret_access_key"
-export AWS_DEFAULT_REGION="us-east-1"  # Optional, defaults to us-east-1
+export S3_REGION="eu-central-1"  # Optional, defaults to us-east-1
+# export S3_ENDPOINT="https://alt-provider"  # Optional, for non-AWS S3-compatible services
 ```
 
 ## IAM Policy
@@ -30,20 +56,27 @@ Create an IAM user for ProofKit backups with this policy:
     "Version": "2012-10-17",
     "Statement": [
         {
-            "Sid": "ProofKitBackupPolicy",
+            "Sid": "ProofKitBucketManagement",
+            "Effect": "Allow",
+            "Action": [
+                "s3:CreateBucket",
+                "s3:ListBucket",
+                "s3:PutLifecycleConfiguration",
+                "s3:GetBucketLifecycleConfiguration"
+            ],
+            "Resource": "arn:aws:s3:::proofkit-backups"
+        },
+        {
+            "Sid": "ProofKitObjectOperations", 
             "Effect": "Allow",
             "Action": [
                 "s3:PutObject",
                 "s3:PutObjectAcl",
                 "s3:GetObject",
                 "s3:GetObjectAcl",
-                "s3:DeleteObject",
-                "s3:ListBucket"
+                "s3:DeleteObject"
             ],
-            "Resource": [
-                "arn:aws:s3:::proofkit-backups-prod",
-                "arn:aws:s3:::proofkit-backups-prod/*"
-            ]
+            "Resource": "arn:aws:s3:::proofkit-backups/*"
         }
     ]
 }
@@ -68,7 +101,7 @@ Configure your S3 bucket with this policy for additional security:
                 "s3:PutObject",
                 "s3:DeleteObject"
             ],
-            "Resource": "arn:aws:s3:::proofkit-backups-prod/*"
+            "Resource": "arn:aws:s3:::proofkit-backups/*"
         },
         {
             "Sid": "ProofKitBackupBucketList",
@@ -77,7 +110,7 @@ Configure your S3 bucket with this policy for additional security:
                 "AWS": "arn:aws:iam::YOUR_ACCOUNT_ID:user/proofkit-backup"
             },
             "Action": "s3:ListBucket",
-            "Resource": "arn:aws:s3:::proofkit-backups-prod"
+            "Resource": "arn:aws:s3:::proofkit-backups"
         },
         {
             "Sid": "DenyPublicAccess",
@@ -85,8 +118,8 @@ Configure your S3 bucket with this policy for additional security:
             "Principal": "*",
             "Action": "s3:*",
             "Resource": [
-                "arn:aws:s3:::proofkit-backups-prod",
-                "arn:aws:s3:::proofkit-backups-prod/*"
+                "arn:aws:s3:::proofkit-backups",
+                "arn:aws:s3:::proofkit-backups/*"
             ],
             "Condition": {
                 "Bool": {
@@ -102,20 +135,20 @@ Configure your S3 bucket with this policy for additional security:
 
 1. **Create S3 Bucket**:
 ```bash
-aws s3 mb s3://proofkit-backups-prod --region us-east-1
+aws s3 mb s3://proofkit-backups --region us-east-1
 ```
 
 2. **Enable Versioning** (recommended):
 ```bash
 aws s3api put-bucket-versioning \
-    --bucket proofkit-backups-prod \
+    --bucket proofkit-backups \
     --versioning-configuration Status=Enabled
 ```
 
 3. **Enable Server-Side Encryption**:
 ```bash
 aws s3api put-bucket-encryption \
-    --bucket proofkit-backups-prod \
+    --bucket proofkit-backups \
     --server-side-encryption-configuration '{
         "Rules": [{
             "ApplyServerSideEncryptionByDefault": {
@@ -128,7 +161,7 @@ aws s3api put-bucket-encryption \
 4. **Set Lifecycle Policy** (optional - for automatic cleanup):
 ```bash
 aws s3api put-bucket-lifecycle-configuration \
-    --bucket proofkit-backups-prod \
+    --bucket proofkit-backups \
     --lifecycle-configuration '{
         "Rules": [{
             "ID": "DeleteOldBackups",
@@ -145,14 +178,22 @@ To run a backup manually:
 
 ```bash
 cd /app  # or your ProofKit directory
+
+# Test configuration without uploading (dry-run mode)
+./scripts/backup_to_s3.sh --dry-run
+
+# Actual backup
 ./scripts/backup_to_s3.sh
 ```
 
 The script will:
 1. Create a tar.gz file of the storage directory
 2. Calculate SHA-256 hash
-3. Upload to S3 with hash metadata
+3. Upload to S3 with hash metadata (or simulate if --dry-run)
 4. Log success/failure
+5. Emit success metric (`backup_success:1|c`) only on successful completion
+
+**Note**: The success metric is logged in StatsD format for monitoring purposes.
 
 ## Manual Restore
 
@@ -160,20 +201,20 @@ To restore from a backup:
 
 1. **List available backups**:
 ```bash
-aws s3 ls s3://proofkit-backups-prod/ | grep backup-
+aws s3 ls s3://proofkit-backups/ | grep backup-
 ```
 
 2. **Download specific backup**:
 ```bash
 # Replace YYYYMMDD-HHMMSS with actual timestamp
-aws s3 cp s3://proofkit-backups-prod/backup-YYYYMMDD-HHMMSS.tar.gz ./
+aws s3 cp s3://proofkit-backups/backup-YYYYMMDD-HHMMSS.tar.gz ./
 ```
 
 3. **Verify backup integrity**:
 ```bash
 # Get stored hash from S3 metadata
 aws s3api head-object \
-    --bucket proofkit-backups-prod \
+    --bucket proofkit-backups \
     --key backup-YYYYMMDD-HHMMSS.tar.gz \
     --query 'Metadata.sha256' --output text
 
@@ -209,7 +250,7 @@ tail -f /app/logs/cron.log
 
 Verify recent backups:
 ```bash
-aws s3 ls s3://proofkit-backups-prod/ --recursive | tail -10
+aws s3 ls s3://proofkit-backups/ --recursive | tail -10
 ```
 
 ## Troubleshooting
@@ -231,7 +272,7 @@ aws s3 ls s3://proofkit-backups-prod/ --recursive | tail -10
 
 **Upload failures**:
 - Check network connectivity
-- Verify S3 bucket exists: `aws s3 ls s3://proofkit-backups-prod/`
+- Verify S3 bucket exists: `aws s3 ls s3://proofkit-backups/`
 - Check AWS region settings
 
 ### Emergency Recovery
@@ -250,7 +291,7 @@ curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip
 unzip awscliv2.zip && ./aws/install
 
 # Set environment variables
-export S3_BUCKET="proofkit-backups-prod"
+export S3_BUCKET="proofkit-backups"
 export AWS_ACCESS_KEY_ID="your_access_key"
 export AWS_SECRET_ACCESS_KEY="your_secret_key"
 ```
@@ -258,10 +299,10 @@ export AWS_SECRET_ACCESS_KEY="your_secret_key"
 2. **Restore latest backup**:
 ```bash
 # Get latest backup
-LATEST_BACKUP=$(aws s3 ls s3://proofkit-backups-prod/ | grep backup- | sort | tail -n1 | awk '{print $4}')
+LATEST_BACKUP=$(aws s3 ls s3://proofkit-backups/ | grep backup- | sort | tail -n1 | awk '{print $4}')
 
 # Download and restore
-aws s3 cp "s3://proofkit-backups-prod/$LATEST_BACKUP" ./
+aws s3 cp "s3://proofkit-backups/$LATEST_BACKUP" ./
 tar -xzf "$LATEST_BACKUP"
 ```
 
@@ -288,7 +329,7 @@ python app.py
 
 - Use S3 Intelligent Tiering for automatic cost optimization
 - Set lifecycle policies to transition old backups to cheaper storage classes
-- Monitor storage usage: `aws s3api list-objects --bucket proofkit-backups-prod --query 'sum(Contents[].Size)'`
+- Monitor storage usage: `aws s3api list-objects --bucket proofkit-backups --query 'sum(Contents[].Size)'`
 
 ---
 

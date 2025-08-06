@@ -1,0 +1,4 @@
+# ProofKit Golden Output Manifest
+# Generated: 2025-08-05T12:03:21.363326+00:00
+
+6e4483d094e1b6e14cdc36bbb04b1dd570fc429cfafcb33f0d3211ab638b614c  decision.json

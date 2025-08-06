@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProofKit Verification Portal Demo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .verification-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        .pass {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .hash {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            word-break: break-all;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .timestamp {
+            color: #6c757d;
+            font-style: italic;
+        }
+        .button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .demo-notice {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ProofKit Certificate Verification Portal</h1>
+            <p>Verify the authenticity and integrity of ProofKit certificates</p>
+        </div>
+
+        <div class="demo-notice">
+            <strong>Demo Mode:</strong> This is a demonstration of the ProofKit verification portal. 
+            In production, users would upload actual PDF certificates for validation.
+        </div>
+
+        <div class="verification-section">
+            <h3>Certificate Information</h3>
+            <p><strong>Job ID:</strong> powder_coat_cure_batch_PWC_2024_001</p>
+            <p><strong>Industry:</strong> Automotive Coating</p>
+            <p><strong>Standard:</strong> ISO 2368, Qualicoat</p>
+            <p><strong>Generated:</strong> <span class="timestamp">2024-08-05T14:32:17Z</span></p>
+        </div>
+
+        <div class="verification-section">
+            <h3>Hash Verification</h3>
+            <p><strong>Status:</strong> <span class="pass">✓ VERIFIED</span></p>
+            <p><strong>Certificate Hash:</strong></p>
+            <div class="hash">a3d5f7e9c2b8f4d6e1a7c9b3f5d8e2a4c6b9f1d3e5a7c9b2f4d6e8a1c3f5d7e9</div>
+            <p><strong>Recalculated Hash:</strong></p>
+            <div class="hash">a3d5f7e9c2b8f4d6e1a7c9b3f5d8e2a4c6b9f1d3e5a7c9b2f4d6e8a1c3f5d7e9</div>
+            <p><strong>Match:</strong> <span class="pass">✓ IDENTICAL</span></p>
+        </div>
+
+        <div class="verification-section">
+            <h3>Timestamp Verification</h3>
+            <p><strong>Status:</strong> <span class="pass">✓ VALID</span></p>
+            <p><strong>Timestamp Authority:</strong> DigiCert TSA</p>
+            <p><strong>Timestamp:</strong> 2024-08-05T14:32:17Z</p>
+            <p><strong>Certificate Chain:</strong> <span class="pass">✓ TRUSTED</span></p>
+            <p><strong>Signature:</strong> <span class="pass">✓ VALID</span></p>
+        </div>
+
+        <div class="verification-section">
+            <h3>Data Integrity Check</h3>
+            <p><strong>Status:</strong> <span class="pass">✓ VERIFIED</span></p>
+            <p><strong>Embedded CSV:</strong> powder_coat_cure_180c_10min.csv</p>
+            <p><strong>Records:</strong> 847 temperature readings</p>
+            <p><strong>Recalculation:</strong> <span class="pass">✓ PASS</span> (Hold time: 12.3 min)</p>
+            <p><strong>Algorithm Version:</strong> ProofKit v0.5.0</p>
+        </div>
+
+        <div class="verification-section">
+            <h3>PDF/A-3 Compliance</h3>
+            <p><strong>Status:</strong> <span class="pass">✓ COMPLIANT</span></p>
+            <p><strong>Standard:</strong> ISO 19005-3:2012</p>
+            <p><strong>Validator:</strong> veraPDF 1.25.0</p>
+            <p><strong>Conformance Level:</strong> PDF/A-3b</p>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <button class="button" onclick="downloadReport()">Download Verification Report</button>
+            <button class="button" onclick="shareVerification()">Share Verification Link</button>
+        </div>
+
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; text-align: center; color: #6c757d;">
+            <p>This certificate has been cryptographically verified and is tamper-evident.</p>
+            <p>Verification performed at: <span id="currentTime"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // Update current time
+        document.getElementById('currentTime').textContent = new Date().toISOString();
+
+        function downloadReport() {
+            alert('Demo: In production, this would download a detailed verification report.');
+        }
+
+        function shareVerification() {
+            alert('Demo: In production, this would generate a shareable verification link.');
+        }
+    </script>
+</body>
+</html>

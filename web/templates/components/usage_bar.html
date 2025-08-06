@@ -1,0 +1,266 @@
+<!-- Usage Bar Component -->
+<!-- 
+    Usage: {% include "components/usage_bar.html" with context %}
+    Variables required:
+    - current: current usage count
+    - limit: usage limit (null/none for unlimited)
+    - plan: plan name for styling
+    - show_label: show percentage label (default: true)
+    - size: "sm", "md", "lg" (default: "md")
+-->
+
+{% set percentage = (current / limit * 100) if limit else 0 %}
+{% set size_class = size | default("md") %}
+{% set show_label = show_label if show_label is defined else true %}
+
+<div class="usage-bar-container usage-bar-{{ size_class }}">
+    <!-- Usage Numbers -->
+    <div class="usage-display">
+        <span class="usage-current">{{ current }}</span>
+        <span class="usage-separator">/</span>
+        <span class="usage-limit">{{ limit if limit else '∞' }}</span>
+        {% if show_label %}
+        <span class="usage-percentage">({{ "%.0f"|format(percentage) }}%)</span>
+        {% endif %}
+    </div>
+    
+    <!-- Progress Bar -->
+    <div class="usage-progress-bar">
+        <div class="usage-progress-fill 
+                    {% if percentage >= 100 %}over-limit
+                    {% elif percentage >= 80 %}near-limit
+                    {% else %}normal{% endif %}" 
+             style="width: {{ percentage if percentage <= 100 else 100 }}%"
+             data-percentage="{{ "%.1f"|format(percentage) }}">
+        </div>
+        
+        <!-- Warning indicator for over-limit -->
+        {% if percentage >= 100 %}
+        <div class="usage-warning-indicator">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            </svg>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Status Text -->
+    {% if percentage >= 100 %}
+    <div class="usage-status-text warning">
+        {% if plan == 'free' %}
+        You've reached your limit. <a href="/pricing" class="upgrade-link">Upgrade</a> or <a href="#" onclick="buySingleCert()" class="buy-single-link">buy single certificates</a>.
+        {% else %}
+        Usage exceeded. Additional charges may apply.
+        {% endif %}
+    </div>
+    {% elif percentage >= 80 %}
+    <div class="usage-status-text caution">
+        You're approaching your monthly limit.
+    </div>
+    {% endif %}
+</div>
+
+<style>
+/* Usage Bar Component Styles */
+.usage-bar-container {
+    width: 100%;
+}
+
+/* Size variations */
+.usage-bar-sm {
+    font-size: 0.875rem;
+}
+
+.usage-bar-sm .usage-progress-bar {
+    height: 6px;
+}
+
+.usage-bar-md {
+    font-size: 1rem;
+}
+
+.usage-bar-md .usage-progress-bar {
+    height: 8px;
+}
+
+.usage-bar-lg {
+    font-size: 1.125rem;
+}
+
+.usage-bar-lg .usage-progress-bar {
+    height: 10px;
+}
+
+/* Usage Display */
+.usage-display {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.usage-current {
+    color: #667eea;
+}
+
+.usage-separator {
+    color: #6b7280;
+}
+
+.usage-limit {
+    color: #374151;
+}
+
+.usage-percentage {
+    color: #6b7280;
+    font-weight: 400;
+    font-size: 0.875em;
+    margin-left: 0.5rem;
+}
+
+/* Progress Bar */
+.usage-progress-bar {
+    position: relative;
+    background: #f3f4f6;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.usage-progress-fill {
+    height: 100%;
+    transition: width 0.3s ease, background-color 0.3s ease;
+    border-radius: 4px;
+    position: relative;
+}
+
+/* Progress fill colors by status */
+.usage-progress-fill.normal {
+    background: linear-gradient(90deg, #667eea, #764ba2);
+}
+
+.usage-progress-fill.near-limit {
+    background: linear-gradient(90deg, #f59e0b, #f97316);
+}
+
+.usage-progress-fill.over-limit {
+    background: linear-gradient(90deg, #dc2626, #b91c1c);
+}
+
+/* Warning indicator */
+.usage-warning-indicator {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: white;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Status text */
+.usage-status-text {
+    font-size: 0.875em;
+    margin-top: 0.25rem;
+    line-height: 1.4;
+}
+
+.usage-status-text.warning {
+    color: #dc2626;
+}
+
+.usage-status-text.caution {
+    color: #f59e0b;
+}
+
+.upgrade-link, .buy-single-link {
+    color: #667eea;
+    text-decoration: underline;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.upgrade-link:hover, .buy-single-link:hover {
+    color: #5a67d8;
+}
+
+/* Hover effects */
+.usage-bar-container:hover .usage-progress-fill {
+    opacity: 0.9;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .usage-display {
+        font-size: 0.875rem;
+    }
+    
+    .usage-bar-lg .usage-display {
+        font-size: 1rem;
+    }
+    
+    .usage-status-text {
+        font-size: 0.8rem;
+    }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+    .usage-progress-fill {
+        transition: none;
+    }
+    
+    .usage-warning-indicator {
+        animation: none;
+    }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    .usage-progress-bar {
+        border: 1px solid #000;
+    }
+    
+    .usage-progress-fill.normal {
+        background: #0066cc;
+    }
+    
+    .usage-progress-fill.near-limit {
+        background: #ff8800;
+    }
+    
+    .usage-progress-fill.over-limit {
+        background: #cc0000;
+    }
+}
+</style>
+
+<script>
+// Usage bar component helper functions
+function buySingleCert() {
+    // This will be handled by the main dashboard.js
+    if (typeof window.showBuySingleModal === 'function') {
+        window.showBuySingleModal();
+    } else {
+        // Fallback to direct purchase
+        window.location.href = '/api/buy-single';
+    }
+}
+
+// Animate progress bar on load
+document.addEventListener('DOMContentLoaded', function() {
+    const progressBars = document.querySelectorAll('.usage-progress-fill');
+    progressBars.forEach(bar => {
+        const width = bar.style.width;
+        bar.style.width = '0%';
+        setTimeout(() => {
+            bar.style.width = width;
+        }, 100);
+    });
+});
+</script>

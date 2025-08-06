@@ -1,0 +1,1008 @@
+<!-- ProofKit Sticky Navigation Component -->
+<!-- Fully accessible WCAG AA compliant navigation with keyboard support -->
+{% from 'macros/navigation.html' import is_active_nav, nav_class, nav_link, is_industry_active, dropdown_toggle_class, is_home_page %}
+
+<nav role="navigation" aria-label="Main navigation" class="proofkit-nav">
+    <div class="nav-container">
+        
+        <!-- Logo/Brand Section -->
+        <div class="nav-brand">
+            <a href="/" aria-label="ProofKit Home - Temperature validation and compliance certification">
+                <img src="/static/brand/proofkit_logo_lockup_light.svg" 
+                     alt="ProofKit" 
+                     width="140" 
+                     height="35" 
+                     class="nav-logo">
+            </a>
+        </div>
+
+        <!-- Desktop Navigation -->
+        <div class="nav-desktop" id="nav-desktop">
+            
+            <!-- Industries Dropdown -->
+            <div class="nav-dropdown">
+                <button 
+                    type="button" 
+                    class="nav-dropdown-toggle {{ dropdown_toggle_class(request, ['powder-coat', 'haccp', 'autoclave', 'sterile-eto', 'concrete', 'cold-chain'], '') }}" 
+                    aria-expanded="false" 
+                    aria-haspopup="true"
+                    aria-controls="industries-menu"
+                    id="industries-button">
+                    <span>Industries</span>
+                    <svg class="dropdown-arrow" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                        <path d="M4.427 6.427a.75.75 0 0 1 1.06 0L8 8.94l2.513-2.513a.75.75 0 1 1 1.06 1.06l-3 3a.75.75 0 0 1-1.06 0l-3-3a.75.75 0 0 1 0-1.06z"/>
+                    </svg>
+                </button>
+                
+                <div 
+                    id="industries-menu" 
+                    class="nav-dropdown-menu" 
+                    role="menu"
+                    aria-labelledby="industries-button">
+                    
+                    <a href="/app?industry=powder-coat" 
+                       role="menuitem" 
+                       class="nav-dropdown-item {{ nav_class(request, '/app', 'powder-coat') }}"
+                       tabindex="-1">
+                        <span class="menu-icon" aria-hidden="true">🎨</span>
+                        <span>Powder-Coat</span>
+                        <span class="menu-desc">ISO 2368 cure validation</span>
+                    </a>
+                    
+                    <a href="/app?industry=haccp" 
+                       role="menuitem" 
+                       class="nav-dropdown-item {{ nav_class(request, '/app', 'haccp') }}"
+                       tabindex="-1">
+                        <span class="menu-icon" aria-hidden="true">🍽️</span>
+                        <span>HACCP</span>
+                        <span class="menu-desc">Food safety cooling curves</span>
+                    </a>
+                    
+                    <a href="/app?industry=autoclave" 
+                       role="menuitem" 
+                       class="nav-dropdown-item {{ nav_class(request, '/app', 'autoclave') }}"
+                       tabindex="-1">
+                        <span class="menu-icon" aria-hidden="true">🏥</span>
+                        <span>Autoclave</span>
+                        <span class="menu-desc">Medical device sterilization</span>
+                    </a>
+                    
+                    <a href="/app?industry=sterile-eto" 
+                       role="menuitem" 
+                       class="nav-dropdown-item {{ nav_class(request, '/app', 'sterile-eto') }}"
+                       tabindex="-1">
+                        <span class="menu-icon" aria-hidden="true">🧪</span>
+                        <span>Sterile EtO</span>
+                        <span class="menu-desc">Ethylene oxide sterilization</span>
+                    </a>
+                    
+                    <a href="/app?industry=concrete" 
+                       role="menuitem" 
+                       class="nav-dropdown-item {{ nav_class(request, '/app', 'concrete') }}"
+                       tabindex="-1">
+                        <span class="menu-icon" aria-hidden="true">🏗️</span>
+                        <span>Concrete</span>
+                        <span class="menu-desc">ASTM C31 curing compliance</span>
+                    </a>
+                    
+                    <a href="/app?industry=cold-chain" 
+                       role="menuitem" 
+                       class="nav-dropdown-item {{ nav_class(request, '/app', 'cold-chain') }}"
+                       tabindex="-1">
+                        <span class="menu-icon" aria-hidden="true">❄️</span>
+                        <span>Cold-Chain</span>
+                        <span class="menu-desc">USP 797 vaccine storage</span>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Main Navigation Links -->
+            <div class="nav-links">
+                <a href="/examples" 
+                   class="nav-link {{ nav_class(request, '/examples') }}">
+                    Examples
+                </a>
+                
+                <a href="/docs" 
+                   class="nav-link {{ nav_class(request, '/docs') }}">
+                    Docs
+                </a>
+                
+                <a href="/trust" 
+                   class="nav-link {{ nav_class(request, '/trust') }}">
+                    Trust
+                </a>
+                
+                <a href="/pricing" 
+                   class="nav-link {{ nav_class(request, '/pricing') }}">
+                    Pricing
+                </a>
+                
+                <!-- Authentication -->
+                {% if request.state.user %}
+                    <a href="/dashboard" 
+                       class="nav-link {{ nav_class(request, '/dashboard') }}">
+                        Dashboard
+                    </a>
+                    <div class="nav-auth">
+                        <span class="user-info">
+                            {{ request.state.user.email }} 
+                            <span class="user-role">({{ request.state.user.role.upper() }})</span>
+                        </span>
+                        <form method="POST" action="/auth/logout" class="logout-form">
+                            <button type="submit" class="btn-logout" aria-label="Sign out of ProofKit">
+                                <span aria-hidden="true">🚪</span>
+                                Logout
+                            </button>
+                        </form>
+                    </div>
+                {% else %}
+                    <a href="/auth/login" 
+                       class="nav-link nav-login {{ nav_class(request, '/auth/login') }}">
+                        <span aria-hidden="true">🔐</span>
+                        Login
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Mobile Menu Toggle -->
+        <button 
+            type="button" 
+            class="nav-mobile-toggle" 
+            aria-label="Toggle navigation menu"
+            aria-expanded="false"
+            aria-controls="nav-desktop"
+            id="mobile-menu-button">
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+        </button>
+    </div>
+
+    <!-- Mobile Navigation Overlay -->
+    <div class="nav-mobile-overlay" id="nav-mobile-overlay" aria-hidden="true">
+        <div class="nav-mobile-content">
+            
+            <!-- Mobile Industries Section -->
+            <div class="nav-mobile-section">
+                <h3 class="nav-mobile-title">Industries</h3>
+                <div class="nav-mobile-industries">
+                    <a href="/app?industry=powder-coat" 
+                       class="nav-mobile-item {{ nav_class(request, '/app', 'powder-coat') }}">
+                        <span class="menu-icon" aria-hidden="true">🎨</span>
+                        <div>
+                            <div class="item-title">Powder-Coat</div>
+                            <div class="item-desc">ISO 2368 cure validation</div>
+                        </div>
+                    </a>
+                    
+                    <a href="/app?industry=haccp" 
+                       class="nav-mobile-item {{ nav_class(request, '/app', 'haccp') }}">
+                        <span class="menu-icon" aria-hidden="true">🍽️</span>
+                        <div>
+                            <div class="item-title">HACCP</div>
+                            <div class="item-desc">Food safety cooling curves</div>
+                        </div>
+                    </a>
+                    
+                    <a href="/app?industry=autoclave" 
+                       class="nav-mobile-item {{ nav_class(request, '/app', 'autoclave') }}">
+                        <span class="menu-icon" aria-hidden="true">🏥</span>
+                        <div>
+                            <div class="item-title">Autoclave</div>
+                            <div class="item-desc">Medical device sterilization</div>
+                        </div>
+                    </a>
+                    
+                    <a href="/app?industry=sterile-eto" 
+                       class="nav-mobile-item {{ nav_class(request, '/app', 'sterile-eto') }}">
+                        <span class="menu-icon" aria-hidden="true">🧪</span>
+                        <div>
+                            <div class="item-title">Sterile EtO</div>
+                            <div class="item-desc">Ethylene oxide sterilization</div>
+                        </div>
+                    </a>
+                    
+                    <a href="/app?industry=concrete" 
+                       class="nav-mobile-item {{ nav_class(request, '/app', 'concrete') }}">
+                        <span class="menu-icon" aria-hidden="true">🏗️</span>
+                        <div>
+                            <div class="item-title">Concrete</div>
+                            <div class="item-desc">ASTM C31 curing compliance</div>
+                        </div>
+                    </a>
+                    
+                    <a href="/app?industry=cold-chain" 
+                       class="nav-mobile-item {{ nav_class(request, '/app', 'cold-chain') }}">
+                        <span class="menu-icon" aria-hidden="true">❄️</span>
+                        <div>
+                            <div class="item-title">Cold-Chain</div>
+                            <div class="item-desc">USP 797 vaccine storage</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Mobile Main Links -->
+            <div class="nav-mobile-section">
+                <div class="nav-mobile-links">
+                    <a href="/examples" class="nav-mobile-link {{ nav_class(request, '/examples') }}">
+                        Examples
+                    </a>
+                    <a href="/docs" class="nav-mobile-link {{ nav_class(request, '/docs') }}">
+                        Docs
+                    </a>
+                    <a href="/trust" class="nav-mobile-link {{ nav_class(request, '/trust') }}">
+                        Trust
+                    </a>
+                    <a href="/pricing" class="nav-mobile-link {{ nav_class(request, '/pricing') }}">
+                        Pricing
+                    </a>
+                    
+                    {% if request.state.user %}
+                        <a href="/dashboard" class="nav-mobile-link {{ nav_class(request, '/dashboard') }}">
+                            Dashboard
+                        </a>
+                        <div class="nav-mobile-auth">
+                            <div class="mobile-user-info">
+                                {{ request.state.user.email }}
+                                <span class="user-role">({{ request.state.user.role.upper() }})</span>
+                            </div>
+                            <form method="POST" action="/auth/logout">
+                                <button type="submit" class="nav-mobile-logout">
+                                    <span aria-hidden="true">🚪</span>
+                                    Logout
+                                </button>
+                            </form>
+                        </div>
+                    {% else %}
+                        <a href="/auth/login" class="nav-mobile-link nav-mobile-login {{ nav_class(request, '/auth/login') }}">
+                            <span aria-hidden="true">🔐</span>
+                            Login
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Navigation Styles -->
+<style>
+/* Base Navigation Styles */
+.proofkit-nav {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+}
+
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+}
+
+/* Brand/Logo */
+.nav-brand a {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: white;
+    text-decoration: none;
+    font-size: 1.5rem;
+    font-weight: 700;
+    transition: opacity 0.2s ease;
+}
+
+.nav-brand a:hover,
+.nav-brand a:focus {
+    opacity: 0.9;
+}
+
+.brand-text {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+
+/* Desktop Navigation */
+.nav-desktop {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.nav-link {
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.nav-link:hover,
+.nav-link:focus {
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+    outline: none;
+}
+
+.nav-link:focus {
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+.nav-link.active {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+/* Dropdown Styles */
+.nav-dropdown {
+    position: relative;
+}
+
+.nav-dropdown-toggle {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.nav-dropdown-toggle:hover,
+.nav-dropdown-toggle:focus {
+    background: rgba(255, 255, 255, 0.2);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+.nav-dropdown-toggle.active {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.dropdown-arrow {
+    transition: transform 0.2s ease;
+}
+
+.nav-dropdown-toggle[aria-expanded="true"] .dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+.nav-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 0.5rem;
+    background: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    min-width: 280px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s ease;
+    z-index: 1001;
+    overflow: hidden;
+}
+
+.nav-dropdown-menu.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.nav-dropdown-item {
+    display: block;
+    padding: 1rem 1.25rem;
+    color: #374151;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid #f3f4f6;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.nav-dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.nav-dropdown-item:hover,
+.nav-dropdown-item:focus {
+    background: #f8fafc;
+    color: #1f2937;
+    outline: none;
+}
+
+.nav-dropdown-item.active {
+    background: #667eea;
+    color: white;
+}
+
+.menu-icon {
+    font-size: 1.25rem;
+    width: 1.5rem;
+    text-align: center;
+}
+
+.nav-dropdown-item > span:not(.menu-icon):not(.menu-desc) {
+    font-weight: 600;
+    flex: 1;
+}
+
+.menu-desc {
+    font-size: 0.875rem;
+    color: #6b7280;
+    font-weight: 400;
+}
+
+.nav-dropdown-item.active .menu-desc {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Authentication Styles */
+.nav-auth {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.user-info {
+    font-size: 0.9rem;
+}
+
+.user-role {
+    font-size: 0.8rem;
+    opacity: 0.7;
+}
+
+.logout-form {
+    display: inline;
+}
+
+.btn-logout {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-logout:hover,
+.btn-logout:focus {
+    background: rgba(255, 255, 255, 0.2);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+.nav-login {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Mobile Menu Toggle */
+.nav-mobile-toggle {
+    display: none;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    flex-direction: column;
+    gap: 0.25rem;
+    transition: all 0.2s ease;
+}
+
+.nav-mobile-toggle:hover,
+.nav-mobile-toggle:focus {
+    background: rgba(255, 255, 255, 0.2);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+.hamburger-line {
+    width: 20px;
+    height: 2px;
+    background: white;
+    transition: all 0.3s ease;
+    transform-origin: center;
+}
+
+.nav-mobile-toggle[aria-expanded="true"] .hamburger-line:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+}
+
+.nav-mobile-toggle[aria-expanded="true"] .hamburger-line:nth-child(2) {
+    opacity: 0;
+}
+
+.nav-mobile-toggle[aria-expanded="true"] .hamburger-line:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -6px);
+}
+
+/* Mobile Overlay */
+.nav-mobile-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(10px);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    overflow-y: auto;
+}
+
+.nav-mobile-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.nav-mobile-content {
+    padding: 5rem 1.5rem 2rem;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.nav-mobile-section {
+    margin-bottom: 2rem;
+}
+
+.nav-mobile-title {
+    color: white;
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.nav-mobile-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    color: white;
+    text-decoration: none;
+    border-radius: 0.5rem;
+    margin-bottom: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.nav-mobile-item:hover,
+.nav-mobile-item:focus {
+    background: rgba(255, 255, 255, 0.1);
+    outline: none;
+}
+
+.nav-mobile-item.active {
+    background: rgba(102, 126, 234, 0.3);
+}
+
+.item-title {
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.item-desc {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.nav-mobile-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.nav-mobile-link {
+    color: white;
+    text-decoration: none;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    font-size: 1.1rem;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.nav-mobile-link:hover,
+.nav-mobile-link:focus {
+    background: rgba(255, 255, 255, 0.1);
+    outline: none;
+}
+
+.nav-mobile-link.active {
+    background: rgba(102, 126, 234, 0.3);
+}
+
+.nav-mobile-auth {
+    padding: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    margin-top: 1rem;
+}
+
+.mobile-user-info {
+    color: white;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.nav-mobile-logout {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.nav-mobile-logout:hover,
+.nav-mobile-logout:focus {
+    background: rgba(255, 255, 255, 0.2);
+    outline: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .nav-desktop {
+        display: none;
+    }
+    
+    .nav-mobile-toggle {
+        display: flex;
+    }
+    
+    .nav-container {
+        padding: 0.75rem 1rem;
+    }
+    
+    .nav-brand a {
+        font-size: 1.25rem;
+        gap: 0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .nav-mobile-content {
+        padding: 4rem 1rem 2rem;
+    }
+    
+    .nav-dropdown-menu {
+        position: fixed;
+        top: 70px;
+        left: 1rem;
+        right: 1rem;
+        width: auto;
+        min-width: auto;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .nav-link:focus,
+    .nav-dropdown-toggle:focus,
+    .nav-dropdown-item:focus,
+    .btn-logout:focus,
+    .nav-mobile-toggle:focus {
+        box-shadow: 0 0 0 3px #ffff00;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .nav-link,
+    .nav-dropdown-toggle,
+    .nav-dropdown-menu,
+    .dropdown-arrow,
+    .hamburger-line,
+    .nav-mobile-overlay {
+        transition: none;
+    }
+}
+
+/* Focus management for screen readers */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+</style>
+
+<!-- Navigation JavaScript -->
+<script>
+class ProofKitNavigation {
+    constructor() {
+        this.dropdownButton = document.getElementById('industries-button');
+        this.dropdownMenu = document.getElementById('industries-menu');
+        this.mobileButton = document.getElementById('mobile-menu-button');
+        this.mobileOverlay = document.getElementById('nav-mobile-overlay');
+        this.mobileMenuItems = [];
+        this.dropdownItems = [];
+        this.currentFocusIndex = -1;
+        
+        this.init();
+    }
+    
+    init() {
+        this.setupDropdown();
+        this.setupMobileMenu();
+        this.setupKeyboardNavigation();
+        this.setupClickOutside();
+        this.setupFocusTrapping();
+    }
+    
+    setupDropdown() {
+        if (this.dropdownButton && this.dropdownMenu) {
+            this.dropdownItems = Array.from(this.dropdownMenu.querySelectorAll('.nav-dropdown-item'));
+            
+            this.dropdownButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.toggleDropdown();
+            });
+        }
+    }
+    
+    setupMobileMenu() {
+        if (this.mobileButton && this.mobileOverlay) {
+            this.mobileMenuItems = Array.from(this.mobileOverlay.querySelectorAll('a, button'));
+            
+            this.mobileButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.toggleMobileMenu();
+            });
+        }
+    }
+    
+    setupKeyboardNavigation() {
+        document.addEventListener('keydown', (e) => this.handleKeydown(e));
+    }
+    
+    setupClickOutside() {
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.nav-dropdown')) {
+                this.closeDropdown();
+            }
+            
+            if (!e.target.closest('.nav-mobile-toggle') && !e.target.closest('.nav-mobile-overlay')) {
+                this.closeMobileMenu();
+            }
+        });
+    }
+    
+    setupFocusTrapping() {
+        // Trap focus in mobile menu when open
+        document.addEventListener('keydown', (e) => {
+            if (this.mobileOverlay.classList.contains('show') && e.key === 'Tab') {
+                this.trapFocus(e, this.mobileMenuItems);
+            }
+        });
+    }
+    
+    toggleDropdown() {
+        const isOpen = this.dropdownButton.getAttribute('aria-expanded') === 'true';
+        
+        if (isOpen) {
+            this.closeDropdown();
+        } else {
+            this.openDropdown();
+        }
+    }
+    
+    openDropdown() {
+        this.dropdownButton.setAttribute('aria-expanded', 'true');
+        this.dropdownMenu.classList.add('show');
+        this.dropdownMenu.setAttribute('aria-hidden', 'false');
+        
+        // Set tabindex for dropdown items
+        this.dropdownItems.forEach(item => item.setAttribute('tabindex', '0'));
+        
+        // Focus first item
+        if (this.dropdownItems.length > 0) {
+            this.dropdownItems[0].focus();
+            this.currentFocusIndex = 0;
+        }
+    }
+    
+    closeDropdown() {
+        this.dropdownButton.setAttribute('aria-expanded', 'false');
+        this.dropdownMenu.classList.remove('show');
+        this.dropdownMenu.setAttribute('aria-hidden', 'true');
+        
+        // Remove tabindex from dropdown items
+        this.dropdownItems.forEach(item => item.setAttribute('tabindex', '-1'));
+        
+        this.currentFocusIndex = -1;
+    }
+    
+    toggleMobileMenu() {
+        const isOpen = this.mobileButton.getAttribute('aria-expanded') === 'true';
+        
+        if (isOpen) {
+            this.closeMobileMenu();
+        } else {
+            this.openMobileMenu();
+        }
+    }
+    
+    openMobileMenu() {
+        this.mobileButton.setAttribute('aria-expanded', 'true');
+        this.mobileOverlay.classList.add('show');
+        this.mobileOverlay.setAttribute('aria-hidden', 'false');
+        
+        // Prevent body scroll
+        document.body.style.overflow = 'hidden';
+        
+        // Focus first menu item
+        if (this.mobileMenuItems.length > 0) {
+            setTimeout(() => this.mobileMenuItems[0].focus(), 100);
+        }
+    }
+    
+    closeMobileMenu() {
+        this.mobileButton.setAttribute('aria-expanded', 'false');
+        this.mobileOverlay.classList.remove('show');
+        this.mobileOverlay.setAttribute('aria-hidden', 'true');
+        
+        // Restore body scroll
+        document.body.style.overflow = '';
+        
+        // Return focus to toggle button
+        this.mobileButton.focus();
+    }
+    
+    handleKeydown(e) {
+        // Handle escape key
+        if (e.key === 'Escape') {
+            this.closeDropdown();
+            this.closeMobileMenu();
+            return;
+        }
+        
+        // Handle dropdown navigation
+        if (this.dropdownMenu.classList.contains('show')) {
+            this.handleDropdownKeydown(e);
+        }
+        
+        // Handle dropdown toggle
+        if (e.target === this.dropdownButton) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                this.toggleDropdown();
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                this.openDropdown();
+            }
+        }
+        
+        // Handle mobile menu toggle
+        if (e.target === this.mobileButton) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                this.toggleMobileMenu();
+            }
+        }
+    }
+    
+    handleDropdownKeydown(e) {
+        if (!this.dropdownItems.length) return;
+        
+        switch (e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                this.currentFocusIndex = (this.currentFocusIndex + 1) % this.dropdownItems.length;
+                this.dropdownItems[this.currentFocusIndex].focus();
+                break;
+                
+            case 'ArrowUp':
+                e.preventDefault();
+                this.currentFocusIndex = this.currentFocusIndex <= 0 
+                    ? this.dropdownItems.length - 1 
+                    : this.currentFocusIndex - 1;
+                this.dropdownItems[this.currentFocusIndex].focus();
+                break;
+                
+            case 'Home':
+                e.preventDefault();
+                this.currentFocusIndex = 0;
+                this.dropdownItems[0].focus();
+                break;
+                
+            case 'End':
+                e.preventDefault();
+                this.currentFocusIndex = this.dropdownItems.length - 1;
+                this.dropdownItems[this.currentFocusIndex].focus();
+                break;
+                
+            case 'Enter':
+            case ' ':
+                if (e.target.classList.contains('nav-dropdown-item')) {
+                    e.target.click();
+                }
+                break;
+        }
+    }
+    
+    trapFocus(e, focusableElements) {
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+        
+        if (e.shiftKey && document.activeElement === firstElement) {
+            e.preventDefault();
+            lastElement.focus();
+        } else if (!e.shiftKey && document.activeElement === lastElement) {
+            e.preventDefault();
+            firstElement.focus();
+        }
+    }
+}
+
+// Initialize navigation when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => new ProofKitNavigation());
+} else {
+    new ProofKitNavigation();
+}
+
+// Announce page changes to screen readers
+function announcePageChange(pageName) {
+    const announcement = document.createElement('div');
+    announcement.setAttribute('aria-live', 'polite');
+    announcement.setAttribute('aria-atomic', 'true');
+    announcement.className = 'sr-only';
+    announcement.textContent = `Navigated to ${pageName}`;
+    
+    document.body.appendChild(announcement);
+    
+    setTimeout(() => {
+        document.body.removeChild(announcement);
+    }, 1000);
+}
+</script>

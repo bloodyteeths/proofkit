@@ -1,0 +1,281 @@
+{% extends "industry_base.html" %}
+
+{% set headline = "Cold Chain Temperature Validation" %}
+{% set subline = "Generate GDP-compliant proof PDFs for pharmaceutical and vaccine temperature monitoring. Meet WHO, FDA, and EU requirements with traceable cold chain validation." %}
+
+{% set trust_badges = [
+    {"icon": "💉", "text": "WHO PQS Certified"},
+    {"icon": "🏥", "text": "FDA GDP Ready"},
+    {"icon": "🇪🇺", "text": "EU GDP Compliant"},
+    {"icon": "❄️", "text": "VVM Compatible"}
+] %}
+
+{% set examples = {
+    "title": "Need cold chain example data to test with?",
+    "description": "Download example temperature log files from pharmaceutical cold chain operations:",
+    "files": [
+        {
+            "name": "vaccine_transport.csv",
+            "description": "Vaccine shipment - 2-8°C maintained during 48hr transport",
+            "icon": "✅",
+            "bg_color": "#f8f9ff",
+            "border_color": "#4CAF50",
+            "url": "/examples/coldchain/vaccine_transport.csv"
+        },
+        {
+            "name": "insulin_excursion.csv",
+            "description": "Insulin storage - brief excursion to 12°C, within tolerance",
+            "icon": "⚠️",
+            "bg_color": "#fff8f0",
+            "border_color": "#f59e0b",
+            "url": "/examples/coldchain/insulin_excursion.csv"
+        },
+        {
+            "name": "freezer_failure.csv",
+            "description": "Frozen biologics - equipment failure, temperature rose to -5°C",
+            "icon": "❌",
+            "bg_color": "#fef2f2",
+            "border_color": "#ef4444",
+            "url": "/examples/coldchain/freezer_failure.csv"
+        }
+    ],
+    "format_requirements": [
+        "<strong>Timestamp column:</strong> High-resolution logging (1-15 minute intervals)",
+        "<strong>Temperature columns:</strong> Multiple probe locations, ambient temp (e.g., probe_1_temp, ambient_temp)",
+        "<strong>Product tracking:</strong> Batch numbers, expiry dates in CSV metadata (#)",
+        "<strong>Transport info:</strong> Carrier, route, packaging type in comments",
+        "<strong>Calibration data:</strong> Logger calibration certificates and dates"
+    ]
+} %}
+
+{% set faq = {
+    "title": "Cold Chain Validation FAQ",
+    "items": [
+        {
+            "question": "What cold chain standards does ProofKit support?",
+            "answer": "ProofKit supports WHO Good Distribution Practices (GDP), FDA guidance for pharmaceutical cold chain, EU GDP requirements, USP <1079> storage and transportation, and WHO Performance Quality and Safety (PQS) standards. The system validates temperature maintenance per product-specific requirements."
+        },
+        {
+            "question": "How do I validate different temperature ranges (2-8°C, frozen, ultra-cold)?",
+            "answer": "Different products require specific temperature ranges:<br><strong>Refrigerated (2-8°C):</strong> Vaccines, insulin, many biologics<br><strong>Frozen (-25 to -15°C):</strong> Plasma, some vaccines<br><strong>Ultra-cold (-80 to -60°C):</strong> mRNA vaccines, cell therapies<br><strong>Controlled room temperature (15-25°C):</strong> Some pharmaceuticals<br>Set your target range based on product labeling and regulatory requirements."
+        },
+        {
+            "question": "Can ProofKit handle temperature excursions and stability studies?",
+            "answer": "Yes! ProofKit analyzes temperature excursions against stability data and regulatory guidelines. The system calculates:<br>• Excursion duration and magnitude<br>• Impact on product stability using kinetic models<br>• Remaining shelf life based on temperature history<br>• WHO stability credit analysis for vaccines<br>Generate deviation reports with recommended actions (use/quarantine/destroy)."
+        },
+        {
+            "question": "How do I validate transport packaging and shipping containers?",
+            "answer": "For transport validation, monitor both product and ambient temperatures. Include multiple sensors:<br><strong>Product sensors:</strong> Inside packaging, closest to product<br><strong>Ambient sensors:</strong> Outside container, environmental conditions<br><strong>Packaging performance:</strong> Analyze temperature differential to validate insulation<br>ProofKit generates transport validation reports meeting ISTA 7D and other packaging standards."
+        },
+        {
+            "question": "What documentation does ProofKit provide for regulatory audits?",
+            "answer": "ProofKit generates comprehensive cold chain documentation:<br>• GDP-compliant temperature certificates with batch traceability<br>• Deviation reports with root cause analysis and CAPAs<br>• Transport validation studies with packaging performance data<br>• Tamper-evident records with digital signatures and blockchain verification<br>• Excursion impact assessments with stability modeling<br>All records meet 21 CFR Part 11 and EU Annex 11 requirements."
+        }
+    ]
+} %}
+
+{% block spec_form %}
+<div style="margin-top: 3rem;">
+    <h4 style="color: #4c51bf; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+        ❄️ Cold Chain Temperature Specification
+    </h4>
+    <p style="margin: 0 0 2rem 0; color: #64748b; font-size: 0.95rem;">
+        Configure your pharmaceutical cold chain requirements. Default values follow WHO GDP and FDA guidance for vaccine storage and transport.
+    </p>
+    
+    <div style="background: white; padding: 2rem; border-radius: 1rem; box-shadow: var(--card-shadow); border: 2px solid #e2e8f0;">
+        <div class="form-grid" style="margin-bottom: 2rem;">
+            <!-- Job Information -->
+            <div>
+                <label for="job_id" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                    📋 Shipment/Batch ID
+                </label>
+                <input type="text" id="job_id" value="SHIP_2024_001" 
+                       placeholder="e.g., SHIP_2024_001, VAC_BATCH_A123">
+                <small style="color: #6b7280; font-size: 0.85rem;">Shipment or storage batch identifier for traceability</small>
+            </div>
+            
+            <!-- Temperature Range -->
+            <div>
+                <label for="temp_range" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                    🌡️ Temperature Range
+                </label>
+                <select id="temp_range" style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 0.5rem;">
+                    <option value="2-8">2-8°C (Refrigerated - Vaccines, Insulin)</option>
+                    <option value="15-25">15-25°C (Controlled Room Temperature)</option>
+                    <option value="-25--15">-25 to -15°C (Frozen - Plasma)</option>
+                    <option value="-80--60">-80 to -60°C (Ultra-cold - mRNA Vaccines)</option>
+                    <option value="custom">Custom Range</option>
+                </select>
+                <small style="color: #6b7280; font-size: 0.85rem;">Select standard range or choose custom for specific requirements</small>
+            </div>
+        </div>
+        
+        <div class="form-grid" style="margin-bottom: 2rem; display: none;" id="custom-range-inputs">
+            <!-- Custom Min Temperature -->
+            <div>
+                <label for="min_temp" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                    🔽 Minimum Temperature (°C)
+                </label>
+                <input type="number" id="min_temp" value="2" min="-80" max="25" step="0.5">
+                <small style="color: #6b7280; font-size: 0.85rem;">Lower limit of acceptable temperature range</small>
+            </div>
+            
+            <!-- Custom Max Temperature -->
+            <div>
+                <label for="max_temp" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                    🔼 Maximum Temperature (°C)
+                </label>
+                <input type="number" id="max_temp" value="8" min="-70" max="30" step="0.5">
+                <small style="color: #6b7280; font-size: 0.85rem;">Upper limit of acceptable temperature range</small>
+            </div>
+        </div>
+        
+        <div class="form-grid" style="margin-bottom: 2rem;">
+            <!-- Monitoring Duration -->
+            <div>
+                <label for="hold_time" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                    ⏱️ Monitoring Duration (hours)
+                </label>
+                <input type="number" id="hold_time" value="48" min="2" max="720" step="2">
+                <small style="color: #6b7280; font-size: 0.85rem;">Total monitoring period (2 hrs to 30 days)</small>
+            </div>
+            
+            <!-- Sensor Uncertainty -->
+            <div>
+                <label for="sensor_uncertainty" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                    📊 Sensor Uncertainty (°C)
+                </label>
+                <input type="number" id="sensor_uncertainty" value="0.5" min="0.1" max="2.0" step="0.1">
+                <small style="color: #6b7280; font-size: 0.85rem;">±0.5°C for calibrated data loggers (WHO recommendation)</small>
+            </div>
+        </div>
+        
+        <!-- Advanced Settings Toggle -->
+        <details style="margin-top: 2rem;">
+            <summary style="font-weight: 600; color: #4c51bf; cursor: pointer; margin-bottom: 1rem;">
+                🔧 Advanced Cold Chain Settings
+            </summary>
+            
+            <div style="background: #f8f9ff; padding: 1.5rem; border-radius: 0.75rem; margin-top: 1rem;">
+                <div class="form-grid" style="margin-bottom: 1.5rem;">
+                    <!-- Excursion Tolerance -->
+                    <div>
+                        <label for="excursion_tolerance" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                            ⚠️ Excursion Tolerance (minutes)
+                        </label>
+                        <input type="number" id="excursion_tolerance" value="30" min="0" max="120" step="5">
+                        <small style="color: #6b7280; font-size: 0.85rem;">Maximum allowable time outside temperature range</small>
+                    </div>
+                    
+                    <!-- Stability Credit -->
+                    <div>
+                        <label for="stability_credit" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
+                            💊 Stability Credit Analysis
+                        </label>
+                        <select id="stability_credit" style="width: 100%; padding: 0.75rem;">
+                            <option value="who_vvm">WHO VVM Guidelines</option>
+                            <option value="fda_guidance">FDA Stability Guidance</option>
+                            <option value="custom_kinetic">Custom Kinetic Model</option>
+                            <option value="disabled">Disabled</option>
+                        </select>
+                        <small style="color: #6b7280; font-size: 0.85rem;">Analyze impact of temperature excursions on product stability</small>
+                    </div>
+                </div>
+                
+                <!-- Mean Kinetic Temperature -->
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="font-weight: 600; color: #374151; margin-bottom: 1rem; display: block;">
+                        🌡️ Mean Kinetic Temperature (MKT) Calculation
+                    </label>
+                    <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; white-space: nowrap;">
+                            <input type="checkbox" id="calculate_mkt" checked
+                                   style="accent-color: #667eea; margin: 0;">
+                            <span>Calculate MKT per USP <1079></span>
+                        </label>
+                    </div>
+                    <small style="color: #6b7280; font-size: 0.85rem; margin-top: 0.5rem; display: block;">
+                        MKT provides single temperature value representing thermal stress
+                    </small>
+                </div>
+                
+                <!-- Sensor Configuration -->
+                <div>
+                    <label style="font-weight: 600; color: #374151; margin-bottom: 1rem; display: block;">
+                        📡 Multi-Sensor Logic
+                    </label>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; white-space: nowrap;">
+                            <input type="radio" name="sensor_mode" value="max_of_set" checked
+                                   style="accent-color: #667eea; margin: 0;">
+                            <span><strong>Warmest</strong> (worst case)</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; white-space: nowrap;">
+                            <input type="radio" name="sensor_mode" value="mean_of_set" 
+                                   style="accent-color: #667eea; margin: 0;">
+                            <span><strong>Average</strong> (typical analysis)</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; white-space: nowrap;">
+                            <input type="radio" name="sensor_mode" value="min_of_set" 
+                                   style="accent-color: #667eea; margin: 0;">
+                            <span><strong>Coldest</strong> (minimum exposure)</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </details>
+        
+        <!-- Industry Info Box -->
+        <div style="background: #eff6ff; border: 1px solid #3b82f6; border-radius: 0.75rem; padding: 1rem; margin-top: 2rem;">
+            <div style="display: flex; align-items: start; gap: 0.75rem;">
+                <div style="font-size: 1.25rem;">❄️</div>
+                <div>
+                    <strong style="color: #1d4ed8;">WHO/FDA Cold Chain Requirements</strong>
+                    <p style="margin: 0.5rem 0 0 0; color: #1d4ed8; font-size: 0.9rem; line-height: 1.4;">
+                        Default values meet WHO Good Distribution Practices and FDA guidance for pharmaceutical cold chain.
+                        Temperature excursions are analyzed against product stability data and regulatory tolerances.
+                        Always validate against product-specific storage requirements and consult stability studies for excursion assessment.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hidden JSON field for backend -->
+    <input type="hidden" id="spec_json" name="spec_json" value="">
+</div>
+
+<script>
+// Handle custom temperature range visibility
+document.getElementById('temp_range').addEventListener('change', function() {
+    const customInputs = document.getElementById('custom-range-inputs');
+    if (this.value === 'custom') {
+        customInputs.style.display = 'grid';
+    } else {
+        customInputs.style.display = 'none';
+        // Set predefined ranges
+        const minTemp = document.getElementById('min_temp');
+        const maxTemp = document.getElementById('max_temp');
+        switch(this.value) {
+            case '2-8':
+                minTemp.value = 2;
+                maxTemp.value = 8;
+                break;
+            case '15-25':
+                minTemp.value = 15;
+                maxTemp.value = 25;
+                break;
+            case '-25--15':
+                minTemp.value = -25;
+                maxTemp.value = -15;
+                break;
+            case '-80--60':
+                minTemp.value = -80;
+                maxTemp.value = -60;
+                break;
+        }
+    }
+});
+</script>
+{% endblock %}

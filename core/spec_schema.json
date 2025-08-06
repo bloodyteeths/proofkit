@@ -54,8 +54,8 @@
         "hold_time_s": {
           "type": "integer",
           "minimum": 1,
-          "maximum": 7200,
-          "description": "Required hold time at target temperature in seconds (>= 1)"
+          "maximum": 172800,
+          "description": "Required hold time at target temperature in seconds (>= 1, <= 48 hours)"
         },
         "temp_band_C": {
           "type": "object",
@@ -92,14 +92,14 @@
         "max_sample_period_s": {
           "type": "number",
           "minimum": 1,
-          "maximum": 300,
-          "description": "Maximum allowed time between samples in seconds"
+          "maximum": 3600,
+          "description": "Maximum allowed time between samples in seconds (>= 1, <= 1 hour)"
         },
         "allowed_gaps_s": {
           "type": "number",
           "minimum": 0,
-          "maximum": 600,
-          "description": "Maximum allowed gap in data in seconds"
+          "maximum": 7200,
+          "description": "Maximum allowed gap in data in seconds (>= 0, <= 2 hours)"
         }
       }
     },

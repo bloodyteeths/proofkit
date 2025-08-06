@@ -1,430 +1,670 @@
-{% extends "base.html" %}
+{% extends "modern_base.html" %}
 
-{% block title %}ProofKit Examples - Powder Coat Cure Test Data & Specifications{% endblock %}
-
-{% block head %}
-<meta name="description" content="Download real-world powder coat cure examples including PASS/FAIL scenarios, temperature data in CSV format, and JSON specifications for ProofKit validation testing. Perfect for manufacturing quality control and industrial coating verification.">
-<meta name="keywords" content="powder coat cure, temperature validation, CSV examples, quality control, industrial coating, PMT sensor data, cure verification, manufacturing quality, thermal processing, cure temperature monitoring">
-<link rel="canonical" href="{{ request.url }}">
-<meta property="og:title" content="ProofKit Examples - Powder Coat Cure Test Data & Specifications">
-<meta property="og:description" content="Real-world powder coat cure examples with PASS/FAIL scenarios, temperature data, and specifications for quality control testing.">
-<meta property="og:type" content="website">
-<meta property="og:url" content="{{ request.url }}">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="ProofKit Examples - Powder Coat Cure Test Data">
-<meta name="twitter:description" content="Download CSV temperature data and JSON specifications for powder coat cure testing and validation.">
-<meta name="robots" content="index, follow">
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Dataset",
-  "name": "ProofKit Powder Coat Cure Examples",
-  "description": "Real-world powder coat cure temperature data and specifications for quality control testing",
-  "keywords": ["powder coat cure", "temperature validation", "quality control", "industrial coating"],
-  "creator": {
-    "@type": "Organization",
-    "name": "ProofKit"
-  },
-  "distribution": {
-    "@type": "DataDownload",
-    "encodingFormat": "text/csv",
-    "contentUrl": "{{ request.base_url }}examples/"
-  }
-}
-</script>
-{% endblock %}
+{% block title %}ProofKit Examples - Temperature Log Validation Samples{% endblock %}
+{% block description %}Download real-world temperature validation examples with PASS/FAIL scenarios, CSV data, and JSON specifications across multiple industries.{% endblock %}
 
 {% block content %}
-<main class="container">
-    <header>
-        <h1>ProofKit Examples & Test Data</h1>
-        <p>
-            Real-world powder coat cure examples demonstrating various scenarios you might encounter. 
-            Each example includes temperature data (CSV), specification files (JSON), and expected results.
-            Use these to test ProofKit or understand different cure validation scenarios.
-        </p>
-    </header>
-
-    <section>
-        <h2>✅ Successful Cure Examples (PASS)</h2>
-        <p>These examples demonstrate successful powder coat cures that meet all specification requirements:</p>
-        
-        <div class="grid">
-            <article>
-                <header>
-                    <h3>Standard 180°C 10-Minute Cure</h3>
-                </header>
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-container">
+        <div class="hero-grid">
+            <div>
+                <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(255, 255, 255, 0.2); padding: 0.5rem 1rem; border-radius: 2rem; margin-bottom: 1.5rem;">
+                    <span style="font-size: 1.5rem;">📊</span>
+                    <span style="font-weight: 600;">Examples & Test Data</span>
+                </div>
+                <h1>
+                    Real-World<br>
+                    <span class="highlight">Validation Examples</span>
+                </h1>
                 <p>
-                    Premium automotive wheel coating with clean temperature ramp and adequate hold time.
-                    Demonstrates ideal cure profile with dual PMT sensors.
+                    Download CSV data, specifications, and expected results across multiple industries. 
+                    Test ProofKit with real temperature validation scenarios.
                 </p>
-                <ul>
-                    <li><strong>Target:</strong> 180°C for 10 minutes</li>
-                    <li><strong>Sensors:</strong> Dual PMT (min_of_set)</li>
-                    <li><strong>Logic:</strong> Continuous hold required</li>
-                </ul>
-                <footer>
-                    <a href="/examples/powder_coat_cure_successful_180c_10min_pass.csv" download>📄 Download CSV Data</a>
-                    <a href="/examples/powder_coat_cure_spec_standard_180c_10min.json" download>⚙️ Download Spec JSON</a>
-                </footer>
-            </article>
-
-            <article>
-                <header>
-                    <h3>Cumulative Hold 170°C 20-Minute Cure</h3>
-                </header>
-                <p>
-                    Large industrial part coating allowing temperature dips with cumulative hold logic.
-                    Shows how parts can briefly drop below threshold but still achieve cure.
-                </p>
-                <ul>
-                    <li><strong>Target:</strong> 170°C for 20 minutes (cumulative)</li>
-                    <li><strong>Sensors:</strong> Triple PMT (majority_over_threshold)</li>
-                    <li><strong>Logic:</strong> Cumulative hold with 5-min dip allowance</li>
-                </ul>
-                <footer>
-                    <a href="/examples/powder_coat_cure_cumulative_hold_pass_170c_20min.csv" download>📄 Download CSV Data</a>
-                    <a href="/examples/powder_coat_cure_spec_cumulative_hold_170c_20min.json" download>⚙️ Download Spec JSON</a>
-                </footer>
-            </article>
-
-            <article>
-                <header>
-                    <h3>Fahrenheit Input Data (356°F)</h3>
-                </header>
-                <p>
-                    US automotive parts with temperature data in Fahrenheit. ProofKit automatically 
-                    converts to Celsius for analysis while preserving original units for reporting.
-                </p>
-                <ul>
-                    <li><strong>Target:</strong> 356°F (180°C) for 10 minutes</li>
-                    <li><strong>Input:</strong> Temperature data in Fahrenheit</li>
-                    <li><strong>Output:</strong> Report in Fahrenheit units</li>
-                </ul>
-                <footer>
-                    <a href="/examples/powder_coat_cure_fahrenheit_input_356f_10min_pass.csv" download>📄 Download CSV Data</a>
-                    <a href="/examples/powder_coat_cure_spec_fahrenheit_input_356f_10min.json" download>⚙️ Download Spec JSON</a>
-                </footer>
-            </article>
+                <div class="hero-actions">
+                    <a href="#examples" class="btn btn-primary">
+                        Browse Examples →
+                    </a>
+                    <a href="/app" class="btn btn-secondary">
+                        Try ProofKit
+                    </a>
+                </div>
+            </div>
+            <div class="card glass">
+                <div style="background: white; border-radius: 0.5rem; padding: 1.5rem; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                        <span style="font-size: 2rem;">📊</span>
+                        <span style="font-weight: 600; color: #1a1a1a;">Test Datasets</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1rem;">
+                        <div style="text-align: center; padding: 0.75rem; background: #f0f9ff; border-radius: 0.5rem;">
+                            <div style="font-size: 0.75rem; color: #0369a1; text-transform: uppercase; letter-spacing: 0.05em;">Datasets</div>
+                            <div style="font-size: 1.25rem; font-weight: bold; color: #1a1a1a;">12+</div>
+                        </div>
+                        <div style="text-align: center; padding: 0.75rem; background: #f0f9ff; border-radius: 0.5rem;">
+                            <div style="font-size: 0.75rem; color: #0369a1; text-transform: uppercase; letter-spacing: 0.05em;">Industries</div>
+                            <div style="font-size: 1.25rem; font-weight: bold; color: #1a1a1a;">5</div>
+                        </div>
+                    </div>
+                    <div style="padding: 0.75rem; background: #dbeafe; border-radius: 0.5rem; text-align: center;">
+                        <span style="color: #1e40af; font-weight: bold; font-size: 0.875rem;">📊 100% REAL DATA</span>
+                    </div>
+                </div>
+            </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <section>
-        <h2>❌ Failed Cure Examples (FAIL)</h2>
-        <p>These examples show common failure modes and quality issues in powder coat curing:</p>
+<!-- Examples Filter/Navigation -->
+<section class="section">
+  <div class="section-container">
+    <div class="filter-tabs">
+      <button class="filter-btn active" data-filter="all">All Examples</button>
+      <button class="filter-btn" data-filter="pass">✅ PASS Cases</button>
+      <button class="filter-btn" data-filter="fail">❌ FAIL Cases</button>
+      <button class="filter-btn" data-filter="powder">Powder Coating</button>
+      <button class="filter-btn" data-filter="autoclave">Sterilization</button>
+      <button class="filter-btn" data-filter="concrete">Concrete</button>
+    </div>
+  </div>
+</section>
 
-        <div class="grid">
-            <article>
-                <header>
-                    <h3>Insufficient Hold Time</h3>
-                </header>
-                <p>
-                    Industrial bracket coating where temperature reaches target but cools down too quickly.
-                    Demonstrates failure due to inadequate time at cure temperature.
-                </p>
-                <ul>
-                    <li><strong>Issue:</strong> Only ~4 minutes at temperature (needs 10)</li>
-                    <li><strong>Cause:</strong> Rapid cooling after reaching target</li>
-                    <li><strong>Result:</strong> FAIL - insufficient hold time</li>
-                </ul>
-                <footer>
-                    <a href="/examples/powder_coat_cure_insufficient_hold_time_fail.csv" download>📄 Download CSV Data</a>
-                    <a href="/examples/powder_coat_cure_spec_standard_180c_10min.json" download>⚙️ Download Spec JSON</a>
-                </footer>
-            </article>
-
-            <article>
-                <header>
-                    <h3>Data Gaps from Sensor Disconnection</h3>
-                </header>
-                <p>
-                    Decorative furniture coating with sensor disconnection during cure process.
-                    Shows how data gaps can invalidate cure verification.
-                </p>
-                <ul>
-                    <li><strong>Issue:</strong> 2.5-minute gap exceeds 1-minute limit</li>
-                    <li><strong>Cause:</strong> Sensor cable disconnection</li>
-                    <li><strong>Result:</strong> FAIL - data integrity compromised</li>
-                </ul>
-                <footer>
-                    <a href="/examples/powder_coat_cure_data_gaps_sensor_disconnect_fail.csv" download>📄 Download CSV Data</a>
-                    <a href="/examples/powder_coat_cure_spec_standard_180c_10min.json" download>⚙️ Download Spec JSON</a>
-                </footer>
-            </article>
-
-            <article>
-                <header>
-                    <h3>Slow Temperature Ramp Rate</h3>
-                </header>
-                <p>
-                    Precision electronic component coating taking excessive time to reach target temperature.
-                    Demonstrates failure when heating rate is too conservative.
-                </p>
-                <ul>
-                    <li><strong>Issue:</strong> 16+ minutes to reach threshold (limit: 15 min)</li>
-                    <li><strong>Cause:</strong> Conservative heating profile</li>
-                    <li><strong>Result:</strong> FAIL - excessive time to threshold</li>
-                </ul>
-                <footer>
-                    <a href="/examples/powder_coat_cure_slow_ramp_rate_fail.csv" download>📄 Download CSV Data</a>
-                    <a href="/examples/powder_coat_cure_spec_standard_180c_10min.json" download>⚙️ Download Spec JSON</a>
-                </footer>
-            </article>
-
-            <article>
-                <header>
-                    <h3>Sensor Failure Mid-Run</h3>
-                </header>
-                <p>
-                    Heavy machinery coating with complete sensor failure during cure process.
-                    Shows impact of sensor redundancy requirements.
-                </p>
-                <ul>
-                    <li><strong>Issue:</strong> One of three sensors fails completely</li>
-                    <li><strong>Cause:</strong> Hardware failure mid-process</li>
-                    <li><strong>Result:</strong> FAIL - insufficient sensor redundancy</li>
-                </ul>
-                <footer>
-                    <a href="/examples/powder_coat_cure_sensor_failure_mid_run_fail.csv" download>📄 Download CSV Data</a>
-                    <a href="/examples/powder_coat_cure_spec_strict_tolerances_190c_15min.json" download>⚙️ Download Spec JSON</a>
-                </footer>
-            </article>
+<!-- Pass Examples -->
+<section id="examples" class="section" data-category="pass">
+  <div class="section-container">
+    <div class="section-header">
+      <h2>✅ Successful Validation Examples (PASS)</h2>
+      <p>These examples demonstrate successful temperature processes that meet all specification requirements</p>
+    </div>
+    
+    <div class="examples-grid">
+      <div class="example-tile" data-filter="pass powder">
+        <div class="example-header">
+          <div class="example-icon">🎨</div>
+          <div class="example-meta">
+            <h3>Standard 180°C Powder Cure</h3>
+            <div class="example-tags">
+              <span class="tag pass">PASS</span>
+              <span class="tag industry">Powder Coating</span>
+            </div>
+          </div>
         </div>
-    </section>
-
-    <section>
-        <h2>📦 Sample Evidence Bundles & Outputs</h2>
-        <p>Download complete evidence bundles and generated outputs to understand ProofKit's verification process:</p>
+        <p>Premium automotive wheel coating with clean temperature ramp and adequate hold time. Demonstrates ideal cure profile with dual PMT sensors.</p>
         
-        <div class="grid">
-            <article>
-                <header>
-                    <h3>PASS - Standard Cure Evidence Bundle</h3>
-                </header>
-                <p>
-                    Complete evidence bundle from successful 180°C cure showing proof PDF, 
-                    temperature plot, decision analysis, and tamper-evident manifest.
-                </p>
-                <ul>
-                    <li><strong>Contents:</strong> PDF proof, PNG plot, JSON decision, CSV normalized data</li>
-                    <li><strong>SHA-256:</strong> Cryptographic integrity verification</li>
-                    <li><strong>QR Code:</strong> Embedded verification link</li>
-                </ul>
-                <footer>
-                    <a href="/examples/outputs/proof_pass.pdf" download="powder_coat_cure_pass_proof_certificate.pdf">📄 Download Proof PDF</a>
-                    <a href="/examples/outputs/proof_plot_pass.png" download="powder_coat_cure_pass_temperature_plot.png">📊 Download Temperature Plot</a>
-                    <a href="/examples/outputs/decision_pass.json" download="powder_coat_cure_pass_decision_analysis.json">📋 Download Decision JSON</a>
-                </footer>
-            </article>
-
-            <article>
-                <header>
-                    <h3>FAIL - Insufficient Hold Evidence Bundle</h3>
-                </header>
-                <p>
-                    Evidence bundle from failed cure due to insufficient hold time, 
-                    demonstrating how ProofKit identifies and documents quality failures.
-                </p>
-                <ul>
-                    <li><strong>Failure Mode:</strong> Insufficient time at cure temperature</li>
-                    <li><strong>Analysis:</strong> Clear failure reason in decision JSON</li>
-                    <li><strong>Visualization:</strong> Temperature plot showing premature cooling</li>
-                </ul>
-                <footer>
-                    <a href="/examples/outputs/proof_fail_short_hold.pdf" download="powder_coat_cure_fail_insufficient_hold_proof.pdf">📄 Download Proof PDF</a>
-                    <a href="/examples/outputs/proof_plot_fail_short_hold.png" download="powder_coat_cure_fail_insufficient_hold_plot.png">📊 Download Temperature Plot</a>
-                    <a href="/examples/outputs/decision_fail_short_hold.json" download="powder_coat_cure_fail_insufficient_hold_decision.json">📋 Download Decision JSON</a>
-                </footer>
-            </article>
-
-            <article>
-                <header>
-                    <h3>FAIL - No Threshold Reached Evidence Bundle</h3>
-                </header>
-                <p>
-                    Evidence bundle showing complete cure failure when target temperature 
-                    is never reached, typical of equipment malfunction or incorrect settings.
-                </p>
-                <ul>
-                    <li><strong>Failure Mode:</strong> Target temperature never achieved</li>
-                    <li><strong>Root Cause:</strong> Equipment malfunction or incorrect parameters</li>
-                    <li><strong>Documentation:</strong> Complete failure analysis and timeline</li>
-                </ul>
-                <footer>
-                    <a href="/examples/outputs/proof_fail_no_threshold.pdf" download="powder_coat_cure_fail_no_threshold_proof.pdf">📄 Download Proof PDF</a>
-                    <a href="/examples/outputs/proof_plot_fail_no_threshold.png" download="powder_coat_cure_fail_no_threshold_plot.png">📊 Download Temperature Plot</a>
-                    <a href="/examples/outputs/decision_fail_no_threshold.json" download="powder_coat_cure_fail_no_threshold_decision.json">📋 Download Decision JSON</a>
-                </footer>
-            </article>
+        <div class="example-details">
+          <div class="detail-row">
+            <span class="detail-label">Target:</span>
+            <span class="detail-value">180°C for 10 minutes</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Sensors:</span>
+            <span class="detail-value">Dual PMT (min_of_set)</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Logic:</span>
+            <span class="detail-value">Continuous hold required</span>
+          </div>
         </div>
-    </section>
-
-    <section>
-        <h2>📋 Specification Templates</h2>
-        <p>Ready-to-use JSON specifications for different cure requirements and tolerances:</p>
-
-        <div class="grid">
-            <article>
-                <header>
-                    <h3>Standard Tolerances</h3>
-                </header>
-                <p>
-                    General-purpose powder coat cure specification with moderate tolerances.
-                    Suitable for most automotive and industrial applications.
-                </p>
-                <ul>
-                    <li><strong>Temperature:</strong> 180°C ± 2°C uncertainty</li>
-                    <li><strong>Hold Time:</strong> 10 minutes continuous</li>
-                    <li><strong>Data Quality:</strong> 30s samples, 60s gap limit</li>
-                </ul>
-                <footer>
-                    <a href="/examples/powder_coat_cure_spec_standard_180c_10min.json" download>⚙️ Download Standard Spec</a>
-                </footer>
-            </article>
-
-            <article>
-                <header>
-                    <h3>Strict Tolerances</h3>
-                </header>
-                <p>
-                    High-precision cure specification for critical applications requiring 
-                    tight temperature control and multiple sensor validation.
-                </p>
-                <ul>
-                    <li><strong>Temperature:</strong> 190°C ± 1°C uncertainty</li>
-                    <li><strong>Hold Time:</strong> 15 minutes continuous</li>
-                    <li><strong>Data Quality:</strong> 15s samples, 30s gap limit</li>
-                </ul>
-                <footer>
-                    <a href="/examples/powder_coat_cure_spec_strict_tolerances_190c_15min.json" download>⚙️ Download Strict Spec</a>
-                </footer>
-            </article>
-
-            <article>
-                <header>
-                    <h3>Cumulative Hold Logic</h3>
-                </header>
-                <p>
-                    Flexible cure specification allowing temperature dips during the cure cycle.
-                    Ideal for large parts with thermal mass variations.
-                </p>
-                <ul>
-                    <li><strong>Temperature:</strong> 170°C ± 2.5°C uncertainty</li>
-                    <li><strong>Hold Time:</strong> 20 minutes cumulative (5 min dips OK)</li>
-                    <li><strong>Sensors:</strong> Majority over threshold logic</li>
-                </ul>
-                <footer>
-                    <a href="/examples/powder_coat_cure_spec_cumulative_hold_170c_20min.json" download>⚙️ Download Cumulative Spec</a>
-                </footer>
-            </article>
+        
+        <div class="example-actions">
+          <a href="/examples/powder_coat_cure_successful_180c_10min_pass.csv" class="btn btn-sm" download>
+            📄 CSV Data
+          </a>
+          <a href="/examples/powder_coat_cure_spec_standard_180c_10min.json" class="btn btn-sm btn-outline" download>
+            ⚙️ JSON Spec
+          </a>
         </div>
-    </section>
-
-    <section>
-        <h2>🚀 How to Use These Powder Coat Cure Examples</h2>
-        
-        <p>Follow these steps to test ProofKit with our comprehensive example datasets:</p>
-        
-        <ol>
-            <li>
-                <strong>Download Temperature Data & Specifications:</strong> Choose a CSV temperature data file and its corresponding JSON cure specification from the examples above. Each pair represents a real manufacturing scenario.
-            </li>
-            <li>
-                <strong>Upload to ProofKit Interface:</strong> Use the <a href="/" title="ProofKit Main Interface">main ProofKit interface</a> to upload your chosen CSV and JSON files. The system will process them automatically.
-            </li>
-            <li>
-                <strong>Analyze Generated Results:</strong> Compare the generated proof PDF certificate with the expected PASS/FAIL result. Review the temperature plots and decision analysis for insights.
-            </li>
-            <li>
-                <strong>Verify Evidence Bundle Integrity:</strong> Download the complete evidence ZIP bundle and test the cryptographic verification process using ProofKit's verification tools.
-            </li>
-            <li>
-                <strong>Study Manufacturing Scenarios:</strong> Each example represents common manufacturing scenarios - successful cures, equipment failures, sensor issues, and process deviations.
-            </li>
-        </ol>
-
-        <details>
-            <summary>💡 Understanding ProofKit File Naming Convention</summary>
-            <p>
-                Our example files use descriptive, industry-standard naming that clearly identifies each manufacturing scenario:
-            </p>
-            <ul>
-                <li><code>powder_coat_cure_</code> - Manufacturing process type (powder coating thermal cure)</li>
-                <li><code>successful_</code> or <code>insufficient_hold_time_</code> - Process outcome or failure mode</li>
-                <li><code>180c_10min</code> - Target cure temperature (Celsius) and hold time (minutes)</li>
-                <li><code>pass</code> or <code>fail</code> - Expected quality control result</li>
-                <li><code>.csv</code> - Temperature sensor data file (timestamp + temperature columns)</li>
-                <li><code>.json</code> - Cure specification file (temperature targets, tolerances, sensor rules)</li>
-            </ul>
-            <p><strong>Example:</strong> <code>powder_coat_cure_successful_180c_10min_pass.csv</code> represents temperature data from a successful powder coat cure at 180°C for 10 minutes that should pass quality validation.</p>
-        </details>
-
-        <details>
-            <summary>🔧 Customizing Powder Coat Cure Specifications</summary>
-            <p>
-                You can customize any JSON cure specification to match your manufacturing requirements by editing these critical parameters:
-            </p>
-            <ul>
-                <li><strong>target_temp_C:</strong> Required cure temperature in Celsius (e.g., 180.0 for standard automotive coatings)</li>
-                <li><strong>hold_time_s:</strong> Time at cure temperature in seconds (600 = 10 minutes)</li>
-                <li><strong>sensor_uncertainty_C:</strong> PMT sensor measurement uncertainty (default: 2.0°C)</li>
-                <li><strong>hysteresis_C:</strong> Temperature tolerance band around target (default: 2.0°C)</li>
-                <li><strong>max_sample_period_s:</strong> Maximum time between temperature readings (60 = 1 minute)</li>
-                <li><strong>allowed_gaps_s:</strong> Maximum data gap before failure (120 = 2 minutes)</li>
-                <li><strong>continuous:</strong> true for continuous hold requirement, false for cumulative hold</li>
-                <li><strong>sensor_selection.mode:</strong> "min_of_set", "max_of_set", or "majority_over_threshold"</li>
-            </ul>
-            <p><strong>Manufacturing Tip:</strong> Higher-value parts typically use stricter tolerances (±1°C) and shorter allowed gaps, while large industrial parts may use cumulative hold logic to accommodate thermal mass variations.</p>
-        </details>
-
-        <details>
-            <summary>🏭 Industry Applications & Use Cases</summary>
-            <p>These powder coat cure examples represent real manufacturing scenarios across various industries:</p>
-            <ul>
-                <li><strong>Automotive:</strong> Wheel rims, brake components, chassis parts (180°C, 10-15 min)</li>
-                <li><strong>Industrial:</strong> Heavy machinery, agricultural equipment (170-190°C, 15-20 min)</li>
-                <li><strong>Electronics:</strong> Precision components requiring strict tolerances (180°C ±1°C)</li>
-                <li><strong>Furniture:</strong> Decorative metal components with flexible cure profiles</li>
-                <li><strong>Aerospace:</strong> Critical components with redundant sensor requirements</li>
-            </ul>
-            <p>Each application has specific requirements for temperature accuracy, hold time, and data integrity that are reflected in our example specifications.</p>
-        </details>
-    </section>
-
-    <section>
-        <h2>📞 Manufacturing Support & Resources</h2>
-        <p>
-            Need help implementing ProofKit in your powder coating operation or have questions about these examples?
-        </p>
-        
-        <div class="grid">
-            <article>
-                <header><h3>📚 Documentation</h3></header>
-                <ul>
-                    <li><a href="/docs" title="ProofKit API Documentation">Complete API documentation</a> with endpoint details and parameter explanations</li>
-                    <li><a href="/" title="ProofKit Main Interface">Interactive ProofKit interface</a> for real-time temperature data validation</li>
-                    <li>Generated proof PDF certificates showing detailed analysis methodology</li>
-                </ul>
-            </article>
-
-            <article>
-                <header><h3>🔧 Implementation</h3></header>
-                <ul>
-                    <li>CSV format requirements for temperature logger integration</li>
-                    <li>JSON specification templates for various coating types</li>
-                    <li>Quality control workflow integration guidelines</li>
-                </ul>
-            </article>
-
-            <article>
-                <header><h3>✅ Validation</h3></header>
-                <ul>
-                    <li>Evidence bundle verification for audit compliance</li>
-                    <li>Cryptographic integrity checking with SHA-256 hashes</li>
-                    <li>Inspector-ready certification format with QR codes</li>
-                </ul>
-            </article>
+      </div>
+      
+      <div class="example-tile" data-filter="pass autoclave">
+        <div class="example-header">
+          <div class="example-icon">🏥</div>
+          <div class="example-meta">
+            <h3>Steam Sterilization Cycle</h3>
+            <div class="example-tags">
+              <span class="tag pass">PASS</span>
+              <span class="tag industry">Autoclave</span>
+            </div>
+          </div>
         </div>
-    </section>
-</main>
+        <p>Medical device sterilization at 121°C with proper come-up time and steam penetration. F0 value calculation demonstrates sterility assurance.</p>
+        
+        <div class="example-details">
+          <div class="detail-row">
+            <span class="detail-label">Target:</span>
+            <span class="detail-value">121°C for 15 minutes</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">F0 Value:</span>
+            <span class="detail-value">18.2 minutes</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Application:</span>
+            <span class="detail-value">Medical devices</span>
+          </div>
+        </div>
+        
+        <div class="example-actions">
+          <a href="/examples/autoclave_sterilization_pass.csv" class="btn btn-sm" download>
+            📄 CSV Data
+          </a>
+          <a href="/examples/autoclave_sterilization_spec.json" class="btn btn-sm btn-outline" download>
+            ⚙️ JSON Spec
+          </a>
+        </div>
+      </div>
+      
+      <div class="example-tile" data-filter="pass concrete">
+        <div class="example-header">
+          <div class="example-icon">🏗️</div>
+          <div class="example-meta">
+            <h3>Concrete Curing Monitoring</h3>
+            <div class="example-tags">
+              <span class="tag pass">PASS</span>
+              <span class="tag industry">Construction</span>
+            </div>
+          </div>
+        </div>
+        <p>Structural concrete curing with proper temperature management per ASTM C31. Demonstrates controlled heat of hydration for strength development.</p>
+        
+        <div class="example-details">
+          <div class="detail-row">
+            <span class="detail-label">Standard:</span>
+            <span class="detail-value">ASTM C31</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Duration:</span>
+            <span class="detail-value">72 hours</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Max Temp:</span>
+            <span class="detail-value">65°C</span>
+          </div>
+        </div>
+        
+        <div class="example-actions">
+          <a href="/examples/concrete_curing_pass.csv" class="btn btn-sm" download>
+            📄 CSV Data
+          </a>
+          <a href="/examples/concrete_curing_spec.json" class="btn btn-sm btn-outline" download>
+            ⚙️ JSON Spec
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Fail Examples -->
+<section class="section" style="background: #f7fafc;" data-category="fail">
+  <div class="section-container">
+    <div class="section-header">
+      <h2>❌ Failed Validation Examples (FAIL)</h2>
+      <p>These examples show common failure modes and quality issues across different processes</p>
+    </div>
+    
+    <div class="examples-grid">
+      <div class="example-tile" data-filter="fail powder">
+        <div class="example-header">
+          <div class="example-icon">🎨</div>
+          <div class="example-meta">
+            <h3>Insufficient Hold Time</h3>
+            <div class="example-tags">
+              <span class="tag fail">FAIL</span>
+              <span class="tag industry">Powder Coating</span>
+            </div>
+          </div>
+        </div>
+        <p>Industrial bracket coating where temperature reaches target but cools down too quickly. Demonstrates failure due to inadequate time at cure temperature.</p>
+        
+        <div class="example-details">
+          <div class="detail-row">
+            <span class="detail-label">Issue:</span>
+            <span class="detail-value">Only ~4 minutes at temperature</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Cause:</span>
+            <span class="detail-value">Rapid cooling after reaching target</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Required:</span>
+            <span class="detail-value">10 minutes minimum</span>
+          </div>
+        </div>
+        
+        <div class="example-actions">
+          <a href="/examples/powder_coat_cure_insufficient_hold_time_fail.csv" class="btn btn-sm" download>
+            📄 CSV Data
+          </a>
+          <a href="/examples/powder_coat_cure_spec_standard_180c_10min.json" class="btn btn-sm btn-outline" download>
+            ⚙️ JSON Spec
+          </a>
+        </div>
+      </div>
+      
+      <div class="example-tile" data-filter="fail autoclave">
+        <div class="example-header">
+          <div class="example-icon">🏥</div>
+          <div class="example-meta">
+            <h3>Incomplete Steam Penetration</h3>
+            <div class="example-tags">
+              <span class="tag fail">FAIL</span>
+              <span class="tag industry">Autoclave</span>
+            </div>
+          </div>
+        </div>
+        <p>Sterilization cycle fails due to inadequate steam penetration. Temperature sensors show uneven heating, compromising sterility assurance.</p>
+        
+        <div class="example-details">
+          <div class="detail-row">
+            <span class="detail-label">Issue:</span>
+            <span class="detail-value">Uneven temperature distribution</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">F0 Value:</span>
+            <span class="detail-value">6.2 minutes (insufficient)</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Minimum:</span>
+            <span class="detail-value">8.0 minutes required</span>
+          </div>
+        </div>
+        
+        <div class="example-actions">
+          <a href="/examples/autoclave_sterilization_fail.csv" class="btn btn-sm" download>
+            📄 CSV Data
+          </a>
+          <a href="/examples/autoclave_sterilization_spec.json" class="btn btn-sm btn-outline" download>
+            ⚙️ JSON Spec
+          </a>
+        </div>
+      </div>
+      
+      <div class="example-tile" data-filter="fail concrete">
+        <div class="example-header">
+          <div class="example-icon">🏗️</div>
+          <div class="example-meta">
+            <h3>Temperature Runaway</h3>
+            <div class="example-tags">
+              <span class="tag fail">FAIL</span>
+              <span class="tag industry">Construction</span>
+            </div>
+          </div>
+        </div>
+        <p>Concrete pour with excessive heat of hydration due to high cement content. Temperature exceeds safe limits, risking thermal cracking.</p>
+        
+        <div class="example-details">
+          <div class="detail-row">
+            <span class="detail-label">Peak Temp:</span>
+            <span class="detail-value">78°C (exceeded limit)</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Limit:</span>
+            <span class="detail-value">65°C maximum</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Risk:</span>
+            <span class="detail-value">Thermal cracking</span>
+          </div>
+        </div>
+        
+        <div class="example-actions">
+          <a href="/examples/concrete_curing_fail.csv" class="btn btn-sm" download>
+            📄 CSV Data
+          </a>
+          <a href="/examples/concrete_curing_spec.json" class="btn btn-sm btn-outline" download>
+            ⚙️ JSON Spec
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How to Use -->
+<section class="section">
+  <div class="section-container">
+    <div class="section-header" style="text-align: center;">
+      <h2>How to Use These Examples</h2>
+      <p>Get started with ProofKit using our comprehensive test datasets</p>
+    </div>
+    
+    <div class="process-steps">
+      <div class="step-item">
+        <div class="step-number">1</div>
+        <div class="step-content">
+          <h3>Download Example Data</h3>
+          <p>Choose a CSV temperature data file and its corresponding JSON specification from the examples above.</p>
+        </div>
+      </div>
+      
+      <div class="step-item">
+        <div class="step-number">2</div>
+        <div class="step-content">
+          <h3>Upload to ProofKit</h3>
+          <p>Use the main ProofKit interface to upload your chosen files. The system will process them automatically.</p>
+        </div>
+      </div>
+      
+      <div class="step-item">
+        <div class="step-number">3</div>
+        <div class="step-content">
+          <h3>Compare Results</h3>
+          <p>Review the generated proof PDF and compare with the expected PASS/FAIL result from the example.</p>
+        </div>
+      </div>
+      
+      <div class="step-item">
+        <div class="step-number">4</div>
+        <div class="step-content">
+          <h3>Verify Evidence</h3>
+          <p>Download the evidence bundle and test the cryptographic verification process.</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="text-center">
+      <a href="/app" class="btn btn-primary btn-lg">
+        <span>Try ProofKit Now</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="m9 18 6-6-6-6"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block styles %}
+<style>
+/* Examples specific styles */
+#examples {
+  margin-top: 2rem;
+}
+
+/* Filter Tabs */
+.filter-tabs {
+  padding: 2rem 0;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: center;
+}
+
+.filter-tabs {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: 0.75rem 1.5rem;
+  border: 2px solid #e2e8f0;
+  background: white;
+  color: #64748b;
+  border-radius: 2rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.filter-btn:hover,
+.filter-btn.active {
+  border-color: #667eea;
+  background: #667eea;
+  color: white;
+}
+
+/* Examples Grid */
+.examples-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 2rem;
+}
+
+.example-tile {
+  background: white;
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.example-tile:hover {
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px);
+}
+
+.example-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.example-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.example-meta {
+  flex-grow: 1;
+}
+
+.example-meta h3 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+  color: #1e293b;
+}
+
+.example-tags {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.tag {
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.tag.pass {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.tag.fail {
+  background: #fecaca;
+  color: #dc2626;
+}
+
+.tag.industry {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
+.example-tile p {
+  color: #64748b;
+  line-height: 1.6;
+  margin: 0 0 1.5rem 0;
+}
+
+.example-details {
+  background: #f8fafc;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.detail-row:last-child {
+  margin-bottom: 0;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+.detail-value {
+  font-family: 'SF Mono', Monaco, monospace;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.example-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* Process Steps */
+.process-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.step-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border-radius: 50%;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.step-content h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  color: #1e293b;
+}
+
+.step-content p {
+  color: #64748b;
+  margin: 0;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+/* Button Styles */
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  border-radius: 0.375rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 2rem;
+  }
+  
+  .hero-stats {
+    gap: 2rem;
+  }
+  
+  .examples-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .filter-tabs {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .example-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.75rem;
+  }
+  
+  .detail-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+  
+  .process-steps {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-stats {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .example-tile {
+    padding: 1.5rem;
+  }
+  
+  .example-actions {
+    flex-direction: column;
+  }
+}
+
+/* Filter functionality */
+.example-tile[data-filter] {
+  transition: all 0.3s ease;
+}
+
+.example-tile.hidden {
+  display: none;
+}
+</style>
+
+<script>
+// Filter functionality
+document.addEventListener('DOMContentLoaded', function() {
+  const filterButtons = document.querySelectorAll('.filter-btn');
+  const exampleTiles = document.querySelectorAll('.example-tile');
+  
+  filterButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      const filter = this.getAttribute('data-filter');
+      
+      // Update active button
+      filterButtons.forEach(btn => btn.classList.remove('active'));
+      this.classList.add('active');
+      
+      // Filter examples
+      exampleTiles.forEach(tile => {
+        const tileFilters = tile.getAttribute('data-filter');
+        
+        if (filter === 'all' || tileFilters.includes(filter)) {
+          tile.classList.remove('hidden');
+        } else {
+          tile.classList.add('hidden');
+        }
+      });
+    });
+  });
+});
+</script>
 {% endblock %}

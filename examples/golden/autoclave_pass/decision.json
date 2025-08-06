@@ -1,0 +1,15 @@
+{
+  "pass_": false,
+  "job_id": "pharma_sterilization_validation",
+  "target_temp_C": 121.0,
+  "conservative_threshold_C": 121.5,
+  "actual_hold_time_s": 1490.0,
+  "required_hold_time_s": 900,
+  "max_temp_C": 122.1,
+  "min_temp_C": 19.8,
+  "reasons": [
+    "Ramp rate too high: 5.4\u00b0C/min > 5.0\u00b0C/min",
+    "Continuous hold time requirement met: 1490s \u2265 900s"
+  ],
+  "warnings": []
+}

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Navigation Demo - ProofKit</title>
+    <style>
+        body { font-family: sans-serif; margin: 2rem; }
+        .nav-link, .nav-dropdown-item { 
+            display: inline-block; 
+            padding: 0.5rem 1rem; 
+            margin: 0.25rem; 
+            text-decoration: none; 
+            border: 1px solid #ccc; 
+        }
+        .nav-link.active, .nav-dropdown-item.active { 
+            background: #4CAF50; 
+            color: white; 
+            border-color: #45a049; 
+        }
+        .nav-dropdown-toggle { 
+            padding: 0.5rem 1rem; 
+            margin: 0.25rem; 
+            border: 1px solid #ccc; 
+            background: #f0f0f0; 
+        }
+        .nav-dropdown-toggle.active { 
+            background: #2196F3; 
+            color: white; 
+            border-color: #1976D2; 
+        }
+        .demo-section { 
+            margin: 2rem 0; 
+            padding: 1rem; 
+            border: 1px solid #eee; 
+            border-radius: 0.5rem; 
+        }
+    </style>
+</head>
+<body>
+    {% from 'macros/navigation.html' import nav_class, is_active_nav, is_industry_active, dropdown_toggle_class %}
+    
+    <h1>ProofKit Navigation Demo</h1>
+    
+    <div class="demo-section">
+        <h2>Current Request Info</h2>
+        <p><strong>Path:</strong> {{ request.url.path }}</p>
+        <p><strong>Industry:</strong> {{ request.query_params.get('industry', 'None') }}</p>
+        <p><strong>Query String:</strong> {{ request.url.query or 'None' }}</p>
+    </div>
+    
+    <div class="demo-section">
+        <h2>Main Navigation Links</h2>
+        <a href="/" class="{{ nav_class(request, '/') }}">Home</a>
+        <a href="/examples" class="{{ nav_class(request, '/examples', base_classes='nav-link') }}">Examples</a>
+        <a href="/docs" class="{{ nav_class(request, '/docs', base_classes='nav-link') }}">Docs</a>
+        <a href="/trust" class="{{ nav_class(request, '/trust', base_classes='nav-link') }}">Trust</a>
+    </div>
+    
+    <div class="demo-section">
+        <h2>Industry Dropdown</h2>
+        <div style="display: inline-block;">
+            <button class="{{ dropdown_toggle_class(request, ['powder-coat', 'haccp', 'autoclave', 'sterile-eto', 'concrete', 'cold-chain'], 'nav-dropdown-toggle') }}">
+                Industries
+            </button>
+            <div style="margin-top: 0.5rem;">
+                <a href="/?industry=powder-coat" class="{{ nav_class(request, '/', 'powder-coat', 'nav-dropdown-item') }}">🎨 Powder-Coat</a>
+                <a href="/?industry=haccp" class="{{ nav_class(request, '/', 'haccp', 'nav-dropdown-item') }}">🍽️ HACCP</a>
+                <a href="/?industry=autoclave" class="{{ nav_class(request, '/', 'autoclave', 'nav-dropdown-item') }}">🏥 Autoclave</a>
+                <a href="/?industry=sterile-eto" class="{{ nav_class(request, '/', 'sterile-eto', 'nav-dropdown-item') }}">🧪 Sterile EtO</a>
+                <a href="/?industry=concrete" class="{{ nav_class(request, '/', 'concrete', 'nav-dropdown-item') }}">🏗️ Concrete</a>
+                <a href="/?industry=cold-chain" class="{{ nav_class(request, '/', 'cold-chain', 'nav-dropdown-item') }}">❄️ Cold-Chain</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="demo-section">
+        <h2>Active State Tests</h2>
+        <table border="1" cellpadding="5" cellspacing="0">
+            <tr>
+                <th>Test</th>
+                <th>Result</th>
+            </tr>
+            <tr>
+                <td>is_active_nav(request, '/')</td>
+                <td>{{ is_active_nav(request, '/') }}</td>
+            </tr>
+            <tr>
+                <td>is_active_nav(request, '/examples')</td>
+                <td>{{ is_active_nav(request, '/examples') }}</td>
+            </tr>
+            <tr>
+                <td>is_active_nav(request, '/', 'powder-coat')</td>
+                <td>{{ is_active_nav(request, '/', 'powder-coat') }}</td>
+            </tr>
+            <tr>
+                <td>is_industry_active(request, ['powder-coat', 'haccp'])</td>
+                <td>{{ is_industry_active(request, ['powder-coat', 'haccp']) }}</td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="demo-section">
+        <h2>Test Different Routes</h2>
+        <p><a href="/nav_demo">Demo Home</a></p>
+        <p><a href="/nav_demo?industry=powder-coat">Demo + Powder-Coat</a></p>
+        <p><a href="/nav_demo?industry=haccp">Demo + HACCP</a></p>
+        <p><a href="/examples">Examples Page</a></p>
+        <p><a href="/trust">Trust Page</a></p>
+    </div>
+</body>
+</html>

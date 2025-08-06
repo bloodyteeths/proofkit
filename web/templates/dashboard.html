@@ -1,0 +1,796 @@
+{% extends "modern_base.html" %}
+
+{% block title %}Dashboard - ProofKit{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- User Info Header -->
+    <div class="dashboard-header">
+        <h1>Welcome, {{ user.email }}</h1>
+        <p class="subtitle">Manage your ProofKit account and subscription</p>
+    </div>
+
+    <!-- Quick Stats Cards -->
+    <div class="stats-grid">
+        <!-- Current Plan Card -->
+        <div class="stat-card plan-card">
+            <div class="stat-icon">💎</div>
+            <div class="stat-content">
+                <h3>Current Plan</h3>
+                <div class="plan-badge {{ quota.plan }}">
+                    {{ quota.plan_name }}
+                </div>
+                {% if quota.plan == 'free' %}
+                <p class="stat-description">{{ quota.total_remaining }} certificates remaining (lifetime)</p>
+                {% else %}
+                <p class="stat-description">€{{ quota.price }}/month</p>
+                {% endif %}
+            </div>
+            <div class="stat-action">
+                {% if quota.plan != 'enterprise' %}
+                <a href="/pricing" class="btn-upgrade">Upgrade Plan</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Usage This Month Card -->
+        <div class="stat-card usage-card">
+            <div class="stat-icon">📊</div>
+            <div class="stat-content">
+                <h3>Monthly Usage</h3>
+                <div class="usage-display">
+                    <span class="usage-current">{{ quota.monthly_used }}</span>
+                    <span class="usage-separator">/</span>
+                    <span class="usage-limit">{{ quota.monthly_limit if quota.monthly_limit else '∞' }}</span>
+                </div>
+                <div class="usage-bar">
+                    <div class="usage-bar-fill" style="width: {{ (quota.monthly_used / quota.monthly_limit * 100) if quota.monthly_limit else 0 }}%"></div>
+                </div>
+                {% if quota.plan != 'free' and quota.monthly_used >= quota.monthly_limit %}
+                <p class="stat-description warning">Overage charges apply</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Billing Status Card -->
+        <div class="stat-card billing-card">
+            <div class="stat-icon">💳</div>
+            <div class="stat-content">
+                <h3>Billing Status</h3>
+                {% if quota.subscription %}
+                <div class="status-badge active">Active</div>
+                <p class="stat-description">Next billing: {{ quota.next_billing_date }}</p>
+                {% else %}
+                <div class="status-badge inactive">No Subscription</div>
+                {% if quota.plan == 'free' %}
+                <p class="stat-description">Using free tier</p>
+                {% else %}
+                <p class="stat-description">Pay-as-you-go</p>
+                {% endif %}
+                {% endif %}
+            </div>
+            {% if quota.subscription %}
+            <div class="stat-action">
+                <button onclick="manageBilling()" class="btn-secondary">Manage Billing</button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Main Dashboard Content -->
+    <div class="dashboard-main">
+        <!-- Recent Jobs Section -->
+        <section class="dashboard-section">
+            <div class="section-header">
+                <h2>Recent Compilations</h2>
+                <a href="/my-jobs" class="view-all-link">View All →</a>
+            </div>
+            
+            <div class="jobs-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Job ID</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Result</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for job in recent_jobs[:5] %}
+                        <tr>
+                            <td class="job-id">{{ job.job_id[:8] }}...</td>
+                            <td>{{ job.created_at }}</td>
+                            <td>
+                                {% if job.approved %}
+                                <span class="badge approved">Approved</span>
+                                {% else %}
+                                <span class="badge pending">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if job.pass %}
+                                <span class="result pass">✓ PASS</span>
+                                {% else %}
+                                <span class="result fail">✗ FAIL</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="/verify/{{ job.job_id }}" class="action-link">View</a>
+                                <a href="/download/{{ job.job_id }}/pdf" class="action-link">PDF</a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="empty-state">No compilations yet</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Quick Actions Section -->
+        <section class="dashboard-section">
+            <h2>Quick Actions</h2>
+            <div class="actions-grid">
+                <a href="/app" class="action-card">
+                    <div class="action-icon">📤</div>
+                    <h3>New Compilation</h3>
+                    <p>Upload CSV and generate certificate</p>
+                </a>
+                
+                {% if quota.plan == 'free' and quota.total_remaining == 0 %}
+                <a href="/api/buy-single" class="action-card" onclick="buySingleCert(event)">
+                    <div class="action-icon">🎫</div>
+                    <h3>Buy Single Certificate</h3>
+                    <p>€{{ quota.single_cert_price }} per certificate</p>
+                </a>
+                {% endif %}
+                
+                <a href="/examples" class="action-card">
+                    <div class="action-icon">📚</div>
+                    <h3>View Examples</h3>
+                    <p>See sample data and specs</p>
+                </a>
+                
+                <a href="/docs" class="action-card">
+                    <div class="action-icon">📖</div>
+                    <h3>Documentation</h3>
+                    <p>Learn about ProofKit features</p>
+                </a>
+            </div>
+        </section>
+
+        <!-- Usage History Chart -->
+        <section class="dashboard-section">
+            <h2>Usage History</h2>
+            <div class="usage-chart" id="usage-chart">
+                <canvas id="usage-canvas"></canvas>
+            </div>
+        </section>
+    </div>
+
+    <!-- Billing Management Modal -->
+    <div id="billing-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Billing Management</h2>
+                <button onclick="closeBillingModal()" class="close-btn">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="billing-options">
+                    <button onclick="updatePaymentMethod()" class="billing-btn">
+                        💳 Update Payment Method
+                    </button>
+                    <button onclick="downloadInvoices()" class="billing-btn">
+                        📄 Download Invoices
+                    </button>
+                    <button onclick="changePlan()" class="billing-btn">
+                        🔄 Change Plan
+                    </button>
+                    <button onclick="cancelSubscription()" class="billing-btn danger">
+                        ❌ Cancel Subscription
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.dashboard-header {
+    margin-bottom: 2rem;
+}
+
+.dashboard-header h1 {
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.subtitle {
+    color: var(--muted-foreground);
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    position: relative;
+    transition: transform 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.stat-icon {
+    font-size: 2rem;
+    width: 3rem;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary-light);
+    border-radius: 0.5rem;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-content h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted-foreground);
+}
+
+.plan-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-weight: 600;
+    font-size: 1.125rem;
+}
+
+.plan-badge.free {
+    background: #e0e7ff;
+    color: #3730a3;
+}
+
+.plan-badge.starter {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.plan-badge.pro {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.plan-badge.business {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.plan-badge.enterprise {
+    background: #fce7f3;
+    color: #9f1239;
+}
+
+.stat-description {
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+    margin: 0.5rem 0 0 0;
+}
+
+.stat-description.warning {
+    color: var(--warning-color);
+}
+
+.stat-action {
+    position: absolute;
+    bottom: 1.5rem;
+    right: 1.5rem;
+}
+
+.btn-upgrade {
+    background: var(--primary-gradient);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: opacity 0.2s ease;
+}
+
+.btn-upgrade:hover {
+    opacity: 0.9;
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Usage Display */
+.usage-display {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.usage-separator {
+    color: var(--muted-foreground);
+    margin: 0 0.25rem;
+}
+
+.usage-bar {
+    width: 100%;
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    margin-top: 0.5rem;
+    overflow: hidden;
+}
+
+.usage-bar-fill {
+    height: 100%;
+    background: var(--primary-gradient);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+/* Status Badges */
+.status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.status-badge.active {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-badge.inactive {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+/* Dashboard Sections */
+.dashboard-section {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.section-header h2 {
+    margin: 0;
+    color: var(--primary-color);
+}
+
+.view-all-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.view-all-link:hover {
+    text-decoration: underline;
+}
+
+/* Jobs Table */
+.jobs-table {
+    overflow-x: auto;
+}
+
+.jobs-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.jobs-table th {
+    text-align: left;
+    padding: 0.75rem;
+    border-bottom: 2px solid #e5e7eb;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--muted-foreground);
+}
+
+.jobs-table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.job-id {
+    font-family: monospace;
+    font-size: 0.875rem;
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.badge.approved {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.badge.pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.result {
+    font-weight: 600;
+}
+
+.result.pass {
+    color: #16a34a;
+}
+
+.result.fail {
+    color: #dc2626;
+}
+
+.action-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-size: 0.875rem;
+    margin-right: 0.75rem;
+}
+
+.action-link:hover {
+    text-decoration: underline;
+}
+
+.empty-state {
+    text-align: center;
+    color: var(--muted-foreground);
+    padding: 2rem !important;
+}
+
+/* Actions Grid */
+.actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.action-card {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    text-align: center;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s ease;
+}
+
+.action-card:hover {
+    background: white;
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.action-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.action-card h3 {
+    margin: 0.5rem 0;
+    font-size: 1rem;
+    color: var(--primary-color);
+}
+
+.action-card p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+}
+
+/* Usage Chart */
+.usage-chart {
+    height: 300px;
+    padding: 1rem;
+    background: #f9fafb;
+    border-radius: 0.5rem;
+}
+
+/* Modal */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 0.75rem;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-header h2 {
+    margin: 0;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 0;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.375rem;
+    transition: background 0.2s ease;
+}
+
+.close-btn:hover {
+    background: #f3f4f6;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.billing-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.billing-btn {
+    padding: 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    background: white;
+    cursor: pointer;
+    text-align: left;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+}
+
+.billing-btn:hover {
+    background: #f9fafb;
+    border-color: var(--primary-color);
+}
+
+.billing-btn.danger {
+    color: #dc2626;
+    border-color: #fecaca;
+}
+
+.billing-btn.danger:hover {
+    background: #fef2f2;
+    border-color: #dc2626;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .dashboard-container {
+        padding: 1rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .actions-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .jobs-table {
+        font-size: 0.875rem;
+    }
+}
+</style>
+
+<script{% if get_nonce(request) %} nonce="{{ get_nonce(request) }}"{% endif %}>
+// Mock usage data for chart
+const usageData = {
+    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    data: [5, 8, 12, 10, 15, 18]
+};
+
+// Draw simple usage chart
+function drawUsageChart() {
+    const canvas = document.getElementById('usage-canvas');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    const width = canvas.parentElement.offsetWidth;
+    const height = 280;
+    
+    canvas.width = width;
+    canvas.height = height;
+    
+    // Simple bar chart
+    const barWidth = width / usageData.labels.length * 0.6;
+    const spacing = width / usageData.labels.length * 0.4;
+    const maxValue = Math.max(...usageData.data);
+    
+    usageData.data.forEach((value, index) => {
+        const barHeight = (value / maxValue) * (height - 40);
+        const x = index * (barWidth + spacing) + spacing;
+        const y = height - barHeight - 20;
+        
+        // Draw bar
+        ctx.fillStyle = '#667eea';
+        ctx.fillRect(x, y, barWidth, barHeight);
+        
+        // Draw label
+        ctx.fillStyle = '#6b7280';
+        ctx.font = '12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(usageData.labels[index], x + barWidth / 2, height - 5);
+        
+        // Draw value
+        ctx.fillText(value, x + barWidth / 2, y - 5);
+    });
+}
+
+// Billing management functions
+function manageBilling() {
+    document.getElementById('billing-modal').style.display = 'flex';
+}
+
+function closeBillingModal() {
+    document.getElementById('billing-modal').style.display = 'none';
+}
+
+async function updatePaymentMethod() {
+    // Redirect to Stripe customer portal
+    window.location.href = '/api/billing/portal';
+}
+
+async function downloadInvoices() {
+    // Download invoices
+    window.location.href = '/api/billing/invoices';
+}
+
+function changePlan() {
+    window.location.href = '/pricing';
+}
+
+async function cancelSubscription() {
+    if (confirm('Are you sure you want to cancel your subscription? You will be downgraded to the free tier at the end of your billing period.')) {
+        try {
+            const response = await fetch('/api/billing/cancel', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                alert('Subscription cancelled. You will retain access until the end of your billing period.');
+                location.reload();
+            } else {
+                alert('Failed to cancel subscription. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error cancelling subscription:', error);
+            alert('An error occurred. Please try again.');
+        }
+    }
+}
+
+async function buySingleCert(event) {
+    event.preventDefault();
+    
+    try {
+        const response = await fetch('/api/buy-single', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                certificate_count: 1,
+                success_url: window.location.origin + '/dashboard',
+                cancel_url: window.location.origin + '/dashboard'
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            window.location.href = data.checkout_url;
+        } else {
+            alert('Failed to create checkout session. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error buying certificate:', error);
+        alert('An error occurred. Please try again.');
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    drawUsageChart();
+    
+    // Redraw chart on window resize
+    window.addEventListener('resize', function() {
+        drawUsageChart();
+    });
+});
+</script>
+{% endblock %}

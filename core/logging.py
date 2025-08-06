@@ -17,7 +17,7 @@ import sys
 import time
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Callable, IO
 
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -334,3 +334,66 @@ def log_with_context(
     # Get logging method
     log_method = getattr(logger, level.lower(), logger.info)
     log_method(message, extra=extra_fields)
+
+
+def get_request_logger(
+    stream: Optional[IO[str]] = None,
+    request_id_provider: Optional[Callable[[], str]] = None
+) -> logging.Logger:
+    """
+    Factory function to create a logger with JSON formatting for request tracking.
+    
+    Creates a logger configured with JSON formatting and optional custom stream
+    and request ID provider. Useful for testing and custom logging configurations.
+    
+    Args:
+        stream: IO stream for log output (defaults to sys.stdout)
+        request_id_provider: Function to generate request IDs (defaults to uuid4)
+        
+    Returns:
+        logging.Logger: Configured logger with JSON formatting
+        
+    Example:
+        >>> # Production use (defaults)
+        >>> logger = get_request_logger()
+        >>> 
+        >>> # Testing with StringIO
+        >>> from io import StringIO
+        >>> buffer = StringIO()
+        >>> logger = get_request_logger(stream=buffer)
+        >>> 
+        >>> # Fixed request IDs for testing
+        >>> logger = get_request_logger(request_id_provider=lambda: "test-123")
+    """
+    # Use default stream if not provided
+    if stream is None:
+        stream = sys.stdout
+    
+    # Use default request ID provider if not provided
+    if request_id_provider is None:
+        request_id_provider = lambda: str(uuid.uuid4())[:8]
+    
+    # Create unique logger name to avoid conflicts in tests
+    logger_name = f"proofkit.request.{id(stream)}"
+    logger = logging.getLogger(logger_name)
+    
+    # Clear existing handlers to avoid duplicates
+    logger.handlers.clear()
+    
+    # Create JSON formatter
+    formatter = JSONFormatter()
+    
+    # Create handler with custom stream
+    handler = logging.StreamHandler(stream)
+    handler.setFormatter(formatter)
+    handler.setLevel(logging.INFO)
+    
+    # Configure logger
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
+    logger.propagate = False
+    
+    # Store request ID provider for later use
+    logger._request_id_provider = request_id_provider
+    
+    return logger

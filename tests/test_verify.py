@@ -1,584 +1,1164 @@
 """
-ProofKit Bundle Verification Tests
+ProofKit Evidence Bundle Verification Tests
 
-Comprehensive test suite for evidence bundle verification functionality including:
-- Bundle integrity validation
-- Hash verification and tamper detection  
-- Decision re-computation and validation
-- File corruption detection
-- Manifest validation
-- End-to-end verification workflows
+Comprehensive test suite for core.verify module to ensure ≥85% test coverage.
+Tests bundle integrity verification, decision re-computation, tamper detection,
+RFC 3161 timestamp verification, and error handling.
 
-Example usage:
-    pytest tests/test_verify.py -v
+Key testing features:
+- Uses test fixtures for deterministic evidence bundles
+- Tests successful verification workflows
+- Tests various failure scenarios (tampering, missing files, etc.)
+- Tests RFC 3161 timestamp verification with mocked dependencies
+- Comprehensive edge case coverage
 """
 
 import pytest
-import pandas as pd
 import json
-import zipfile
-import hashlib
 import tempfile
+import zipfile
+import shutil
 from pathlib import Path
-from typing import Dict, Any, List
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+from unittest.mock import patch, MagicMock, mock_open
+import pandas as pd
+import hashlib
+import os
 
 from core.verify import (
     verify_evidence_bundle,
-    verify_bundle_integrity,
-    verify_decision_consistency,
-    calculate_manifest_hash,
+    verify_bundle_quick,
     VerificationReport,
-    VerificationError
+    VerificationError,
+    extract_bundle_to_temp,
+    verify_bundle_integrity,
+    recompute_decision,
+    compare_decisions,
+    verify_rfc3161_timestamp,
+    verify_proof_pdf,
+    calculate_manifest_hash,
+    verify_decision_consistency,
+    RFC3161_VERIFICATION_AVAILABLE
 )
-from core.pack import create_evidence_bundle, calculate_content_hash
 from core.models import SpecV1, DecisionResult
-from core.decide import make_decision
-from core.normalize import normalize_temperature_data
+from core.pack import create_evidence_bundle
+from tests.helpers import (
+    load_csv_fixture,
+    load_spec_fixture,
+    load_spec_fixture_validated,
+    compute_sha256_file,
+    create_minimal_zip
+)
+
+
+class TestVerificationReport:
+    """Test VerificationReport class functionality."""
+    
+    def test_verification_report_initialization(self):
+        """Test report initializes with correct defaults."""
+        report = VerificationReport()
+        
+        assert report.bundle_path is None
+        assert report.bundle_exists == False
+        assert report.manifest_found == False
+        assert report.root_hash is None
+        assert report.is_valid == False
+        assert len(report.issues) == 0
+        assert len(report.warnings) == 0
+        assert report.files_total == 0
+        assert report.files_verified == 0
+    
+    def test_verification_report_add_issue(self):
+        """Test adding issues and warnings to report."""
+        report = VerificationReport()
+        
+        # Add regular issue
+        report.add_issue("Test issue 1")
+        assert len(report.issues) == 1
+        assert "Test issue 1" in report.issues
+        assert len(report.warnings) == 0
+        
+        # Add warning
+        report.add_issue("Test warning 1", is_warning=True)
+        assert len(report.issues) == 1
+        assert len(report.warnings) == 1
+        assert "Test warning 1" in report.warnings
+    
+    def test_verification_report_finalize_valid(self):
+        """Test finalize with valid bundle."""
+        report = VerificationReport()
+        
+        # Set up valid state
+        report.bundle_exists = True
+        report.manifest_found = True
+        report.manifest_valid = True
+        report.root_hash = "abc123" * 10  # 60 chars
+        report.root_hash_valid = True
+        report.files_total = 5
+        report.files_verified = 5
+        report.decision_recomputed = True
+        report.decision_matches = True
+        
+        report.finalize()
+        assert report.is_valid == True
+    
+    def test_verification_report_finalize_invalid(self):
+        """Test finalize with various invalid states."""
+        # Test missing manifest
+        report = VerificationReport()
+        report.bundle_exists = True
+        report.manifest_found = False
+        report.finalize()
+        assert report.is_valid == False
+        
+        # Test hash mismatch
+        report = VerificationReport()
+        report.bundle_exists = True
+        report.manifest_found = True
+        report.manifest_valid = True
+        report.root_hash_valid = False
+        report.finalize()
+        assert report.is_valid == False
+        
+        # Test file count mismatch
+        report = VerificationReport()
+        report.bundle_exists = True
+        report.manifest_found = True
+        report.manifest_valid = True
+        report.root_hash_valid = True
+        report.files_total = 5
+        report.files_verified = 3
+        report.finalize()
+        assert report.is_valid == False
+    
+    def test_verification_report_generate_summary(self):
+        """Test summary generation for different states."""
+        # Valid report
+        report = VerificationReport()
+        report.is_valid = True
+        report.root_hash = "abc123def456" * 5
+        summary = report.generate_summary()
+        assert "PASSED" in summary
+        assert "abc123def456" in summary
+        
+        # Invalid report
+        report = VerificationReport()
+        report.is_valid = False
+        report.issues = ["Issue 1", "Issue 2"]
+        report.warnings = ["Warning 1"]
+        summary = report.generate_summary()
+        assert "FAILED" in summary
+        assert "2 issues" in summary
+        assert "1 warnings" in summary
+    
+    def test_verification_report_to_dict(self):
+        """Test converting report to dictionary."""
+        report = VerificationReport()
+        report.bundle_path = "/test/evidence.zip"
+        report.is_valid = True
+        report.root_hash = "test_hash"
+        report.issues = ["Test issue"]
+        report.warnings = ["Test warning"]
+        
+        result_dict = report.to_dict()
+        
+        assert result_dict["bundle_path"] == "/test/evidence.zip"
+        assert result_dict["is_valid"] == True
+        assert result_dict["bundle_integrity"]["root_hash"] == "test_hash"
+        assert "Test issue" in result_dict["issues"]
+        assert "Test warning" in result_dict["warnings"]
+        assert "verification_metadata" in result_dict
+    
+    def test_verification_report_str_representation(self):
+        """Test string representation of report."""
+        report = VerificationReport()
+        report.bundle_path = "/test/evidence.zip"
+        report.is_valid = False
+        report.root_hash = "abc123" * 10
+        report.files_verified = 3
+        report.files_total = 5
+        report.issues = ["Missing files", "Hash mismatch"]
+        
+        str_repr = str(report)
+        
+        assert "ProofKit Evidence Bundle Verification Report" in str_repr
+        assert "Bundle: /test/evidence.zip" in str_repr
+        assert "Status: INVALID" in str_repr
+        assert "Files Verified: 3/5" in str_repr
+        assert "Missing files" in str_repr
+        assert "Hash mismatch" in str_repr
+
+
+class TestBundleExtraction:
+    """Test bundle extraction functionality."""
+    
+    def test_extract_bundle_to_temp_success(self):
+        """Test successful bundle extraction."""
+        # Create a test bundle
+        with tempfile.NamedTemporaryFile(suffix='.zip', delete=False) as tmp:
+            bundle_path = tmp.name
+            
+        try:
+            # Create test ZIP
+            with zipfile.ZipFile(bundle_path, 'w') as zf:
+                zf.writestr("manifest.json", '{"version": "1.0"}')
+                zf.writestr("inputs/data.csv", "timestamp,temp_C\n2024-01-01,170.0")
+                zf.writestr("outputs/proof.pdf", b"PDF content")
+            
+            # Extract bundle
+            temp_dir, extracted_files = extract_bundle_to_temp(bundle_path)
+            
+            assert Path(temp_dir).exists()
+            assert "manifest.json" in extracted_files
+            assert "inputs/data.csv" in extracted_files
+            assert "outputs/proof.pdf" in extracted_files
+            
+            # Check extracted content
+            manifest_path = Path(extracted_files["manifest.json"])
+            assert manifest_path.exists()
+            with open(manifest_path, 'r') as f:
+                data = json.load(f)
+                assert data["version"] == "1.0"
+            
+            # Cleanup
+            shutil.rmtree(temp_dir)
+            
+        finally:
+            os.unlink(bundle_path)
+    
+    def test_extract_bundle_not_found(self):
+        """Test extraction with non-existent bundle."""
+        with pytest.raises(VerificationError, match="Evidence bundle not found"):
+            extract_bundle_to_temp("/nonexistent/bundle.zip")
+    
+    def test_extract_bundle_corrupted(self):
+        """Test extraction with corrupted ZIP."""
+        with tempfile.NamedTemporaryFile(suffix='.zip', delete=False) as tmp:
+            bundle_path = tmp.name
+            # Write invalid ZIP data
+            tmp.write(b"This is not a valid ZIP file")
+        
+        try:
+            with pytest.raises(VerificationError, match="Evidence bundle extraction failed"):
+                extract_bundle_to_temp(bundle_path)
+        finally:
+            os.unlink(bundle_path)
+    
+    def test_extract_bundle_path_traversal(self):
+        """Test extraction prevents path traversal attacks."""
+        with tempfile.NamedTemporaryFile(suffix='.zip', delete=False) as tmp:
+            bundle_path = tmp.name
+        
+        try:
+            # Create ZIP with path traversal attempt
+            with zipfile.ZipFile(bundle_path, 'w') as zf:
+                # Try to write outside extraction directory
+                zf.writestr("../../../etc/passwd", "malicious content")
+            
+            with pytest.raises(VerificationError, match="Unsafe archive path"):
+                extract_bundle_to_temp(bundle_path)
+                
+        finally:
+            os.unlink(bundle_path)
 
 
 class TestBundleIntegrity:
-    """Test evidence bundle integrity validation."""
+    """Test bundle integrity verification."""
     
-    def test_valid_bundle_verification(self, temp_dir, simple_temp_data, example_spec):
-        """Test verification of a valid evidence bundle."""
-        # Create a valid bundle
-        csv_path = temp_dir / "test_data.csv"
-        spec_path = temp_dir / "test_spec.json"
-        bundle_path = temp_dir / "evidence.zip"
-        
-        # Save test data
-        simple_temp_data.to_csv(csv_path, index=False)
-        with open(spec_path, 'w') as f:
-            json.dump(example_spec.model_dump(), f, indent=2)
-        
-        # Create bundle
-        create_evidence_bundle(
-            csv_path=str(csv_path),
-            spec_path=str(spec_path),
-            output_path=str(bundle_path)
-        )
-        
-        # Verify bundle
-        report = verify_evidence_bundle(str(bundle_path))
-        
-        assert isinstance(report, VerificationReport)
-        assert report.is_valid is True
-        assert report.bundle_exists is True
-        assert report.manifest_found is True
-        assert report.manifest_valid is True
-        assert report.decision_matches is True
-        assert len(report.issues) == 0
-        assert report.root_hash is not None
-    
-    def test_missing_bundle_file(self, temp_dir):
-        """Test verification of non-existent bundle."""
-        bundle_path = temp_dir / "nonexistent.zip"
-        
-        report = verify_evidence_bundle(str(bundle_path))
-        
-        assert report.is_valid is False
-        assert report.bundle_exists is False
-        assert "Bundle file not found" in report.issues
-    
-    def test_corrupted_zip_file(self, temp_dir):
-        """Test verification of corrupted ZIP file."""
-        bundle_path = temp_dir / "corrupted.zip"
-        
-        # Create corrupted ZIP file
-        with open(bundle_path, 'wb') as f:
-            f.write(b"This is not a valid ZIP file")
-        
-        report = verify_evidence_bundle(str(bundle_path))
-        
-        assert report.is_valid is False
-        assert "Invalid ZIP file" in " ".join(report.issues)
-    
-    def test_missing_manifest(self, temp_dir, simple_temp_data, example_spec):
-        """Test verification of bundle without manifest."""
-        bundle_path = temp_dir / "no_manifest.zip"
-        
-        # Create ZIP without manifest
-        with zipfile.ZipFile(bundle_path, 'w') as zf:
-            # Add some files but no manifest
-            zf.writestr("data.csv", simple_temp_data.to_csv(index=False))
-            zf.writestr("spec.json", json.dumps(example_spec.model_dump(), indent=2))
-        
-        report = verify_evidence_bundle(str(bundle_path))
-        
-        assert report.is_valid is False
-        assert report.manifest_found is False
-        assert "Manifest not found" in " ".join(report.issues)
-    
-    def test_invalid_manifest_format(self, temp_dir, simple_temp_data, example_spec):
-        """Test verification of bundle with invalid manifest."""
-        bundle_path = temp_dir / "invalid_manifest.zip"
-        
-        # Create ZIP with invalid manifest
-        with zipfile.ZipFile(bundle_path, 'w') as zf:
-            zf.writestr("data.csv", simple_temp_data.to_csv(index=False))
-            zf.writestr("spec.json", json.dumps(example_spec.model_dump(), indent=2))
-            zf.writestr("manifest.json", "This is not valid JSON")
-        
-        report = verify_evidence_bundle(str(bundle_path))
-        
-        assert report.is_valid is False
-        assert report.manifest_valid is False
-        assert "Invalid manifest format" in " ".join(report.issues)
-
-
-class TestHashVerification:
-    """Test file hash verification and tamper detection."""
-    
-    def test_hash_calculation_consistency(self, temp_dir, simple_temp_data):
-        """Test that hash calculations are consistent."""
-        csv_path = temp_dir / "test_data.csv"
-        simple_temp_data.to_csv(csv_path, index=False)
-        
-        # Calculate hash twice
-        hash1 = calculate_content_hash(str(csv_path))
-        hash2 = calculate_content_hash(str(csv_path))
-        
-        assert hash1 == hash2
-        assert isinstance(hash1, str)
-        assert len(hash1) > 0
-    
-    def test_hash_detects_tampering(self, temp_dir, simple_temp_data, example_spec):
-        """Test that hash verification detects file tampering."""
-        csv_path = temp_dir / "test_data.csv"
-        spec_path = temp_dir / "test_spec.json"
-        bundle_path = temp_dir / "evidence.zip"
-        
-        # Create original bundle
-        simple_temp_data.to_csv(csv_path, index=False)
-        with open(spec_path, 'w') as f:
-            json.dump(example_spec.model_dump(), f, indent=2)
-        
-        create_evidence_bundle(
-            csv_path=str(csv_path),
-            spec_path=str(spec_path),
-            output_path=str(bundle_path)
-        )
-        
-        # Tamper with the bundle by modifying a file inside
-        with zipfile.ZipFile(bundle_path, 'a') as zf:
-            # Overwrite data with modified content
-            modified_data = simple_temp_data.copy()
-            modified_data.iloc[0, 1] = 999.9  # Change first temperature value
-            zf.writestr("data.csv", modified_data.to_csv(index=False))
-        
-        # Verification should detect tampering
-        report = verify_evidence_bundle(str(bundle_path))
-        
-        assert report.is_valid is False
-        assert "Hash mismatch" in " ".join(report.issues) or "tamper" in " ".join(report.issues).lower()
-    
-    def test_manifest_hash_validation(self, temp_dir, simple_temp_data, example_spec):
-        """Test manifest hash validation against file contents."""
-        # Create test files
-        csv_path = temp_dir / "test_data.csv"
-        spec_path = temp_dir / "test_spec.json"
-        
-        simple_temp_data.to_csv(csv_path, index=False)
-        with open(spec_path, 'w') as f:
-            json.dump(example_spec.model_dump(), f, indent=2)
-        
-        # Calculate expected hashes
-        csv_hash = calculate_content_hash(str(csv_path))
-        spec_hash = calculate_content_hash(str(spec_path))
-        
-        # Create manifest
-        manifest = {
-            "version": "1.0",
-            "created_at": datetime.now(timezone.utc).isoformat(),
-            "files": {
-                "data.csv": {"hash": csv_hash, "size": csv_path.stat().st_size},
-                "spec.json": {"hash": spec_hash, "size": spec_path.stat().st_size}
-            }
-        }
-        
-        manifest_hash = calculate_manifest_hash(manifest)
-        
-        # Hash should be deterministic
-        manifest_hash2 = calculate_manifest_hash(manifest)
-        assert manifest_hash == manifest_hash2
-
-
-class TestDecisionConsistency:
-    """Test decision re-computation and consistency validation."""
-    
-    def test_decision_recomputation_matches(self, temp_dir, simple_temp_data, example_spec):
-        """Test that re-computed decisions match original."""
-        # Create bundle with decision
-        csv_path = temp_dir / "test_data.csv"
-        spec_path = temp_dir / "test_spec.json"
-        bundle_path = temp_dir / "evidence.zip"
-        
-        simple_temp_data.to_csv(csv_path, index=False)
-        with open(spec_path, 'w') as f:
-            json.dump(example_spec.model_dump(), f, indent=2)
-        
-        create_evidence_bundle(
-            csv_path=str(csv_path),
-            spec_path=str(spec_path),
-            output_path=str(bundle_path)
-        )
-        
-        # Verify decision consistency
-        report = verify_evidence_bundle(str(bundle_path))
-        
-        assert report.decision_matches is True
-        assert report.original_decision is not None
-        assert report.recomputed_decision is not None
-        assert report.original_decision.pass_ == report.recomputed_decision.pass_
-        assert abs(report.original_decision.actual_hold_time_s - 
-                  report.recomputed_decision.actual_hold_time_s) < 1.0
-    
-    def test_decision_mismatch_detection(self, temp_dir, simple_temp_data, example_spec):
-        """Test detection of decision mismatches."""
-        # Create bundle
-        csv_path = temp_dir / "test_data.csv"
-        spec_path = temp_dir / "test_spec.json"
-        bundle_path = temp_dir / "evidence.zip"
-        
-        simple_temp_data.to_csv(csv_path, index=False)
-        with open(spec_path, 'w') as f:
-            json.dump(example_spec.model_dump(), f, indent=2)
-        
-        # Create bundle manually to inject wrong decision
-        original_decision = make_decision(simple_temp_data, example_spec)
-        
-        # Create fake decision with different result
-        fake_decision = DecisionResult(
-            pass_=not original_decision.pass_,  # Flip the result
-            job_id=original_decision.job_id,
-            target_temp_C=original_decision.target_temp_C,
-            conservative_threshold_C=original_decision.conservative_threshold_C,
-            actual_hold_time_s=100.0,  # Wrong value
-            required_hold_time_s=original_decision.required_hold_time_s,
-            max_temp_C=original_decision.max_temp_C,
-            min_temp_C=original_decision.min_temp_C,
-            reasons=["Fake decision for testing"],
-            warnings=[]
-        )
-        
-        # Create bundle with fake decision
-        with zipfile.ZipFile(bundle_path, 'w') as zf:
-            zf.writestr("data.csv", simple_temp_data.to_csv(index=False))
-            zf.writestr("spec.json", json.dumps(example_spec.model_dump(), indent=2))
-            zf.writestr("decision.json", json.dumps(fake_decision.model_dump(), indent=2))
+    def test_verify_bundle_integrity_valid(self):
+        """Test integrity verification with valid bundle."""
+        # Create extracted files structure
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
             
             # Create manifest
             manifest = {
                 "version": "1.0",
-                "created_at": datetime.now(timezone.utc).isoformat(),
+                "created_at": "2024-01-01T00:00:00Z",
+                "metadata": {"job_id": "test"},
                 "files": {
-                    "data.csv": {"hash": "dummy_hash", "size": 1000},
-                    "spec.json": {"hash": "dummy_hash", "size": 500},
-                    "decision.json": {"hash": "dummy_hash", "size": 300}
-                }
+                    "inputs/data.csv": {
+                        "sha256": hashlib.sha256(b"csv_content").hexdigest(),
+                        "size_bytes": 11
+                    },
+                    "outputs/proof.pdf": {
+                        "sha256": hashlib.sha256(b"pdf_content").hexdigest(),
+                        "size_bytes": 11
+                    }
+                },
+                "root_hash": ""  # Will calculate
             }
-            zf.writestr("manifest.json", json.dumps(manifest, indent=2))
-        
-        # Verification should detect decision mismatch
-        report = verify_evidence_bundle(str(bundle_path))
-        
-        assert report.decision_matches is False
-        assert "Decision mismatch" in " ".join(report.issues)
+            
+            # Calculate root hash
+            file_hashes = [
+                manifest["files"]["inputs/data.csv"]["sha256"],
+                manifest["files"]["outputs/proof.pdf"]["sha256"]
+            ]
+            root_hash = hashlib.sha256("".join(file_hashes).encode()).hexdigest()
+            manifest["root_hash"] = root_hash
+            
+            # Write manifest
+            manifest_path = temp_path / "manifest.json"
+            with open(manifest_path, 'w') as f:
+                json.dump(manifest, f)
+            
+            # Write data files
+            data_path = temp_path / "inputs" / "data.csv"
+            data_path.parent.mkdir(parents=True)
+            data_path.write_bytes(b"csv_content")
+            
+            pdf_path = temp_path / "outputs" / "proof.pdf"
+            pdf_path.parent.mkdir(parents=True)
+            pdf_path.write_bytes(b"pdf_content")
+            
+            # Create extracted files mapping
+            extracted_files = {
+                "manifest.json": str(manifest_path),
+                "inputs/data.csv": str(data_path),
+                "outputs/proof.pdf": str(pdf_path)
+            }
+            
+            # Verify integrity
+            valid, details = verify_bundle_integrity("test.zip", extracted_files)
+            
+            assert valid == True
+            assert details["manifest_found"] == True
+            assert details["manifest_valid"] == True
+            assert details["root_hash"] == root_hash
+            assert details["root_hash_valid"] == True
+            assert details["files_total"] == 2
+            assert details["files_verified"] == 2
+            assert len(details["missing_files"]) == 0
+            assert len(details["hash_mismatches"]) == 0
     
-    def test_missing_decision_file(self, temp_dir, simple_temp_data, example_spec):
-        """Test verification of bundle missing decision file."""
-        bundle_path = temp_dir / "no_decision.zip"
+    def test_verify_bundle_integrity_missing_manifest(self):
+        """Test integrity verification with missing manifest."""
+        extracted_files = {
+            "inputs/data.csv": "/tmp/data.csv",
+            "outputs/proof.pdf": "/tmp/proof.pdf"
+        }
         
-        # Create ZIP without decision file
-        with zipfile.ZipFile(bundle_path, 'w') as zf:
-            zf.writestr("data.csv", simple_temp_data.to_csv(index=False))
-            zf.writestr("spec.json", json.dumps(example_spec.model_dump(), indent=2))
+        valid, details = verify_bundle_integrity("test.zip", extracted_files)
+        
+        assert valid == False
+        assert details["manifest_found"] == False
+    
+    def test_verify_bundle_integrity_hash_mismatch(self):
+        """Test integrity verification with hash mismatch."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            
+            # Create manifest with wrong hash
+            manifest = {
+                "version": "1.0",
+                "files": {
+                    "inputs/data.csv": {
+                        "sha256": "wrong_hash_value" * 4,  # 64 chars
+                        "size_bytes": 11
+                    }
+                },
+                "root_hash": "also_wrong_hash" * 4
+            }
+            
+            manifest_path = temp_path / "manifest.json"
+            with open(manifest_path, 'w') as f:
+                json.dump(manifest, f)
+            
+            data_path = temp_path / "inputs" / "data.csv"
+            data_path.parent.mkdir(parents=True)
+            data_path.write_bytes(b"csv_content")
+            
+            extracted_files = {
+                "manifest.json": str(manifest_path),
+                "inputs/data.csv": str(data_path)
+            }
+            
+            valid, details = verify_bundle_integrity("test.zip", extracted_files)
+            
+            assert valid == False
+            assert len(details["hash_mismatches"]) == 1
+            assert details["hash_mismatches"][0]["file"] == "inputs/data.csv"
+    
+    def test_verify_bundle_integrity_missing_file(self):
+        """Test integrity verification with missing file."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
             
             manifest = {
                 "version": "1.0",
-                "created_at": datetime.now(timezone.utc).isoformat(),
                 "files": {
-                    "data.csv": {"hash": "dummy_hash", "size": 1000},
-                    "spec.json": {"hash": "dummy_hash", "size": 500}
-                }
+                    "inputs/data.csv": {
+                        "sha256": "some_hash" * 8,
+                        "size_bytes": 100
+                    }
+                },
+                "root_hash": "root_hash" * 8
             }
-            zf.writestr("manifest.json", json.dumps(manifest, indent=2))
-        
-        report = verify_evidence_bundle(str(bundle_path))
-        
-        assert report.is_valid is False
-        assert "Decision file not found" in " ".join(report.issues)
-
-
-class TestCorruptionDetection:
-    """Test detection of various types of data corruption."""
+            
+            manifest_path = temp_path / "manifest.json"
+            with open(manifest_path, 'w') as f:
+                json.dump(manifest, f)
+            
+            extracted_files = {
+                "manifest.json": str(manifest_path)
+                # Missing inputs/data.csv
+            }
+            
+            valid, details = verify_bundle_integrity("test.zip", extracted_files)
+            
+            assert valid == False
+            assert "inputs/data.csv" in details["missing_files"]
     
-    def test_csv_structure_corruption(self, temp_dir, example_spec):
-        """Test detection of CSV structure corruption."""
-        bundle_path = temp_dir / "corrupt_csv.zip"
-        
-        # Create bundle with corrupted CSV
-        corrupted_csv = "timestamp,temp1,temp2\nThis is not valid CSV data\n123,abc,def"
-        
-        with zipfile.ZipFile(bundle_path, 'w') as zf:
-            zf.writestr("data.csv", corrupted_csv)
-            zf.writestr("spec.json", json.dumps(example_spec.model_dump(), indent=2))
+    def test_verify_bundle_integrity_extra_files(self):
+        """Test integrity verification detects extra files."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
             
             manifest = {
                 "version": "1.0",
-                "created_at": datetime.now(timezone.utc).isoformat(),
-                "files": {
-                    "data.csv": {"hash": hashlib.sha256(corrupted_csv.encode()).hexdigest(), "size": len(corrupted_csv)},
-                    "spec.json": {"hash": "dummy_hash", "size": 500}
-                }
+                "files": {},
+                "root_hash": hashlib.sha256(b"").hexdigest()
             }
-            zf.writestr("manifest.json", json.dumps(manifest, indent=2))
-        
-        report = verify_evidence_bundle(str(bundle_path))
-        
-        assert report.is_valid is False
-        assert any("CSV" in issue or "data" in issue for issue in report.issues)
-    
-    def test_spec_corruption(self, temp_dir, simple_temp_data):
-        """Test detection of specification file corruption."""
-        bundle_path = temp_dir / "corrupt_spec.zip"
-        
-        # Create bundle with corrupted spec
-        corrupted_spec = "This is not valid JSON for a specification"
-        
-        with zipfile.ZipFile(bundle_path, 'w') as zf:
-            zf.writestr("data.csv", simple_temp_data.to_csv(index=False))
-            zf.writestr("spec.json", corrupted_spec)
             
-            manifest = {
-                "version": "1.0",
-                "created_at": datetime.now(timezone.utc).isoformat(),
-                "files": {
-                    "data.csv": {"hash": "dummy_hash", "size": 1000},
-                    "spec.json": {"hash": hashlib.sha256(corrupted_spec.encode()).hexdigest(), "size": len(corrupted_spec)}
-                }
+            manifest_path = temp_path / "manifest.json"
+            with open(manifest_path, 'w') as f:
+                json.dump(manifest, f)
+            
+            extra_path = temp_path / "extra_file.txt"
+            extra_path.write_text("should not be here")
+            
+            extracted_files = {
+                "manifest.json": str(manifest_path),
+                "extra_file.txt": str(extra_path)  # Not in manifest
             }
-            zf.writestr("manifest.json", json.dumps(manifest, indent=2))
-        
-        report = verify_evidence_bundle(str(bundle_path))
-        
-        assert report.is_valid is False
-        assert any("spec" in issue.lower() or "json" in issue.lower() for issue in report.issues)
-    
-    def test_size_mismatch_detection(self, temp_dir, simple_temp_data, example_spec):
-        """Test detection of file size mismatches."""
-        bundle_path = temp_dir / "size_mismatch.zip"
-        csv_content = simple_temp_data.to_csv(index=False)
-        spec_content = json.dumps(example_spec.model_dump(), indent=2)
-        
-        with zipfile.ZipFile(bundle_path, 'w') as zf:
-            zf.writestr("data.csv", csv_content)
-            zf.writestr("spec.json", spec_content)
             
-            # Create manifest with wrong file sizes
-            manifest = {
-                "version": "1.0",
-                "created_at": datetime.now(timezone.utc).isoformat(),
-                "files": {
-                    "data.csv": {"hash": hashlib.sha256(csv_content.encode()).hexdigest(), "size": 999999},  # Wrong size
-                    "spec.json": {"hash": hashlib.sha256(spec_content.encode()).hexdigest(), "size": len(spec_content)}
-                }
-            }
-            zf.writestr("manifest.json", json.dumps(manifest, indent=2))
-        
-        report = verify_evidence_bundle(str(bundle_path))
-        
-        assert report.is_valid is False
-        assert any("size" in issue.lower() for issue in report.issues)
-
-
-class TestVerificationReport:
-    """Test VerificationReport functionality."""
-    
-    def test_report_structure(self, temp_dir, simple_temp_data, example_spec):
-        """Test verification report structure and contents."""
-        # Create valid bundle
-        csv_path = temp_dir / "test_data.csv"
-        spec_path = temp_dir / "test_spec.json"
-        bundle_path = temp_dir / "evidence.zip"
-        
-        simple_temp_data.to_csv(csv_path, index=False)
-        with open(spec_path, 'w') as f:
-            json.dump(example_spec.model_dump(), f, indent=2)
-        
-        create_evidence_bundle(
-            csv_path=str(csv_path),
-            spec_path=str(spec_path),
-            output_path=str(bundle_path)
-        )
-        
-        report = verify_evidence_bundle(str(bundle_path))
-        
-        # Check all expected attributes
-        assert hasattr(report, 'bundle_path')
-        assert hasattr(report, 'timestamp')
-        assert hasattr(report, 'bundle_exists')
-        assert hasattr(report, 'manifest_found')
-        assert hasattr(report, 'manifest_valid')
-        assert hasattr(report, 'root_hash')
-        assert hasattr(report, 'file_hashes_valid')
-        assert hasattr(report, 'decision_matches')
-        assert hasattr(report, 'original_decision')
-        assert hasattr(report, 'recomputed_decision')
-        assert hasattr(report, 'is_valid')
-        assert hasattr(report, 'issues')
-        assert hasattr(report, 'warnings')
-        
-        # Check report validity summary
-        assert report.is_valid == (len(report.issues) == 0)
-    
-    def test_report_serialization(self, temp_dir, simple_temp_data, example_spec):
-        """Test that verification reports can be serialized."""
-        csv_path = temp_dir / "test_data.csv"
-        spec_path = temp_dir / "test_spec.json"
-        bundle_path = temp_dir / "evidence.zip"
-        
-        simple_temp_data.to_csv(csv_path, index=False)
-        with open(spec_path, 'w') as f:
-            json.dump(example_spec.model_dump(), f, indent=2)
-        
-        create_evidence_bundle(
-            csv_path=str(csv_path),
-            spec_path=str(spec_path),
-            output_path=str(bundle_path)
-        )
-        
-        report = verify_evidence_bundle(str(bundle_path))
-        
-        # Should be able to convert to dictionary
-        report_dict = report.to_dict()
-        assert isinstance(report_dict, dict)
-        assert 'bundle_path' in report_dict
-        assert 'is_valid' in report_dict
-        assert 'issues' in report_dict
-    
-    def test_report_summary_generation(self, temp_dir, simple_temp_data, example_spec):
-        """Test generation of verification report summaries."""
-        csv_path = temp_dir / "test_data.csv"
-        spec_path = temp_dir / "test_spec.json"
-        bundle_path = temp_dir / "evidence.zip"
-        
-        simple_temp_data.to_csv(csv_path, index=False)
-        with open(spec_path, 'w') as f:
-            json.dump(example_spec.model_dump(), f, indent=2)
-        
-        create_evidence_bundle(
-            csv_path=str(csv_path),
-            spec_path=str(spec_path),
-            output_path=str(bundle_path)
-        )
-        
-        report = verify_evidence_bundle(str(bundle_path))
-        summary = report.generate_summary()
-        
-        assert isinstance(summary, str)
-        assert len(summary) > 0
-        assert "verification" in summary.lower()
-        if report.is_valid:
-            assert "valid" in summary.lower() or "pass" in summary.lower()
-        else:
-            assert "invalid" in summary.lower() or "fail" in summary.lower()
-
-
-class TestEndToEndVerification:
-    """Test complete end-to-end verification workflows."""
-    
-    def test_complete_workflow_pass(self, temp_dir, simple_temp_data, example_spec):
-        """Test complete verification workflow with passing data."""
-        # Create and verify bundle
-        csv_path = temp_dir / "passing_data.csv"
-        spec_path = temp_dir / "spec.json"
-        bundle_path = temp_dir / "evidence.zip"
-        
-        simple_temp_data.to_csv(csv_path, index=False)
-        with open(spec_path, 'w') as f:
-            json.dump(example_spec.model_dump(), f, indent=2)
-        
-        create_evidence_bundle(
-            csv_path=str(csv_path),
-            spec_path=str(spec_path),
-            output_path=str(bundle_path)
-        )
-        
-        report = verify_evidence_bundle(str(bundle_path))
-        
-        # All checks should pass
-        assert report.is_valid is True
-        assert report.bundle_exists is True
-        assert report.manifest_found is True
-        assert report.manifest_valid is True
-        assert report.file_hashes_valid is True
-        assert report.decision_matches is True
-        assert len(report.issues) == 0
-        
-        # Decision should be PASS
-        assert report.original_decision.pass_ is True
-        assert report.recomputed_decision.pass_ is True
-    
-    def test_complete_workflow_fail(self, temp_dir, failing_temp_data, example_spec):
-        """Test complete verification workflow with failing data."""
-        csv_path = temp_dir / "failing_data.csv"
-        spec_path = temp_dir / "spec.json"
-        bundle_path = temp_dir / "evidence.zip"
-        
-        failing_temp_data.to_csv(csv_path, index=False)
-        with open(spec_path, 'w') as f:
-            json.dump(example_spec.model_dump(), f, indent=2)
-        
-        create_evidence_bundle(
-            csv_path=str(csv_path),
-            spec_path=str(spec_path),
-            output_path=str(bundle_path)
-        )
-        
-        report = verify_evidence_bundle(str(bundle_path))
-        
-        # Bundle should be valid but decision should be FAIL
-        assert report.is_valid is True
-        assert report.decision_matches is True
-        assert report.original_decision.pass_ is False
-        assert report.recomputed_decision.pass_ is False
-    
-    def test_multiple_bundle_verification(self, temp_dir, simple_temp_data, failing_temp_data, example_spec):
-        """Test verification of multiple bundles."""
-        bundles = []
-        
-        # Create multiple bundles
-        for i, data in enumerate([simple_temp_data, failing_temp_data]):
-            csv_path = temp_dir / f"data_{i}.csv"
-            spec_path = temp_dir / f"spec_{i}.json"
-            bundle_path = temp_dir / f"evidence_{i}.zip"
+            valid, details = verify_bundle_integrity("test.zip", extracted_files)
             
-            data.to_csv(csv_path, index=False)
+            assert "extra_file.txt" in details["extra_files"]
+
+
+class TestDecisionRecomputation:
+    """Test decision algorithm re-computation."""
+    
+    def test_recompute_decision_success(self):
+        """Test successful decision recomputation."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            
+            # Create directory structure
+            inputs_dir = temp_path / "inputs"
+            outputs_dir = temp_path / "outputs"
+            inputs_dir.mkdir()
+            outputs_dir.mkdir()
+            
+            # Copy test fixtures
+            csv_fixture = load_csv_fixture("min_powder.csv")
+            csv_path = inputs_dir / "raw_data.csv"
+            csv_fixture.to_csv(csv_path, index=False)
+            
+            spec_data = load_spec_fixture("min_powder_spec.json")
+            spec_path = inputs_dir / "specification.json"
             with open(spec_path, 'w') as f:
-                json.dump(example_spec.model_dump(), f, indent=2)
+                json.dump(spec_data, f)
             
+            # Create decision file
+            decision_data = {
+                "job_id": "test",
+                "pass_": True,
+                "target_temp_C": 170.0,
+                "conservative_threshold_C": 172.0,
+                "required_hold_time_s": 480,
+                "actual_hold_time_s": 510,
+                "max_temp_C": 174.5,
+                "min_temp_C": 168.0,
+                "reasons": []
+            }
+            decision_path = outputs_dir / "decision.json"
+            with open(decision_path, 'w') as f:
+                json.dump(decision_data, f)
+            
+            extracted_files = {
+                "inputs/raw_data.csv": str(csv_path),
+                "inputs/specification.json": str(spec_path),
+                "outputs/decision.json": str(decision_path)
+            }
+            
+            # Recompute decision
+            success, decision, issues = recompute_decision(extracted_files)
+            
+            assert success == True
+            assert decision is not None
+            assert isinstance(decision, DecisionResult)
+            assert len(issues) == 0
+    
+    def test_recompute_decision_missing_files(self):
+        """Test decision recomputation with missing files."""
+        extracted_files = {
+            "inputs/raw_data.csv": "/tmp/data.csv"
+            # Missing specification.json and decision.json
+        }
+        
+        success, decision, issues = recompute_decision(extracted_files)
+        
+        assert success == False
+        assert decision is None
+        assert len(issues) > 0
+        assert any("specification" in issue for issue in issues)
+    
+    def test_recompute_decision_invalid_spec(self):
+        """Test decision recomputation with invalid specification."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            
+            # Create files
+            csv_path = temp_path / "raw_data.csv"
+            csv_path.write_text("timestamp,temp_C\n2024-01-01,170")
+            
+            spec_path = temp_path / "specification.json"
+            spec_path.write_text('{"invalid": "spec"}')  # Invalid spec format
+            
+            decision_path = temp_path / "decision.json"
+            decision_path.write_text('{"job_id": "test"}')
+            
+            extracted_files = {
+                "inputs/raw_data.csv": str(csv_path),
+                "inputs/specification.json": str(spec_path),
+                "outputs/decision.json": str(decision_path)
+            }
+            
+            success, decision, issues = recompute_decision(extracted_files)
+            
+            assert success == False
+            assert decision is None
+            assert any("Invalid specification" in issue for issue in issues)
+    
+    def test_recompute_decision_normalization_failure(self):
+        """Test decision recomputation with data normalization failure."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            
+            # Create invalid CSV data
+            csv_path = temp_path / "raw_data.csv"
+            csv_path.write_text("invalid,csv,format\nno,temp,data")
+            
+            spec_data = load_spec_fixture("min_powder_spec.json")
+            spec_path = temp_path / "specification.json"
+            with open(spec_path, 'w') as f:
+                json.dump(spec_data, f)
+            
+            decision_path = temp_path / "decision.json"
+            decision_path.write_text('{"job_id": "test"}')
+            
+            extracted_files = {
+                "inputs/raw_data.csv": str(csv_path),
+                "inputs/specification.json": str(spec_path),
+                "outputs/decision.json": str(decision_path)
+            }
+            
+            success, decision, issues = recompute_decision(extracted_files)
+            
+            assert success == False
+            assert decision is None
+            assert any("normalization failed" in issue for issue in issues)
+
+
+class TestDecisionComparison:
+    """Test decision comparison functionality."""
+    
+    def test_compare_decisions_identical(self):
+        """Test comparing identical decisions."""
+        decision1 = DecisionResult(
+            job_id="test",
+            pass_=True,
+            target_temp_C=170.0,
+            conservative_threshold_C=172.0,
+            required_hold_time_s=480,
+            actual_hold_time_s=510.5,
+            max_temp_C=174.5,
+            min_temp_C=168.0,
+            reasons=["All requirements met"]
+        )
+        
+        decision2 = DecisionResult(
+            job_id="test",
+            pass_=True,
+            target_temp_C=170.0,
+            conservative_threshold_C=172.0,
+            required_hold_time_s=480,
+            actual_hold_time_s=510.5,
+            max_temp_C=174.5,
+            min_temp_C=168.0,
+            reasons=["All requirements met"]
+        )
+        
+        match, discrepancies = compare_decisions(decision1, decision2)
+        
+        assert match == True
+        assert len(discrepancies) == 0
+    
+    def test_compare_decisions_pass_fail_mismatch(self):
+        """Test comparing decisions with different pass/fail status."""
+        decision1 = DecisionResult(
+            job_id="test",
+            pass_=True,
+            target_temp_C=170.0,
+            conservative_threshold_C=172.0,
+            required_hold_time_s=480,
+            actual_hold_time_s=510,
+            max_temp_C=174.5,
+            min_temp_C=168.0
+        )
+        
+        decision2 = decision1.model_copy()
+        decision2.pass_ = False
+        
+        match, discrepancies = compare_decisions(decision1, decision2)
+        
+        assert match == False
+        assert len(discrepancies) > 0
+        assert any("Pass/Fail status" in d for d in discrepancies)
+    
+    def test_compare_decisions_numerical_tolerance(self):
+        """Test numerical tolerance in decision comparison."""
+        decision1 = DecisionResult(
+            job_id="test",
+            pass_=True,
+            target_temp_C=170.0,
+            conservative_threshold_C=172.0,
+            required_hold_time_s=480,
+            actual_hold_time_s=510.0,
+            max_temp_C=174.5,
+            min_temp_C=168.0
+        )
+        
+        # Small difference within tolerance
+        decision2 = decision1.model_copy()
+        decision2.actual_hold_time_s = 510.05  # 0.05 difference < 0.1 tolerance
+        
+        match, discrepancies = compare_decisions(decision1, decision2)
+        assert match == True
+        assert len(discrepancies) == 0
+        
+        # Large difference outside tolerance
+        decision3 = decision1.model_copy()
+        decision3.actual_hold_time_s = 511.0  # 1.0 difference > 0.1 tolerance
+        
+        match, discrepancies = compare_decisions(decision1, decision3)
+        assert match == False
+        assert any("Actual hold time" in d for d in discrepancies)
+    
+    def test_compare_decisions_different_reasons(self):
+        """Test comparing decisions with different reasons."""
+        decision1 = DecisionResult(
+            job_id="test",
+            pass_=False,
+            target_temp_C=170.0,
+            conservative_threshold_C=172.0,
+            required_hold_time_s=480,
+            actual_hold_time_s=300,
+            max_temp_C=171.0,
+            min_temp_C=168.0,
+            reasons=["Temperature below threshold", "Insufficient hold time"]
+        )
+        
+        decision2 = decision1.model_copy()
+        decision2.reasons = ["Temperature below threshold", "Data quality issues"]
+        
+        match, discrepancies = compare_decisions(decision1, decision2)
+        
+        assert match == False
+        assert any("Missing reasons" in d for d in discrepancies)
+        assert any("Extra reasons" in d for d in discrepancies)
+    
+    def test_verify_decision_consistency_alias(self):
+        """Test verify_decision_consistency is an alias for compare_decisions."""
+        decision1 = DecisionResult(
+            job_id="test",
+            pass_=True,
+            target_temp_C=170.0,
+            conservative_threshold_C=172.0,
+            required_hold_time_s=480,
+            actual_hold_time_s=510,
+            max_temp_C=174.5,
+            min_temp_C=168.0
+        )
+        
+        decision2 = decision1.model_copy()
+        
+        # Both functions should return identical results
+        match1, disc1 = compare_decisions(decision1, decision2)
+        match2, disc2 = verify_decision_consistency(decision1, decision2)
+        
+        assert match1 == match2
+        assert disc1 == disc2
+
+
+class TestRFC3161Verification:
+    """Test RFC 3161 timestamp verification."""
+    
+    def test_verify_rfc3161_timestamp_not_available(self):
+        """Test RFC 3161 verification when libraries not available."""
+        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
+            pdf_path = tmp.name
+            tmp.write(b"PDF content")
+        
+        try:
+            with patch('core.verify.RFC3161_VERIFICATION_AVAILABLE', False):
+                valid, details = verify_rfc3161_timestamp(pdf_path)
+                
+                assert valid == False
+                assert details["rfc3161_found"] == False
+                assert "not available" in details["rfc3161_issues"][0]
+        finally:
+            os.unlink(pdf_path)
+    
+    @pytest.mark.skipif(not RFC3161_VERIFICATION_AVAILABLE, reason="RFC3161 libs not available")
+    def test_verify_rfc3161_timestamp_found(self):
+        """Test RFC 3161 verification with timestamp found."""
+        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
+            pdf_path = tmp.name
+        
+        try:
+            # Mock PyPDF2 reader
+            mock_metadata = {
+                '/CreationDate': f'D:{datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")}',
+                '/Title': 'Test PDF with timestamp'
+            }
+            
+            with patch('PyPDF2.PdfReader') as mock_reader_class:
+                mock_reader = MagicMock()
+                mock_reader.metadata = mock_metadata
+                mock_reader_class.return_value = mock_reader
+                
+                valid, details = verify_rfc3161_timestamp(pdf_path, grace_period_s=86400)
+                
+                # Should find timestamp in metadata
+                assert details["rfc3161_found"] == True
+                assert details["rfc3161_timestamp"] is not None
+        finally:
+            os.unlink(pdf_path)
+    
+    def test_verify_rfc3161_timestamp_no_metadata(self):
+        """Test RFC 3161 verification with no PDF metadata."""
+        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
+            pdf_path = tmp.name
+        
+        try:
+            with patch('PyPDF2.PdfReader') as mock_reader_class:
+                mock_reader = MagicMock()
+                mock_reader.metadata = None
+                mock_reader_class.return_value = mock_reader
+                
+                valid, details = verify_rfc3161_timestamp(pdf_path)
+                
+                assert valid == False
+                assert details["rfc3161_found"] == False
+                assert "No PDF metadata found" in details["rfc3161_issues"][0]
+        finally:
+            os.unlink(pdf_path)
+    
+    def test_verify_proof_pdf_basic(self):
+        """Test basic PDF verification."""
+        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
+            pdf_path = tmp.name
+            tmp.write(b"PDF test content")
+        
+        try:
+            result = verify_proof_pdf(pdf_path)
+            
+            assert result is not None
+            assert result["valid"] == True
+            assert result["file_size"] == 16
+            assert "verified_at" in result
+        finally:
+            os.unlink(pdf_path)
+    
+    def test_verify_proof_pdf_not_found(self):
+        """Test PDF verification with non-existent file."""
+        result = verify_proof_pdf("/nonexistent/file.pdf")
+        
+        assert result["valid"] == False
+        assert result["error"] == "PDF file not found"
+
+
+class TestManifestHash:
+    """Test manifest hash calculation."""
+    
+    def test_calculate_manifest_hash(self):
+        """Test calculating hash of manifest."""
+        manifest = {
+            "version": "1.0",
+            "created_at": "2024-01-01T00:00:00Z",
+            "files": {
+                "test.txt": {"sha256": "abc123", "size": 100}
+            },
+            "root_hash": "xyz789"  # Should be excluded from hash
+        }
+        
+        hash1 = calculate_manifest_hash(manifest)
+        assert len(hash1) == 64  # SHA-256 hash length
+        
+        # Same manifest should produce same hash
+        hash2 = calculate_manifest_hash(manifest.copy())
+        assert hash1 == hash2
+        
+        # Different manifest should produce different hash
+        manifest2 = manifest.copy()
+        manifest2["version"] = "2.0"
+        hash3 = calculate_manifest_hash(manifest2)
+        assert hash1 != hash3
+    
+    def test_calculate_manifest_hash_excludes_root_hash(self):
+        """Test that root_hash is excluded from manifest hash calculation."""
+        manifest1 = {
+            "version": "1.0",
+            "files": {"test.txt": {"sha256": "abc123"}},
+            "root_hash": "hash1"
+        }
+        
+        manifest2 = manifest1.copy()
+        manifest2["root_hash"] = "different_hash"
+        
+        # Hashes should be the same since root_hash is excluded
+        hash1 = calculate_manifest_hash(manifest1)
+        hash2 = calculate_manifest_hash(manifest2)
+        assert hash1 == hash2
+
+
+class TestFullVerificationWorkflow:
+    """Test complete verification workflows."""
+    
+    def test_verify_evidence_bundle_success(self):
+        """Test successful verification of valid evidence bundle."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            
+            # Create a valid evidence bundle using pack module
+            csv_path = temp_path / "data.csv"
+            df = load_csv_fixture("min_powder.csv")
+            df.to_csv(csv_path, index=False)
+            
+            spec_path = temp_path / "spec.json"
+            spec_data = load_spec_fixture("min_powder_spec.json")
+            with open(spec_path, 'w') as f:
+                json.dump(spec_data, f)
+            
+            # Create dummy output files
+            normalized_path = temp_path / "normalized.csv"
+            df.to_csv(normalized_path, index=False)
+            
+            decision_path = temp_path / "decision.json"
+            decision_data = {
+                "job_id": "test",
+                "pass_": True,
+                "target_temp_C": 170.0,
+                "conservative_threshold_C": 172.0,
+                "required_hold_time_s": 480,
+                "actual_hold_time_s": 510,
+                "max_temp_C": 174.5,
+                "min_temp_C": 168.0,
+                "reasons": []
+            }
+            with open(decision_path, 'w') as f:
+                json.dump(decision_data, f)
+            
+            proof_path = temp_path / "proof.pdf"
+            proof_path.write_bytes(b"PDF content")
+            
+            plot_path = temp_path / "plot.png"
+            plot_path.write_bytes(b"PNG content")
+            
+            bundle_path = temp_path / "evidence.zip"
+            
+            # Create bundle
             create_evidence_bundle(
-                csv_path=str(csv_path),
-                spec_path=str(spec_path),
-                output_path=str(bundle_path)
+                str(csv_path),
+                str(spec_path),
+                str(normalized_path),
+                str(decision_path),
+                str(proof_path),
+                str(plot_path),
+                str(bundle_path),
+                deterministic=True
             )
             
-            bundles.append(str(bundle_path))
+            # Verify bundle
+            report = verify_evidence_bundle(str(bundle_path), verify_decision=False)
+            
+            assert report.is_valid == True
+            assert report.bundle_exists == True
+            assert report.manifest_found == True
+            assert report.root_hash_valid == True
+            assert report.files_verified == report.files_total
+            assert len(report.issues) == 0
+    
+    def test_verify_evidence_bundle_tampered(self):
+        """Test verification detects tampered bundle."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            
+            # Create a bundle first
+            csv_path = temp_path / "data.csv"
+            df = load_csv_fixture("min_powder.csv")
+            df.to_csv(csv_path, index=False)
+            
+            spec_path = temp_path / "spec.json"
+            spec_data = load_spec_fixture("min_powder_spec.json")
+            with open(spec_path, 'w') as f:
+                json.dump(spec_data, f)
+            
+            # Create dummy files
+            normalized_path = temp_path / "normalized.csv"
+            df.to_csv(normalized_path, index=False)
+            
+            decision_path = temp_path / "decision.json"
+            with open(decision_path, 'w') as f:
+                json.dump({"job_id": "test", "pass_": True}, f)
+            
+            proof_path = temp_path / "proof.pdf"
+            proof_path.write_bytes(b"PDF")
+            
+            plot_path = temp_path / "plot.png"
+            plot_path.write_bytes(b"PNG")
+            
+            bundle_path = temp_path / "evidence.zip"
+            
+            # Create bundle
+            create_evidence_bundle(
+                str(csv_path),
+                str(spec_path),
+                str(normalized_path),
+                str(decision_path),
+                str(proof_path),
+                str(plot_path),
+                str(bundle_path),
+                deterministic=True
+            )
+            
+            # Tamper with the bundle - modify a file inside
+            with zipfile.ZipFile(str(bundle_path), 'a') as zf:
+                # Read original content
+                original_csv = zf.read("inputs/raw_data.csv")
+                # Modify it
+                tampered_csv = original_csv + b"\n2024-01-01,999.9"
+                # Remove original and add tampered version
+                zf.writestr("inputs/raw_data.csv", tampered_csv)
+            
+            # Verify tampered bundle
+            report = verify_evidence_bundle(str(bundle_path), verify_decision=False)
+            
+            assert report.is_valid == False
+            assert len(report.hash_mismatches) > 0
+            assert any("raw_data.csv" in mismatch["file"] for mismatch in report.hash_mismatches)
+    
+    def test_verify_evidence_bundle_with_decision_verification(self):
+        """Test full verification including decision re-computation."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            
+            # Load test data
+            df = load_csv_fixture("min_powder.csv")
+            spec = load_spec_fixture_validated("min_powder_spec.json")
+            
+            # Run actual decision algorithm
+            from core.decide import make_decision
+            from core.normalize import normalize_temperature_data
+            
+            normalized_df = normalize_temperature_data(df, 30.0, 120.0, 60.0)
+            decision = make_decision(normalized_df, spec)
+            
+            # Create files
+            csv_path = temp_path / "data.csv"
+            df.to_csv(csv_path, index=False)
+            
+            spec_path = temp_path / "spec.json"
+            with open(spec_path, 'w') as f:
+                json.dump(spec.model_dump(), f)
+            
+            normalized_path = temp_path / "normalized.csv"
+            normalized_df.to_csv(normalized_path, index=False)
+            
+            decision_path = temp_path / "decision.json"
+            with open(decision_path, 'w') as f:
+                json.dump(decision.model_dump(), f)
+            
+            proof_path = temp_path / "proof.pdf"
+            proof_path.write_bytes(b"PDF")
+            
+            plot_path = temp_path / "plot.png"
+            plot_path.write_bytes(b"PNG")
+            
+            bundle_path = temp_path / "evidence.zip"
+            
+            # Create bundle
+            create_evidence_bundle(
+                str(csv_path),
+                str(spec_path),
+                str(normalized_path),
+                str(decision_path),
+                str(proof_path),
+                str(plot_path),
+                str(bundle_path),
+                deterministic=True
+            )
+            
+            # Verify with decision re-computation
+            report = verify_evidence_bundle(str(bundle_path), verify_decision=True)
+            
+            assert report.is_valid == True
+            assert report.decision_recomputed == True
+            assert report.decision_matches == True
+            assert len(report.decision_discrepancies) == 0
+    
+    def test_verify_bundle_quick(self):
+        """Test quick verification (integrity only)."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            
+            # Create minimal bundle
+            csv_path = temp_path / "data.csv"
+            csv_path.write_text("timestamp,temp_C\n2024-01-01,170")
+            
+            spec_path = temp_path / "spec.json"
+            spec_data = load_spec_fixture("min_powder_spec.json")
+            with open(spec_path, 'w') as f:
+                json.dump(spec_data, f)
+            
+            # Create dummy files
+            for name in ["normalized.csv", "decision.json", "proof.pdf", "plot.png"]:
+                (temp_path / name).write_bytes(b"dummy content")
+            
+            bundle_path = temp_path / "evidence.zip"
+            
+            create_evidence_bundle(
+                str(csv_path),
+                str(spec_path),
+                str(temp_path / "normalized.csv"),
+                str(temp_path / "decision.json"),
+                str(temp_path / "proof.pdf"),
+                str(temp_path / "plot.png"),
+                str(bundle_path),
+                deterministic=True
+            )
+            
+            # Quick verify
+            result = verify_bundle_quick(str(bundle_path))
+            
+            assert "valid" in result
+            assert "root_hash" in result
+            assert "files_verified" in result
+            assert result["valid"] == True
+    
+    def test_verify_evidence_bundle_cleanup(self):
+        """Test temporary directory cleanup."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            
+            # Create minimal bundle
+            bundle_path = temp_path / "test.zip"
+            with zipfile.ZipFile(bundle_path, 'w') as zf:
+                zf.writestr("manifest.json", '{"version": "1.0", "files": {}}')
+            
+            # Track temp directories created
+            temp_dirs = []
+            original_mkdtemp = tempfile.mkdtemp
+            
+            def track_mkdtemp(*args, **kwargs):
+                temp_dir = original_mkdtemp(*args, **kwargs)
+                temp_dirs.append(temp_dir)
+                return temp_dir
+            
+            with patch('tempfile.mkdtemp', side_effect=track_mkdtemp):
+                # Verify with cleanup
+                report = verify_evidence_bundle(str(bundle_path), cleanup_temp=True)
+                
+                # Check temp dir was created and cleaned up
+                assert len(temp_dirs) == 1
+                assert not Path(temp_dirs[0]).exists()
+    
+    def test_verify_evidence_bundle_no_cleanup(self):
+        """Test preserving temporary directory."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            
+            # Create minimal bundle
+            bundle_path = temp_path / "test.zip"
+            with zipfile.ZipFile(bundle_path, 'w') as zf:
+                zf.writestr("manifest.json", '{"version": "1.0", "files": {}}')
+            
+            # Verify without cleanup
+            extract_dir = temp_path / "extracted"
+            report = verify_evidence_bundle(
+                str(bundle_path), 
+                extract_dir=str(extract_dir),
+                cleanup_temp=False
+            )
+            
+            # Extract dir should still exist
+            assert extract_dir.exists()
+            assert (extract_dir / "manifest.json").exists()
+
+
+class TestErrorHandling:
+    """Test error handling scenarios."""
+    
+    def test_verify_nonexistent_bundle(self):
+        """Test verifying non-existent bundle."""
+        report = verify_evidence_bundle("/nonexistent/bundle.zip")
         
-        # Verify all bundles
-        reports = []
-        for bundle_path in bundles:
+        assert report.is_valid == False
+        assert report.bundle_exists == False
+        assert len(report.issues) > 0
+        assert any("not found" in issue for issue in report.issues)
+    
+    def test_verify_corrupted_bundle(self):
+        """Test verifying corrupted ZIP file."""
+        with tempfile.NamedTemporaryFile(suffix='.zip', delete=False) as tmp:
+            bundle_path = tmp.name
+            tmp.write(b"This is not a valid ZIP file")
+        
+        try:
             report = verify_evidence_bundle(bundle_path)
-            reports.append(report)
-        
-        # All bundles should be valid (though decisions may differ)
-        for report in reports:
-            assert report.is_valid is True
-            assert report.bundle_exists is True
-            assert report.decision_matches is True
-        
-        # First should pass, second should fail
-        assert reports[0].original_decision.pass_ is True
-        assert reports[1].original_decision.pass_ is False
+            
+            assert report.is_valid == False
+            assert len(report.issues) > 0
+            assert any("extraction failed" in issue for issue in report.issues)
+        finally:
+            os.unlink(bundle_path)
+    
+    def test_verify_bundle_with_exception_in_process(self):
+        """Test handling exceptions during verification process."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            bundle_path = Path(temp_dir) / "test.zip"
+            
+            # Create valid ZIP structure
+            with zipfile.ZipFile(bundle_path, 'w') as zf:
+                zf.writestr("manifest.json", '{"version": "1.0"}')
+            
+            # Mock an exception during extraction
+            with patch('core.verify.extract_bundle_to_temp', side_effect=Exception("Test error")):
+                report = verify_evidence_bundle(str(bundle_path))
+                
+                assert report.is_valid == False
+                assert len(report.issues) > 0
+                assert any("Test error" in issue for issue in report.issues)
+
+
+# Example usage in comments (for module documentation)
+"""
+Example usage for ProofKit verification testing:
+
+# Run all verification tests
+pytest tests/test_verify.py -v
+
+# Run specific test class
+pytest tests/test_verify.py::TestBundleIntegrity -v
+
+# Run with coverage
+pytest tests/test_verify.py --cov=core.verify --cov-report=html
+
+# Test quick verification
+from tests.test_verify import TestFullVerificationWorkflow
+test_instance = TestFullVerificationWorkflow()
+test_instance.test_verify_bundle_quick()
+"""

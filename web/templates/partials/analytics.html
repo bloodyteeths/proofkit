@@ -1,0 +1,502 @@
+<!-- Google Analytics 4 Integration -->
+<!-- Privacy-compliant analytics with cookie consent integration -->
+
+<!-- Load analytics configuration -->
+<script src="/static/js/analytics_config.js"></script>
+
+<script>
+/**
+ * ProofKit GA4 Analytics Integration
+ * 
+ * This script provides privacy-compliant Google Analytics 4 tracking
+ * that respects user cookie consent preferences and tracks key
+ * conversion events for business optimization.
+ * 
+ * Features:
+ * - Cookie consent integration
+ * - Privacy-focused configuration
+ * - Conversion event tracking (upload, compile_ok, purchase, signup)
+ * - GDPR compliant with IP anonymization
+ */
+
+// Get configuration from centralized config
+const config = window.ProofKitAnalytics;
+const GA4_MEASUREMENT_ID = config.ga4.measurementId;
+
+// Initialize analytics based on consent
+function initializeAnalytics() {
+    const consentChoice = localStorage.getItem('cookie_consent');
+    
+    if (consentChoice === 'analytics') {
+        loadGA4();
+    } else {
+        // Load with denied consent initially
+        loadGA4WithDeniedConsent();
+    }
+}
+
+/**
+ * Load Google Analytics 4 with full tracking enabled
+ */
+function loadGA4() {
+    // Prevent duplicate loading
+    if (window.gtag && window.ga4Loaded) {
+        return;
+    }
+    
+    // Load Google Analytics 4 script
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${GA4_MEASUREMENT_ID}`;
+    document.head.appendChild(script);
+    
+    // Initialize gtag
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    window.gtag = gtag;
+    
+    gtag('js', new Date());
+    
+    // Configure GA4 with privacy-focused settings from config
+    gtag('config', GA4_MEASUREMENT_ID, config.ga4.config);
+    
+    // Set consent state
+    gtag('consent', 'default', {
+        'analytics_storage': 'granted',
+        'ad_storage': 'denied'
+    });
+    
+    window.ga4Loaded = true;
+    console.log('GA4 Analytics loaded with full tracking');
+}
+
+/**
+ * Load Google Analytics 4 with denied consent (for consent management)
+ */
+function loadGA4WithDeniedConsent() {
+    // Prevent duplicate loading
+    if (window.gtag && window.ga4Loaded) {
+        return;
+    }
+    
+    // Load Google Analytics 4 script
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${GA4_MEASUREMENT_ID}`;
+    document.head.appendChild(script);
+    
+    // Initialize gtag
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    window.gtag = gtag;
+    
+    gtag('js', new Date());
+    
+    // Set denied consent initially
+    gtag('consent', 'default', {
+        'analytics_storage': 'denied',
+        'ad_storage': 'denied'
+    });
+    
+    // Configure GA4 (will only track with consent)
+    gtag('config', GA4_MEASUREMENT_ID, config.ga4.config);
+    
+    window.ga4Loaded = true;
+    console.log('GA4 Analytics loaded with denied consent');
+}
+
+/**
+ * Update consent for Google Analytics
+ */
+function updateAnalyticsConsent(granted) {
+    if (window.gtag) {
+        gtag('consent', 'update', {
+            'analytics_storage': granted ? 'granted' : 'denied'
+        });
+        console.log(`Analytics consent updated: ${granted ? 'granted' : 'denied'}`);
+    }
+}
+
+/**
+ * Track custom conversion events
+ */
+function trackEvent(eventName, parameters = {}) {
+    const consentChoice = localStorage.getItem('cookie_consent');
+    
+    if (consentChoice !== 'analytics') {
+        console.log(`Event tracking skipped (no consent): ${eventName}`);
+        return;
+    }
+    
+    if (window.gtag) {
+        gtag('event', eventName, {
+            // Default parameters
+            event_category: 'ProofKit',
+            event_label: window.location.pathname,
+            value: 1,
+            
+            // Merge custom parameters
+            ...parameters
+        });
+        console.log(`Event tracked: ${eventName}`, parameters);
+    } else {
+        console.log(`Event queued (GA4 not loaded): ${eventName}`);
+    }
+}
+
+/**
+ * Track file upload event
+ */
+function trackUploadEvent(fileType, fileSize, industry = null) {
+    trackEvent('file_upload', {
+        event_category: 'Engagement',
+        file_type: fileType,
+        file_size_mb: Math.round(fileSize / (1024 * 1024) * 100) / 100,
+        industry_type: industry,
+        value: 1
+    });
+}
+
+/**
+ * Track successful compilation event (conversion)
+ */
+function trackCompileOkEvent(industry, resultType, validationTime = null) {
+    trackEvent('compile_ok', {
+        event_category: 'Conversion',
+        industry_type: industry,
+        result_type: resultType, // 'pass' or 'fail'
+        validation_time_ms: validationTime,
+        value: 10 // Higher value for successful compilation
+    });
+    
+    // Also track as a conversion event for Google Ads
+    trackEvent('conversion', {
+        event_category: 'Conversion',
+        conversion_type: 'compile_ok',
+        industry_type: industry,
+        value: 10
+    });
+}
+
+/**
+ * Track purchase/upgrade event (conversion)
+ */
+function trackPurchaseEvent(plan, value, currency = 'USD') {
+    trackEvent('purchase', {
+        event_category: 'Conversion',
+        transaction_id: Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+        value: value,
+        currency: currency,
+        plan_type: plan,
+        items: [{
+            item_id: `proofkit_${plan}`,
+            item_name: `ProofKit ${plan} Plan`,
+            item_category: 'SaaS Subscription',
+            price: value,
+            quantity: 1
+        }]
+    });
+}
+
+/**
+ * Track signup/registration event (conversion)
+ */
+function trackSignupEvent(source = 'organic', campaign = null) {
+    trackEvent('sign_up', {
+        event_category: 'Conversion',
+        method: 'email',
+        source: source,
+        campaign: campaign,
+        value: 5
+    });
+    
+    // Also track as a conversion event for Google Ads
+    trackEvent('conversion', {
+        event_category: 'Conversion',
+        conversion_type: 'signup',
+        source: source,
+        value: 5
+    });
+}
+
+/**
+ * Track page view with custom parameters
+ */
+function trackPageView(pageTitle = null, industry = null) {
+    const consentChoice = localStorage.getItem('cookie_consent');
+    
+    if (consentChoice !== 'analytics') {
+        return;
+    }
+    
+    if (window.gtag) {
+        gtag('event', 'page_view', {
+            page_title: pageTitle || document.title,
+            page_location: window.location.href,
+            page_path: window.location.pathname,
+            industry_type: industry,
+            send_to: GA4_MEASUREMENT_ID
+        });
+    }
+}
+
+/**
+ * Track engagement events
+ */
+function trackEngagement(action, element = null, value = 1) {
+    trackEvent('engagement', {
+        event_category: 'Engagement',
+        engagement_action: action,
+        element_clicked: element,
+        value: value
+    });
+}
+
+/**
+ * Track error events for debugging
+ */
+function trackError(errorType, errorMessage, page = null) {
+    trackEvent('exception', {
+        event_category: 'Error',
+        description: errorMessage,
+        error_type: errorType,
+        page: page || window.location.pathname,
+        fatal: false
+    });
+}
+
+// Auto-initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    initializeAnalytics();
+    
+    // Track initial page view
+    setTimeout(() => {
+        const industry = document.querySelector('[data-industry]')?.dataset.industry;
+        trackPageView(null, industry);
+    }, 1000);
+});
+
+// Override existing cookie consent functions to update analytics
+const originalAcceptAllCookies = window.acceptAllCookies;
+window.acceptAllCookies = function() {
+    if (originalAcceptAllCookies) {
+        originalAcceptAllCookies();
+    }
+    updateAnalyticsConsent(true);
+};
+
+const originalAcceptEssentialOnly = window.acceptEssentialOnly;
+window.acceptEssentialOnly = function() {
+    if (originalAcceptEssentialOnly) {
+        originalAcceptEssentialOnly();
+    }
+    updateAnalyticsConsent(false);
+};
+
+// Make tracking functions globally available
+window.trackUploadEvent = trackUploadEvent;
+window.trackCompileOkEvent = trackCompileOkEvent;
+window.trackPurchaseEvent = trackPurchaseEvent;
+window.trackSignupEvent = trackSignupEvent;
+window.trackPageView = trackPageView;
+window.trackEngagement = trackEngagement;
+window.trackError = trackError;
+</script>
+
+<!-- Enhanced ecommerce tracking for form interactions -->
+<script>
+/**
+ * Automatic event tracking for ProofKit interactions
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    // Track file uploads automatically
+    const fileInput = document.getElementById('csv_file');
+    if (fileInput) {
+        fileInput.addEventListener('change', function(e) {
+            if (e.target.files && e.target.files[0]) {
+                const file = e.target.files[0];
+                const industry = document.querySelector('[data-industry]')?.dataset.industry;
+                trackUploadEvent(file.type, file.size, industry);
+            }
+        });
+    }
+    
+    // Track form submissions
+    const uploadForm = document.getElementById('upload-form');
+    if (uploadForm) {
+        uploadForm.addEventListener('htmx:afterRequest', function(e) {
+            if (e.detail.xhr.status === 200) {
+                const industry = document.querySelector('[data-industry]')?.dataset.industry;
+                const startTime = window.validationStartTime || Date.now();
+                const validationTime = Date.now() - startTime;
+                
+                // Determine result type from response
+                const responseText = e.detail.xhr.responseText;
+                const resultType = responseText.includes('result-banner pass') ? 'pass' : 'fail';
+                
+                trackCompileOkEvent(industry, resultType, validationTime);
+            }
+        });
+        
+        uploadForm.addEventListener('htmx:beforeRequest', function(e) {
+            window.validationStartTime = Date.now();
+        });
+    }
+    
+    // Track navigation clicks
+    document.querySelectorAll('nav a, .nav-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            trackEngagement('navigation_click', e.target.textContent.trim());
+        });
+    });
+    
+    // Track download links
+    document.querySelectorAll('a[href*=".pdf"], a[href*=".zip"]').forEach(link => {
+        link.addEventListener('click', function(e) {
+            const fileName = e.target.href.split('/').pop();
+            trackEngagement('file_download', fileName, 2);
+        });
+    });
+    
+    // Track CTA button clicks
+    document.querySelectorAll('.primary, [role="button"]').forEach(button => {
+        button.addEventListener('click', function(e) {
+            if (!e.target.id || e.target.id !== 'csv_file') {
+                trackEngagement('cta_click', e.target.textContent.trim(), 3);
+            }
+        });
+    });
+    
+    // Track verification page usage
+    if (window.location.pathname === '/verify') {
+        trackEngagement('verify_page_view', 'verification_portal', 2);
+    }
+    
+    // Track errors automatically
+    window.addEventListener('error', function(e) {
+        trackError('javascript_error', e.message, window.location.pathname);
+    });
+    
+    // Track HTMX errors
+    document.body.addEventListener('htmx:responseError', function(e) {
+        const errorMessage = e.detail.xhr.statusText || 'HTTP Error';
+        trackError('htmx_error', `${e.detail.xhr.status}: ${errorMessage}`, window.location.pathname);
+    });
+});
+</script>
+
+<!-- Google Ads Conversion Tracking Integration -->
+<script>
+/**
+ * Google Ads conversion tracking
+ * Integrates with GA4 events to provide conversion data for Google Ads campaigns
+ */
+
+// Google Ads configuration from centralized config
+const GOOGLE_ADS_CONFIG = config.googleAds;
+
+/**
+ * Load Google Ads conversion tracking
+ */
+function loadGoogleAds() {
+    const consentChoice = localStorage.getItem('cookie_consent');
+    
+    if (consentChoice !== 'analytics') {
+        console.log('Google Ads conversion tracking skipped (no consent)');
+        return;
+    }
+    
+    // Load Google Ads script
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ADS_CONFIG.conversion_id}`;
+    document.head.appendChild(script);
+    
+    // Initialize gtag for Google Ads (if not already initialized)
+    window.dataLayer = window.dataLayer || [];
+    if (!window.gtag) {
+        function gtag(){dataLayer.push(arguments);}
+        window.gtag = gtag;
+        gtag('js', new Date());
+    }
+    
+    // Configure Google Ads
+    gtag('config', GOOGLE_ADS_CONFIG.conversion_id);
+    
+    console.log('Google Ads conversion tracking loaded');
+}
+
+/**
+ * Track Google Ads conversion
+ */
+function trackGoogleAdsConversion(conversionType, value = null, currency = 'USD') {
+    const consentChoice = localStorage.getItem('cookie_consent');
+    
+    if (consentChoice !== 'analytics' || !window.gtag) {
+        console.log(`Google Ads conversion tracking skipped: ${conversionType}`);
+        return;
+    }
+    
+    const conversionConfig = GOOGLE_ADS_CONFIG.conversions[conversionType];
+    if (!conversionConfig) {
+        console.log(`Unknown conversion type: ${conversionType}`);
+        return;
+    }
+    
+    const conversionLabel = conversionConfig.label;
+    
+    const conversionData = {
+        'send_to': conversionLabel,
+        'value': value,
+        'currency': currency,
+        'transaction_id': Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+    };
+    
+    gtag('event', 'conversion', conversionData);
+    console.log(`Google Ads conversion tracked: ${conversionType}`, conversionData);
+}
+
+// Auto-load Google Ads tracking
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(loadGoogleAds, 2000); // Load after GA4
+});
+
+// Override tracking functions to include Google Ads conversions
+const originalTrackCompileOkEvent = window.trackCompileOkEvent;
+window.trackCompileOkEvent = function(industry, resultType, validationTime) {
+    if (originalTrackCompileOkEvent) {
+        originalTrackCompileOkEvent(industry, resultType, validationTime);
+    }
+    
+    // Track Google Ads conversion for successful validations
+    if (resultType === 'pass') {
+        trackGoogleAdsConversion('compile_ok', 10);
+    }
+};
+
+const originalTrackSignupEvent = window.trackSignupEvent;
+window.trackSignupEvent = function(source, campaign) {
+    if (originalTrackSignupEvent) {
+        originalTrackSignupEvent(source, campaign);
+    }
+    trackGoogleAdsConversion('signup', 5);
+};
+
+const originalTrackPurchaseEvent = window.trackPurchaseEvent;
+window.trackPurchaseEvent = function(plan, value, currency) {
+    if (originalTrackPurchaseEvent) {
+        originalTrackPurchaseEvent(plan, value, currency);
+    }
+    trackGoogleAdsConversion('purchase', value, currency);
+};
+
+// Make Google Ads functions globally available
+window.trackGoogleAdsConversion = trackGoogleAdsConversion;
+</script>
+
+<!-- Privacy notice for analytics -->
+<noscript>
+    <!-- Fallback for users with JavaScript disabled -->
+    <img src="https://www.googletagmanager.com/ns.html?id=GTM-XXXXXXX" 
+         height="1" width="1" style="display:none" alt="">
+</noscript>

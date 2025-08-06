@@ -1,0 +1,10 @@
+{
+  "Rules": [
+    {
+      "ID": "exp",
+      "Status": "Enabled", 
+      "Expiration": {"Days": 14},
+      "Filter": {"Prefix": ""}
+    }
+  ]
+}

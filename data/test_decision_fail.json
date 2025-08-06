@@ -1,0 +1,14 @@
+{
+  "pass": false,
+  "actual_hold_time_s": 240,
+  "required_hold_time_s": 480,
+  "max_temp_C": 171.8,
+  "min_temp_C": 165.3,
+  "conservative_threshold_C": 172.0,
+  "reasons": [
+    "Insufficient hold time above conservative threshold",
+    "Temperature dropped below threshold at 12:35",
+    "Only 50% of required hold time achieved"
+  ],
+  "verification_hash": "b8e4c3f9a0e1d2c7b6f5a4e9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0"
+}
