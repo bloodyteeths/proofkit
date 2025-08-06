@@ -31,7 +31,7 @@ import mimetypes
 from datetime import datetime, timezone
 from io import StringIO
 
-from fastapi import FastAPI, Request, Form, File, UploadFile, HTTPException, Depends, Response
+from fastapi import FastAPI, Request, Form, File, UploadFile, HTTPException, Depends, Response, Query
 from fastapi.responses import JSONResponse, HTMLResponse, FileResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -2655,7 +2655,7 @@ async def upgrade_required_page(request: Request) -> HTMLResponse:
 
 
 @app.get("/dashboard", response_class=HTMLResponse, tags=["auth"])
-async def dashboard_page(request: Request, page: int = 1) -> HTMLResponse:
+async def dashboard_page(request: Request, page: int = Query(1, ge=1)) -> HTMLResponse:
     """
     User dashboard showing subscription, usage, and recent jobs with pagination.
     """
@@ -2819,7 +2819,9 @@ async def dashboard_page(request: Request, page: int = 1) -> HTMLResponse:
                 "has_next": page < total_pages,
                 "prev_page": page - 1 if page > 1 else 1,
                 "next_page": page + 1 if page < total_pages else total_pages,
-                "page_range": list(range(max(1, page - 2), min(total_pages + 1, page + 3)))
+                "page_range": list(range(max(1, page - 2), min(total_pages + 1, page + 3))),
+                "start_index": start_idx + 1 if total_jobs > 0 else 0,
+                "end_index": min(end_idx, total_jobs)
             }
         }
         
@@ -2845,7 +2847,17 @@ async def dashboard_page(request: Request, page: int = 1) -> HTMLResponse:
                 "next_billing_date": 'N/A'
             },
             "recent_jobs": [],
-            "usage_data": {"labels": ["Jan", "Feb", "Mar", "Apr", "May", "Jun"], "data": [0, 0, 0, 0, 0, 0]}
+            "usage_data": {"labels": ["Jan", "Feb", "Mar", "Apr", "May", "Jun"], "data": [0, 0, 0, 0, 0, 0]},
+            "pagination": {
+                "current_page": 1,
+                "total_pages": 1,
+                "total_jobs": 0,
+                "has_prev": False,
+                "has_next": False,
+                "prev_page": 1,
+                "next_page": 1,
+                "page_range": [1]
+            }
         }
         logger.warning(f"Using fallback dashboard data for {user.email}")
         return templates.TemplateResponse("dashboard.html", fallback_context)
@@ -2872,7 +2884,11 @@ async def my_jobs_page(request: Request) -> HTMLResponse:
                 created_at = meta.get("created_at")
                 approved_at = meta.get("approved_at")
                 # OP: jobs they submitted; QA: jobs not yet approved
-                creator_email = creator.get("email", "").lower().strip()
+                # Handle both dict and None creator
+                if creator:
+                    creator_email = creator.get("email", "").lower().strip()
+                else:
+                    creator_email = ""
                 user_email_normalized = user.email.lower().strip()
                 
                 if (user.role == UserRole.OPERATOR and creator_email == user_email_normalized) or (user.role == UserRole.QA and not approved):

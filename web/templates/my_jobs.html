@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "modern_base.html" %}
 
 {% block title %}My Jobs - ProofKit{% endblock %}
 
@@ -45,7 +45,7 @@
                     <td>
                         <a href="/download/{{ job.job_id }}/pdf" class="outline" title="Download PDF">📄</a>
                         <a href="/download/{{ job.job_id }}/zip" class="outline" title="Download ZIP">📦</a>
-                        <a href="/verify/{{ job.job_id }}" class="outline" title="Verify">🔍</a>
+                        <a href="/verify/{{ job.job_id[:10] }}" class="outline" title="Verify">🔍</a>
                         <a href="/api/validation-pack/{{ job.job_id }}" class="outline" title="Validation Pack">📋</a>
                         {% if user.role == "qa" %}
                             <a href="/approve/{{ job.job_id }}" class="primary" title="Approve">🔒 Approve</a>

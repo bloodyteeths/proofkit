@@ -1,10 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <defs>
-    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
-    </linearGradient>
-  </defs>
-  <circle cx="50" cy="50" r="45" fill="url(#logoGradient)"/>
-  <text x="50" y="65" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle" fill="white">P</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img">
+  <rect x="24" y="24" width="208" height="208" rx="40" fill="#111827"/>
+  <g transform="translate(68,56)">
+    <path d="M24 0h64l32 32v88c0 8.837-7.163 16-16 16H24c-8.837 0-16-7.163-16-16V16C8 7.163 15.163 0 24 0z" fill="#1F2937"/>
+    <path d="M88 0v24c0 4.418 3.582 8 8 8h24" fill="#374151"/>
+  </g>
+  <path d="M102 164l18 18 38-38" fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
