@@ -33,12 +33,7 @@ JWT_ALGORITHM = "HS256"
 JWT_EXPIRY_HOURS = 24
 MAGIC_LINK_EXPIRY_MINUTES = 15
 
-# Email configuration
-POSTMARK_TOKEN = os.environ.get("POSTMARK_TOKEN", os.environ.get("POSTMARK_API_TOKEN", ""))
-FROM_EMAIL = os.environ.get("FROM_EMAIL", "no-reply@proofkit.net")
-REPLY_TO_EMAIL = os.environ.get("REPLY_TO_EMAIL", "support@proofkit.net")
-# Enable development mode if no Postmark token is provided
-EMAIL_DEV_MODE = os.environ.get("EMAIL_DEV_MODE", "false" if POSTMARK_TOKEN else "true").lower() == "true"
+# Email configuration - moved to function level to ensure runtime evaluation
 
 # Storage for magic links (in production, use Redis or database)
 MAGIC_LINKS: Dict[str, Dict[str, Any]] = {}
@@ -128,13 +123,20 @@ class MagicLinkAuth:
             base_url = os.environ.get("BASE_URL", "https://www.proofkit.net")
             verify_url = f"{base_url}/auth/verify?token={magic_link}"
             
-            # Get Postmark configuration
+            # Get Postmark configuration at runtime
             postmark_token = os.environ.get('POSTMARK_TOKEN', os.environ.get('POSTMARK_API_TOKEN', ''))
             from_email = os.environ.get('FROM_EMAIL', 'no-reply@proofkit.net')
             reply_to = os.environ.get('REPLY_TO_EMAIL', 'support@proofkit.net')
             
+            # Evaluate dev mode at runtime
+            email_dev_mode = os.environ.get("EMAIL_DEV_MODE", "false").lower() == "true"
+            
+            # Log configuration for debugging
+            logger.info(f"Email config - Token present: {bool(postmark_token)}, Token prefix: {postmark_token[:5] if postmark_token else 'None'}, Dev mode: {email_dev_mode}, From: {from_email}")
+            
             # Check if we should use Postmark or development mode
-            if postmark_token and not EMAIL_DEV_MODE:
+            # Always use Postmark if token is present and dev mode is not explicitly enabled
+            if postmark_token and not email_dev_mode:
                 # Production mode - send via Postmark
                 html_body = f"""
                 <!DOCTYPE html>
@@ -222,7 +224,12 @@ class MagicLinkAuth:
                     "MessageStream": "outbound"
                 }
                 
-                response = httpx.post(url, headers=headers, json=data)
+                logger.info(f"Sending Postmark email to {email} with token starting with {postmark_token[:10]}...")
+                
+                with httpx.Client() as client:
+                    response = client.post(url, headers=headers, json=data)
+                
+                logger.info(f"Postmark API response: {response.status_code}")
                 
                 if response.status_code == 200:
                     result = response.json()
