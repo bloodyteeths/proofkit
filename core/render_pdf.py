@@ -400,12 +400,13 @@ def _create_reasons_section(decision: DecisionResult) -> list:
     return elements
 
 
-def _create_verification_section(verification_hash: str) -> list:
+def _create_verification_section(verification_hash: str, job_id: Optional[str] = None) -> list:
     """
     Create the verification section with hash and QR code.
     
     Args:
         verification_hash: Hash string for verification
+        job_id: Optional job ID for creating verification URL
         
     Returns:
         List of ReportLab flowables for verification section
@@ -423,16 +424,33 @@ def _create_verification_section(verification_hash: str) -> list:
     )
     elements.append(Paragraph("Verification", verify_style))
     
-    # Create QR code
-    qr_image = _create_qr_code(verification_hash, size=80)
+    # Create QR code with verification URL if job_id is available, otherwise use hash
+    if job_id:
+        # Use the first 10 characters of job_id for a shorter URL
+        short_id = job_id[:10] if len(job_id) > 10 else job_id
+        qr_data = f"https://www.proofkit.net/verify/{short_id}"
+    else:
+        qr_data = verification_hash
+    
+    qr_image = _create_qr_code(qr_data, size=80)
     
     # Create verification table with hash and QR code
     hash_display = f"{verification_hash[:16]}...{verification_hash[-16:]}" if len(verification_hash) > 40 else verification_hash
     
-    verify_data = [
-        ['Verification Hash:', hash_display],
-        ['QR Code:', ''],
-    ]
+    # Add verification URL if job_id is available
+    if job_id:
+        short_id = job_id[:10] if len(job_id) > 10 else job_id
+        verify_url = f"https://www.proofkit.net/verify/{short_id}"
+        verify_data = [
+            ['Verification Hash:', hash_display],
+            ['Verification URL:', verify_url],
+            ['QR Code:', ''],
+        ]
+    else:
+        verify_data = [
+            ['Verification Hash:', hash_display],
+            ['QR Code:', ''],
+        ]
     
     verify_table = Table(verify_data, colWidths=[1.5*inch, 3*inch])
     verify_table.setStyle(TableStyle([
@@ -1248,7 +1266,7 @@ def generate_proof_pdf(
             elements.append(Spacer(1, 15))
         
         # Verification section
-        verify_elements = _create_verification_section(verification_hash)
+        verify_elements = _create_verification_section(verification_hash, spec.job.job_id)
         elements.extend(verify_elements)
         
         # Add DocuSign signature page if requested

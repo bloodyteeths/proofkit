@@ -347,10 +347,16 @@ def create_decision_reasons(decision: DecisionResult) -> list:
     return elements
 
 
-def create_verification_section(verification_hash: str) -> Table:
+def create_verification_section(verification_hash: str, job_id: Optional[str] = None) -> Table:
     """Create verification section with hash and QR code."""
-    # Create QR code
-    qr_image = create_qr_code(verification_hash)
+    # Create QR code with verification URL if job_id is available
+    if job_id:
+        short_id = job_id[:10] if len(job_id) > 10 else job_id
+        qr_data = f"https://www.proofkit.net/verify/{short_id}"
+    else:
+        qr_data = verification_hash
+    
+    qr_image = create_qr_code(qr_data)
     
     # Hash display
     hash_style = ParagraphStyle('Hash', fontSize=8, textColor=COLOR_SLATE,
@@ -573,7 +579,7 @@ def generate_premium_certificate(
                 pass
         
         # Verification section
-        elements.append(create_verification_section(verification_hash))
+        elements.append(create_verification_section(verification_hash, spec.job.job_id))
         elements.append(Spacer(1, 8*mm))
         
         # Signature section with seal
