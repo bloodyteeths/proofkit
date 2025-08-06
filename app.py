@@ -2655,9 +2655,9 @@ async def upgrade_required_page(request: Request) -> HTMLResponse:
 
 
 @app.get("/dashboard", response_class=HTMLResponse, tags=["auth"])
-async def dashboard_page(request: Request) -> HTMLResponse:
+async def dashboard_page(request: Request, page: int = 1) -> HTMLResponse:
     """
-    User dashboard showing subscription, usage, and recent jobs.
+    User dashboard showing subscription, usage, and recent jobs with pagination.
     """
     user = get_current_user(request)
     if not user:
@@ -2755,8 +2755,20 @@ async def dashboard_page(request: Request) -> HTMLResponse:
         usage_data = generate_usage_chart_data(recent_jobs)  # Pass all jobs for chart
         logger.info(f"Dashboard for {user.email}: Found {len(recent_jobs)} total jobs, usage_data: {usage_data}")
         
-        # Get only top 5 for the recent compilations table
-        recent_jobs_display = recent_jobs[:5]
+        # Pagination settings
+        items_per_page = 5
+        total_jobs = len(recent_jobs)
+        total_pages = (total_jobs + items_per_page - 1) // items_per_page if total_jobs > 0 else 1
+        
+        # Ensure page is within valid range
+        page = max(1, min(page, total_pages))
+        
+        # Calculate slice indices
+        start_idx = (page - 1) * items_per_page
+        end_idx = start_idx + items_per_page
+        
+        # Get jobs for current page
+        recent_jobs_display = recent_jobs[start_idx:end_idx]
         
         # Get pricing info for the user's plan (with fallback)
         try:
@@ -2797,8 +2809,18 @@ async def dashboard_page(request: Request) -> HTMLResponse:
                 "subscription": quota_data.get('subscription'),
                 "next_billing_date": quota_data.get('next_billing_date', 'N/A')
             },
-            "recent_jobs": recent_jobs_display,  # Only show top 5 in table
-            "usage_data": usage_data
+            "recent_jobs": recent_jobs_display,  # Jobs for current page
+            "usage_data": usage_data,
+            "pagination": {
+                "current_page": page,
+                "total_pages": total_pages,
+                "total_jobs": total_jobs,
+                "has_prev": page > 1,
+                "has_next": page < total_pages,
+                "prev_page": page - 1 if page > 1 else 1,
+                "next_page": page + 1 if page < total_pages else total_pages,
+                "page_range": list(range(max(1, page - 2), min(total_pages + 1, page + 3)))
+            }
         }
         
         return templates.TemplateResponse("dashboard.html", context)

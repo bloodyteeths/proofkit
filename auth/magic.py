@@ -425,7 +425,8 @@ def get_current_user(request: Request) -> Optional[User]:
                 plan="free"
             )
     
-    return getattr(request.state, 'user', None)
+    # Check both 'user' and 'current_user' for compatibility with different middleware
+    return getattr(request.state, 'user', None) or getattr(request.state, 'current_user', None)
 
 
 def require_auth(request: Request) -> User:

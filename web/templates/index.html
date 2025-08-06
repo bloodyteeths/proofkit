@@ -227,6 +227,61 @@ button[type="submit"]:hover {
 
 {% block scripts %}
 <script{% if get_nonce(request) %} nonce="{{ get_nonce(request) }}"{% endif %}>
+// Add click handler for submit button to provide immediate feedback
+document.addEventListener('DOMContentLoaded', function() {
+    const submitBtn = document.querySelector('button[type="submit"]');
+    if (submitBtn) {
+        // Add a direct click handler for immediate feedback
+        submitBtn.addEventListener('click', function(e) {
+            const fileInput = document.getElementById('csv_file');
+            if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+                e.preventDefault();
+                // Show friendly message
+                const errorDiv = document.createElement('div');
+                errorDiv.innerHTML = `
+                    <div style="background: #fef2f2; border: 2px solid #dc2626; color: #991b1b; padding: 1rem 1.25rem; border-radius: 0.75rem; margin: 1.5rem auto; max-width: 600px; box-shadow: 0 4px 6px -1px rgba(220, 38, 38, 0.1);">
+                        <div style="display: flex; align-items: start; gap: 0.75rem;">
+                            <span style="font-size: 1.25rem;">📁</span>
+                            <div>
+                                <strong style="display: block; margin-bottom: 0.25rem;">No CSV File Selected</strong>
+                                Please select a CSV temperature log file before generating the validation report. Click or drag a file to the upload area above.
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Insert at top of form container
+                const container = document.querySelector('.section-container');
+                const existingError = document.getElementById('csv-error-msg');
+                if (existingError) existingError.remove();
+                
+                errorDiv.id = 'csv-error-msg';
+                if (container) {
+                    container.insertBefore(errorDiv, container.firstChild);
+                    errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                
+                // Highlight upload area
+                const uploadArea = document.getElementById('upload-area');
+                if (uploadArea) {
+                    uploadArea.style.border = '2px dashed #dc2626';
+                    uploadArea.style.background = '#fef2f2';
+                    setTimeout(() => {
+                        uploadArea.style.border = '2px dashed #cbd5e0';
+                        uploadArea.style.background = '#f7fafc';
+                    }, 3000);
+                }
+                
+                // Remove error after 5 seconds
+                setTimeout(() => {
+                    const err = document.getElementById('csv-error-msg');
+                    if (err) err.remove();
+                }, 5000);
+            }
+        });
+    }
+});
+
 // Industry-specific defaults
 {% if selected_industry %}
 document.addEventListener('DOMContentLoaded', function() {

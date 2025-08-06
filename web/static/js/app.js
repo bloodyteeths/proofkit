@@ -308,14 +308,24 @@ function validateForm() {
     
     // Check file is selected
     if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-        showError('Please select a CSV file.');
+        showError('📁 Please select a CSV file before generating the validation report. Click or drag a file to the upload area above.');
+        // Highlight the upload area
+        const uploadArea = document.getElementById('upload-area');
+        if (uploadArea) {
+            uploadArea.style.border = '2px dashed #dc2626';
+            uploadArea.style.background = '#fef2f2';
+            setTimeout(() => {
+                uploadArea.style.border = '2px dashed #cbd5e0';
+                uploadArea.style.background = '#f7fafc';
+            }, 3000);
+        }
         return false;
     }
     
     // Validate file type and size again
     const file = fileInput.files[0];
     if (!file.name.toLowerCase().endsWith('.csv')) {
-        showError('Please select a CSV file.');
+        showError('⚠️ Invalid file type. Please select a CSV file (*.csv format).');
         return false;
     }
     
@@ -466,13 +476,59 @@ function showError(message) {
     
     const errorDiv = document.createElement('div');
     errorDiv.className = 'error-message';
-    errorDiv.textContent = message;
+    errorDiv.innerHTML = `
+        <div style="display: flex; align-items: start; gap: 0.75rem;">
+            <span style="font-size: 1.25rem; margin-top: -2px;">⚠️</span>
+            <div>
+                <strong style="display: block; margin-bottom: 0.25rem;">Action Required</strong>
+                ${message}
+            </div>
+        </div>
+    `;
     errorDiv.id = 'error-display';
+    errorDiv.style.cssText = `
+        background: #fef2f2;
+        border: 2px solid #dc2626;
+        color: #991b1b;
+        padding: 1rem 1.25rem;
+        border-radius: 0.75rem;
+        margin: 1.5rem auto;
+        max-width: 600px;
+        box-shadow: 0 4px 6px -1px rgba(220, 38, 38, 0.1);
+        animation: slideDown 0.3s ease-out;
+    `;
     
-    // Insert after the form
-    const form = document.getElementById('upload-form');
-    if (form && form.parentNode) {
-        form.parentNode.insertBefore(errorDiv, form.nextSibling);
+    // Add animation style if not already present
+    if (!document.getElementById('error-animation-style')) {
+        const style = document.createElement('style');
+        style.id = 'error-animation-style';
+        style.textContent = `
+            @keyframes slideDown {
+                from {
+                    opacity: 0;
+                    transform: translateY(-10px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    // Insert at the top of the form section
+    const section = document.querySelector('.section-container');
+    if (section) {
+        section.insertBefore(errorDiv, section.firstChild);
+        // Scroll to error message
+        errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+        // Fallback to form insertion
+        const form = document.getElementById('upload-form');
+        if (form && form.parentNode) {
+            form.parentNode.insertBefore(errorDiv, form);
+        }
     }
     
     // Auto-hide after 10 seconds
