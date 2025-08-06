@@ -19,7 +19,7 @@ from pathlib import Path
 import httpx
 import jwt
 from fastapi import Request, HTTPException, Depends
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 

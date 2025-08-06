@@ -836,8 +836,7 @@ async def marketing_page(request: Request) -> HTMLResponse:
 @app.get("/app", response_class=HTMLResponse, tags=["compile"])
 async def app_page(
     request: Request,
-    industry: Optional[str] = None,
-    current_user: dict = Depends(require_auth)
+    industry: Optional[str] = None
 ) -> HTMLResponse:
     """
     Main application page with form for CSV file and specification JSON.
@@ -852,6 +851,12 @@ async def app_page(
         Browser GET /app returns upload form with pre-populated spec JSON
         Browser GET /app?industry=haccp returns form with HACCP preset
     """
+    # Check if user is authenticated
+    user = get_current_user(request)
+    if not user:
+        # Redirect to get started page
+        return RedirectResponse(url="/auth/get-started", status_code=302)
+    
     default_spec = get_default_spec(industry)
     presets = get_industry_presets()
     
@@ -861,7 +866,8 @@ async def app_page(
             "request": request,
             "default_spec": default_spec,
             "presets": presets,
-            "selected_industry": industry
+            "selected_industry": industry,
+            "user": user
         }
     )
 
@@ -924,8 +930,7 @@ async def get_industry_preset(industry: str) -> JSONResponse:
 async def compile_csv_html(
     request: Request,
     csv_file: UploadFile = File(...),
-    spec_json: str = Form(...),
-    current_user: dict = Depends(require_auth)
+    spec_json: str = Form(...)
 ) -> HTMLResponse:
     """
     Process CSV file and specification JSON to generate proof PDF and evidence bundle.
@@ -941,6 +946,24 @@ async def compile_csv_html(
     Example:
         POST /api/compile with multipart form data returns result.html partial
     """
+    # Check authentication
+    current_user = get_current_user(request)
+    if not current_user:
+        # For HTMX requests, return an error partial
+        return templates.TemplateResponse(
+            "error.html",
+            {
+                "request": request,
+                "error": {
+                    "title": "Authentication Required",
+                    "message": "Please sign in to generate validation reports",
+                    "suggestions": [
+                        "Click here to sign in: <a href='/auth/get-started'>Get Started</a>"
+                    ]
+                }
+            }
+        )
+    
     request_id = str(uuid.uuid4())[:8]
     logger.info(f"[{request_id}] Starting compile request from {request.client.host if request.client else 'unknown'}")
     
@@ -1317,8 +1340,7 @@ async def verify_bundle(request: Request, bundle_id: str) -> HTMLResponse:
 async def download_file(
     bundle_id: str, 
     file_type: str, 
-    request: Request,
-    current_user: dict = Depends(require_auth)
+    request: Request
 ) -> FileResponse:
     """
     Download files from an evidence bundle.
@@ -1927,34 +1949,96 @@ async def security_txt():
 
 
 # Authentication routes
-@app.get("/auth/login", response_class=HTMLResponse, tags=["auth"])
-async def login_page(request: Request) -> HTMLResponse:
+@app.get("/auth/get-started", response_class=HTMLResponse, tags=["auth"])
+async def get_started_page(request: Request) -> HTMLResponse:
     """
-    Login page for magic link authentication.
+    Unified authentication page for login/signup via magic link.
     
     Returns:
-        HTMLResponse: Login form for email and role selection
+        HTMLResponse: Magic link request form
     """
+    # If user is already authenticated, redirect to app
+    user = get_current_user(request)
+    if user:
+        return RedirectResponse(url="/app", status_code=302)
+    
     return templates.TemplateResponse(
-        "auth/login.html",
+        "auth/get_started.html",
         {"request": request}
     )
+
+
+# Keep old endpoints for backward compatibility but redirect
+@app.get("/auth/login", response_class=HTMLResponse, tags=["auth"])
+async def login_page(request: Request) -> HTMLResponse:
+    """Legacy login endpoint - redirects to get-started."""
+    return RedirectResponse(url="/auth/get-started", status_code=302)
 
 
 @app.get("/auth/signup", response_class=HTMLResponse, tags=["auth"])
 async def signup_page(request: Request) -> HTMLResponse:
+    """Legacy signup endpoint - redirects to get-started."""
+    return RedirectResponse(url="/auth/get-started", status_code=302)
+
+
+@app.post("/auth/magic-link", response_class=HTMLResponse, tags=["auth"])
+async def request_magic_link_unified(
+    request: Request,
+    email: str = Form(...)
+) -> HTMLResponse:
     """
-    Signup page for new users.
+    Unified magic link handler for both login and signup.
+    
+    Args:
+        request: FastAPI request object
+        email: User email address
     
     Returns:
-        HTMLResponse: Signup form for new user registration
+        HTMLResponse: Magic link sent confirmation page
     """
-    return templates.TemplateResponse(
-        "signup.html",
-        {"request": request}
-    )
+    try:
+        # Generate magic link (works for both new and existing users)
+        magic_token = auth_handler.generate_magic_link(email, "op")
+        
+        # In development mode, include the link
+        dev_mode = os.environ.get("ENV", "development") == "development"
+        dev_link = None
+        if dev_mode:
+            base_url = os.environ.get("BASE_URL", "https://www.proofkit.net")
+            dev_link = f"{base_url}/auth/verify?token={magic_token}"
+        
+        # Send magic link email
+        email_sent = auth_handler.send_magic_link_email(email, magic_token, "op")
+        
+        if not email_sent:
+            logger.error(f"Failed to send magic link email to {email}")
+        
+        logger.info(f"Magic link requested for {email}")
+        
+        return templates.TemplateResponse(
+            "auth/magic_link_sent.html",
+            {
+                "request": request,
+                "email": email,
+                "expires_in": 900,  # 15 minutes
+                "expires_in_minutes": 15,
+                "dev_mode": dev_mode,
+                "dev_link": dev_link
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Magic link error for {email}: {e}")
+        return templates.TemplateResponse(
+            "auth/error.html",
+            {
+                "request": request,
+                "error": "Failed to send magic link. Please try again."
+            }
+        )
 
 
+# Keep old signup endpoint for backward compatibility
 @app.post("/auth/signup", response_class=HTMLResponse, tags=["auth"])
 async def signup_submit(
     request: Request,
@@ -2324,14 +2408,13 @@ def save_job_metadata(job_dir: Path, job_id: str, metadata: Dict[str, Any]) -> N
 
 
 @app.get("/dashboard", response_class=HTMLResponse, tags=["auth"])
-async def dashboard_page(
-    request: Request,
-    current_user: dict = Depends(require_auth)
-) -> HTMLResponse:
+async def dashboard_page(request: Request) -> HTMLResponse:
     """
     User dashboard showing subscription, usage, and recent jobs.
     """
-    user = current_user
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/auth/get-started", status_code=302)
     
     try:
         # Get user's quota information
@@ -2408,14 +2491,13 @@ async def dashboard_page(
         })
 
 @app.get("/my-jobs", response_class=HTMLResponse, tags=["auth"])
-async def my_jobs_page(
-    request: Request,
-    current_user: dict = Depends(require_auth)
-) -> HTMLResponse:
+async def my_jobs_page(request: Request) -> HTMLResponse:
     """
     Show jobs for the current user (OP: jobs submitted, QA: jobs awaiting approval).
     """
-    user = current_user
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/auth/get-started", status_code=302)
     # Scan storage for jobs
     jobs = []
     for root, dirs, files in os.walk(str(STORAGE_DIR)):
