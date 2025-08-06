@@ -16,10 +16,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any
 from pathlib import Path
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-
+import httpx
 import jwt
 from fastapi import Request, HTTPException, Depends
 from fastapi.responses import JSONResponse
@@ -37,13 +34,11 @@ JWT_EXPIRY_HOURS = 24
 MAGIC_LINK_EXPIRY_MINUTES = 15
 
 # Email configuration
-SMTP_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com")
-SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
-SMTP_USERNAME = os.environ.get("SMTP_USERNAME", "")
-SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
-FROM_EMAIL = os.environ.get("FROM_EMAIL", "noreply@proofkit.com")
-# Enable development mode if no email credentials are provided
-EMAIL_DEV_MODE = os.environ.get("EMAIL_DEV_MODE", "true").lower() == "true"
+POSTMARK_TOKEN = os.environ.get("POSTMARK_TOKEN", os.environ.get("POSTMARK_API_TOKEN", ""))
+FROM_EMAIL = os.environ.get("FROM_EMAIL", "no-reply@proofkit.net")
+REPLY_TO_EMAIL = os.environ.get("REPLY_TO_EMAIL", "support@proofkit.net")
+# Enable development mode if no Postmark token is provided
+EMAIL_DEV_MODE = os.environ.get("EMAIL_DEV_MODE", "false" if POSTMARK_TOKEN else "true").lower() == "true"
 
 # Storage for magic links (in production, use Redis or database)
 MAGIC_LINKS: Dict[str, Dict[str, Any]] = {}
@@ -127,56 +122,133 @@ class MagicLinkAuth:
             return None
     
     def send_magic_link_email(self, email: str, magic_link: str, role: UserRole) -> bool:
-        """Send magic link email via Amazon SES."""
+        """Send magic link email via Postmark."""
         try:
-            # Create message
-            msg = MIMEMultipart()
-            msg['From'] = FROM_EMAIL
-            msg['To'] = email
-            msg['Subject'] = f"ProofKit Login - {role.value.upper()} Access"
-            
             # Create verification URL
-            base_url = os.environ.get("BASE_URL", "http://localhost:8000")
+            base_url = os.environ.get("BASE_URL", "https://www.proofkit.net")
             verify_url = f"{base_url}/auth/verify?token={magic_link}"
             
-            # Email body
-            body = f"""
-            <html>
-            <body>
-                <h2>ProofKit Authentication</h2>
-                <p>You requested access to ProofKit with {role.value.upper()} privileges.</p>
-                <p>Click the link below to verify your email and access the system:</p>
-                <p><a href="{verify_url}">{verify_url}</a></p>
-                <p>This link will expire in {MAGIC_LINK_EXPIRY_MINUTES} minutes.</p>
-                <p>If you didn't request this access, please ignore this email.</p>
-                <hr>
-                <p><small>ProofKit - Quality Control Validation System</small></p>
-            </body>
-            </html>
-            """
+            # Get Postmark configuration
+            postmark_token = os.environ.get('POSTMARK_TOKEN', os.environ.get('POSTMARK_API_TOKEN', ''))
+            from_email = os.environ.get('FROM_EMAIL', 'no-reply@proofkit.net')
+            reply_to = os.environ.get('REPLY_TO_EMAIL', 'support@proofkit.net')
             
-            msg.attach(MIMEText(body, 'html'))
-            
-            # Send email
-            if SMTP_USERNAME and SMTP_PASSWORD and not EMAIL_DEV_MODE:
-                # Production mode - send real email
-                server = smtplib.SMTP(SMTP_HOST, SMTP_PORT)
-                server.starttls()
-                server.login(SMTP_USERNAME, SMTP_PASSWORD)
-                server.send_message(msg)
-                server.quit()
-                logger.info(f"Magic link email sent to {email}")
-                return True
+            # Check if we should use Postmark or development mode
+            if postmark_token and not EMAIL_DEV_MODE:
+                # Production mode - send via Postmark
+                html_body = f"""
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="utf-8">
+                    <title>ProofKit Magic Link</title>
+                </head>
+                <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                        <h1 style="color: white; margin: 0 0 20px 0; text-align: center;">
+                            🔐 ProofKit Authentication
+                        </h1>
+                        
+                        <div style="background: white; padding: 30px; border-radius: 8px;">
+                            <p style="font-size: 16px; color: #374151; margin: 20px 0;">
+                                You requested access to ProofKit with {role.value.upper()} privileges.
+                            </p>
+                            
+                            <p style="font-size: 16px; color: #374151; margin: 20px 0;">
+                                Click the button below to verify your email and access the system:
+                            </p>
+                            
+                            <div style="text-align: center; margin: 30px 0;">
+                                <a href="{verify_url}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;">
+                                    🔓 Access ProofKit
+                                </a>
+                            </div>
+                            
+                            <p style="font-size: 14px; color: #6b7280; margin-top: 20px;">
+                                Or copy and paste this link:<br>
+                                <code style="background: #f3f4f6; padding: 4px 8px; border-radius: 3px; word-break: break-all;">{verify_url}</code>
+                            </p>
+                            
+                            <p style="font-size: 14px; color: #dc2626; margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                                ⏱️ This link will expire in {MAGIC_LINK_EXPIRY_MINUTES} minutes.
+                            </p>
+                            
+                            <p style="font-size: 12px; color: #6b7280; margin-top: 20px;">
+                                If you didn't request this access, please ignore this email.
+                            </p>
+                        </div>
+                        
+                        <p style="font-size: 12px; color: rgba(255,255,255,0.8); text-align: center; margin-top: 20px;">
+                            ProofKit - Industrial Temperature Validation<br>
+                            © 2024 ProofKit. All rights reserved.
+                        </p>
+                    </div>
+                </body>
+                </html>
+                """
+                
+                text_body = f"""
+                🔐 ProofKit Magic Link Authentication
+                
+                You requested access to ProofKit with {role.value.upper()} privileges.
+                
+                Click this link to verify your email and access the system:
+                {verify_url}
+                
+                This link will expire in {MAGIC_LINK_EXPIRY_MINUTES} minutes.
+                
+                If you didn't request this access, please ignore this email.
+                
+                ---
+                ProofKit - Industrial Temperature Validation
+                © 2024 ProofKit. All rights reserved.
+                """
+                
+                # Send via Postmark API
+                url = "https://api.postmarkapp.com/email"
+                headers = {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                    "X-Postmark-Server-Token": postmark_token
+                }
+                
+                data = {
+                    "From": from_email,
+                    "To": email,
+                    "ReplyTo": reply_to,
+                    "Subject": f"ProofKit Login - {role.value.upper()} Access",
+                    "HtmlBody": html_body,
+                    "TextBody": text_body,
+                    "MessageStream": "outbound"
+                }
+                
+                response = httpx.post(url, headers=headers, json=data)
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    logger.info(f"Magic link email sent to {email} via Postmark. MessageID: {result.get('MessageID')}")
+                    return True
+                else:
+                    logger.error(f"Postmark API error: {response.status_code} - {response.text}")
+                    # Fall back to development mode
+                    logger.info(f"Falling back to development mode. Magic link for {email}: {verify_url}")
+                    self._store_dev_link(email, verify_url)
+                    return True
             else:
                 # Development mode - log the link and show it in response
-                logger.info(f"Magic link for {email}: {verify_url}")
+                logger.info(f"Development mode or no Postmark token. Magic link for {email}: {verify_url}")
                 # Store the link temporarily for development access
                 self._store_dev_link(email, verify_url)
                 return True
                 
         except Exception as e:
             logger.error(f"Failed to send magic link email to {email}: {e}")
-            return False
+            # Try to at least store the dev link
+            try:
+                self._store_dev_link(email, verify_url)
+                return True
+            except:
+                return False
     
     def _store_dev_link(self, email: str, verify_url: str) -> None:
         """Store development magic link for temporary access."""
