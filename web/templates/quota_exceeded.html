@@ -1,0 +1,494 @@
+{% extends "modern_base.html" %}
+
+{% block title %}Upgrade Your Plan - ProofKit{% endblock %}
+
+{% block content %}
+<div class="quota-page">
+    <div class="quota-container">
+        <div class="quota-header">
+            <div class="quota-icon">
+                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+            </div>
+            <h1 class="quota-title">You've Used All Your Free Certificates!</h1>
+            <p class="quota-subtitle">
+                Great news! You've successfully created {{ used }} of {{ limit }} certificates. 
+                Ready to create more? Let's upgrade your plan!
+            </p>
+        </div>
+
+        <div class="usage-stats">
+            <div class="stat-item">
+                <div class="stat-value">{{ used }}</div>
+                <div class="stat-label">Certificates Created</div>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <div class="stat-value">{{ limit }}</div>
+                <div class="stat-label">Plan Limit</div>
+            </div>
+        </div>
+
+        <div class="upgrade-options">
+            <h2>Choose Your Plan</h2>
+            <p class="upgrade-description">Unlock more certificates and premium features</p>
+            
+            <div class="plans-grid">
+                <!-- Starter Plan -->
+                <div class="plan-card">
+                    <div class="plan-badge">POPULAR</div>
+                    <h3 class="plan-name">Starter</h3>
+                    <div class="plan-price">
+                        <span class="currency">€</span>
+                        <span class="amount">14</span>
+                        <span class="period">/month</span>
+                    </div>
+                    <ul class="plan-features">
+                        <li>10 certificates/month</li>
+                        <li>Standard PDF template</li>
+                        <li>Email support</li>
+                        <li>€3 per extra certificate</li>
+                    </ul>
+                    <button class="plan-button" onclick="selectPlan('starter')">
+                        Get Started
+                    </button>
+                </div>
+
+                <!-- Pro Plan -->
+                <div class="plan-card featured">
+                    <div class="plan-badge">BEST VALUE</div>
+                    <h3 class="plan-name">Pro</h3>
+                    <div class="plan-price">
+                        <span class="currency">€</span>
+                        <span class="amount">59</span>
+                        <span class="period">/month</span>
+                    </div>
+                    <ul class="plan-features">
+                        <li>75 certificates/month</li>
+                        <li>Custom logo template</li>
+                        <li>Priority support</li>
+                        <li>€1.50 per extra certificate</li>
+                    </ul>
+                    <button class="plan-button primary" onclick="selectPlan('pro')">
+                        Most Popular
+                    </button>
+                </div>
+
+                <!-- Business Plan -->
+                <div class="plan-card">
+                    <h3 class="plan-name">Business</h3>
+                    <div class="plan-price">
+                        <span class="currency">€</span>
+                        <span class="amount">199</span>
+                        <span class="period">/month</span>
+                    </div>
+                    <ul class="plan-features">
+                        <li>300 certificates/month</li>
+                        <li>Custom branding</li>
+                        <li>Phone & email support</li>
+                        <li>€0.75 per extra certificate</li>
+                    </ul>
+                    <button class="plan-button" onclick="selectPlan('business')">
+                        Scale Up
+                    </button>
+                </div>
+            </div>
+
+            <div class="quick-purchase">
+                <div class="divider">
+                    <span>OR</span>
+                </div>
+                <button class="one-time-button" onclick="purchaseSingle()">
+                    Purchase Single Certificate (€7)
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<style>
+.quota-page {
+    min-height: calc(100vh - 140px);
+    padding: 2rem 1rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.quota-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 1.5rem;
+    padding: 3rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.quota-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.quota-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    border-radius: 50%;
+    margin-bottom: 1.5rem;
+    color: white;
+}
+
+.quota-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #1a202c;
+    margin-bottom: 1rem;
+}
+
+.quota-subtitle {
+    font-size: 1.25rem;
+    color: #4a5568;
+    line-height: 1.6;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.usage-stats {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 3rem;
+    margin: 3rem 0;
+    padding: 2rem;
+    background: #f7fafc;
+    border-radius: 1rem;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 3rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: #718096;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 0.5rem;
+}
+
+.stat-divider {
+    width: 2px;
+    height: 60px;
+    background: #e2e8f0;
+}
+
+.upgrade-options {
+    margin: 3rem 0;
+}
+
+.upgrade-options h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    text-align: center;
+    color: #1a202c;
+    margin-bottom: 0.5rem;
+}
+
+.upgrade-description {
+    text-align: center;
+    color: #718096;
+    margin-bottom: 2rem;
+}
+
+.plans-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+.plan-card {
+    position: relative;
+    padding: 2rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 1rem;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.plan-card:hover {
+    border-color: #667eea;
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px -5px rgba(102, 126, 234, 0.2);
+}
+
+.plan-card.featured {
+    border-color: #667eea;
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+}
+
+.plan-badge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 0.25rem 1rem;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.plan-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1a202c;
+    margin: 1rem 0;
+    text-align: center;
+}
+
+.plan-price {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    margin: 1rem 0;
+}
+
+.currency {
+    font-size: 1.5rem;
+    color: #718096;
+}
+
+.amount {
+    font-size: 3rem;
+    font-weight: 800;
+    color: #1a202c;
+    margin: 0 0.25rem;
+}
+
+.period {
+    font-size: 1rem;
+    color: #718096;
+}
+
+.plan-features {
+    list-style: none;
+    padding: 0;
+    margin: 1.5rem 0;
+}
+
+.plan-features li {
+    padding: 0.75rem 0;
+    color: #4a5568;
+    display: flex;
+    align-items: center;
+}
+
+.plan-features li:before {
+    content: "✓";
+    color: #48bb78;
+    font-weight: bold;
+    margin-right: 0.75rem;
+}
+
+.plan-button {
+    width: 100%;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    font-size: 1rem;
+    border: 2px solid #667eea;
+    background: white;
+    color: #667eea;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.plan-button:hover {
+    background: #667eea;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.plan-button.primary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+}
+
+.plan-button.primary:hover {
+    background: linear-gradient(135deg, #5a67d8, #6b46c1);
+}
+
+.quick-purchase {
+    margin-top: 3rem;
+}
+
+.divider {
+    text-align: center;
+    position: relative;
+    margin: 2rem 0;
+}
+
+.divider:before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: #e2e8f0;
+}
+
+.divider span {
+    position: relative;
+    background: white;
+    padding: 0 1rem;
+    color: #718096;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.one-time-button {
+    display: block;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 1rem 2rem;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    font-size: 1rem;
+    background: #f7fafc;
+    color: #4a5568;
+    border: 2px solid #e2e8f0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.one-time-button:hover {
+    background: #edf2f7;
+    border-color: #cbd5e0;
+}
+
+
+@media (max-width: 768px) {
+    .quota-container {
+        padding: 2rem 1rem;
+    }
+    
+    .quota-title {
+        font-size: 1.75rem;
+    }
+    
+    .usage-stats {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .stat-divider {
+        width: 60px;
+        height: 2px;
+    }
+    
+    .plans-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+
+function selectPlan(plan) {
+    // Track the upgrade intent
+    if (typeof gtag !== 'undefined') {
+        gtag('event', 'begin_checkout', {
+            currency: 'EUR',
+            value: plan === 'starter' ? 14 : plan === 'pro' ? 59 : 199,
+            items: [{
+                item_name: plan.charAt(0).toUpperCase() + plan.slice(1) + ' Plan',
+                price: plan === 'starter' ? 14 : plan === 'pro' ? 59 : 199,
+                quantity: 1
+            }]
+        });
+    }
+    
+    // Redirect to checkout
+    fetch('/api/pay/checkout', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            plan: plan,
+            payment_type: 'subscription'
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.checkout_url) {
+            window.location.href = data.checkout_url;
+        } else {
+            alert('Payment system is being configured. Please try again later.');
+        }
+    })
+    .catch(error => {
+        console.error('Checkout error:', error);
+        alert('Unable to start checkout. Please contact support.');
+    });
+}
+
+function purchaseSingle() {
+    // Track single purchase intent
+    if (typeof gtag !== 'undefined') {
+        gtag('event', 'begin_checkout', {
+            currency: 'EUR',
+            value: 7,
+            items: [{
+                item_name: 'Single Certificate',
+                price: 7,
+                quantity: 1
+            }]
+        });
+    }
+    
+    // Redirect to single certificate checkout
+    fetch('/api/pay/checkout', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            payment_type: 'one_time',
+            quantity: 1
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.checkout_url) {
+            window.location.href = data.checkout_url;
+        } else {
+            alert('Payment system is being configured. Please try again later.');
+        }
+    })
+    .catch(error => {
+        console.error('Checkout error:', error);
+        alert('Unable to start checkout. Please contact support.');
+    });
+}
+</script>
+{% endblock %}

@@ -1,49 +1,312 @@
-{% extends "base.html" %}
+{% extends "modern_base.html" %}
 
 {% block title %}Authentication Error - ProofKit{% endblock %}
+{% block description %}Authentication error occurred{% endblock %}
 
 {% block content %}
-<main class="container">
-    <article>
-        <header>
-            <h1>❌ Authentication Error</h1>
-            <p>We couldn't complete your authentication.</p>
-        </header>
-
-        <div class="error-banner">
-            <h3>🔐 Authentication Failed</h3>
-            <p>{{ error }}</p>
+<div class="auth-page">
+    <div class="auth-container">
+        <!-- Error Header -->
+        <div class="auth-header error-header">
+            <div class="error-icon">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+            </div>
+            <h1>Authentication Error</h1>
+            <p class="subtitle">We couldn't complete your authentication</p>
         </div>
-
-        <div style="margin-top: 2rem;">
-            <h3>Possible Solutions</h3>
-            <ul>
-                <li><strong>Expired Link:</strong> Magic links expire after 15 minutes. Request a new one.</li>
-                <li><strong>Already Used:</strong> Each magic link can only be used once.</li>
-                <li><strong>Invalid Token:</strong> The link may be corrupted or incomplete.</li>
-                <li><strong>Network Issues:</strong> Check your internet connection and try again.</li>
-            </ul>
+        
+        <!-- Error Details -->
+        <div class="auth-content">
+            <div class="error-message">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                <p>{{ error }}</p>
+            </div>
+            
+            <!-- Solutions -->
+            <div class="solutions-section">
+                <h3>Possible Solutions</h3>
+                <ul class="solutions-list">
+                    {% if suggestions %}
+                        {% for suggestion in suggestions %}
+                        <li>{{ suggestion }}</li>
+                        {% endfor %}
+                    {% else %}
+                    <li>
+                        <strong>Expired Link:</strong> Magic links expire after 15 minutes. Request a new one.
+                    </li>
+                    <li>
+                        <strong>Already Used:</strong> Each magic link can only be used once.
+                    </li>
+                    <li>
+                        <strong>Invalid Token:</strong> The link may be corrupted or incomplete.
+                    </li>
+                    <li>
+                        <strong>Network Issues:</strong> Check your internet connection and try again.
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+            
+            <!-- Actions -->
+            <div class="action-buttons">
+                <a href="/auth/get-started" class="btn btn-primary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    Try Again
+                </a>
+                <a href="/" class="btn btn-secondary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                        <polyline points="9 22 9 12 15 12 15 22"/>
+                    </svg>
+                    Go Home
+                </a>
+            </div>
+            
+            <!-- Help Section -->
+            <details class="help-section">
+                <summary>Need Help?</summary>
+                <div class="help-content">
+                    <p>If you continue to experience issues:</p>
+                    <ul>
+                        <li>Check that you're using the complete link from your email</li>
+                        <li>Ensure your email client hasn't modified the link</li>
+                        <li>Try copying and pasting the link directly into your browser</li>
+                        <li>Clear your browser cache and cookies</li>
+                        <li>Contact support at support@proofkit.net if problems persist</li>
+                    </ul>
+                </div>
+            </details>
         </div>
+    </div>
+</div>
 
-        <div style="margin-top: 2rem;">
-            <a href="/auth/login" class="primary" role="button">
-                🔄 Try Again
-            </a>
-            <a href="/" class="outline" role="button">
-                🏠 Go Home
-            </a>
-        </div>
+<style>
+.auth-page {
+    min-height: calc(100vh - 140px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
 
-        <details style="margin-top: 2rem;">
-            <summary>Need Help?</summary>
-            <p>If you continue to experience issues:</p>
-            <ul>
-                <li>Check that you're using the complete link from your email</li>
-                <li>Ensure your email client hasn't modified the link</li>
-                <li>Try copying and pasting the link directly into your browser</li>
-                <li>Contact your system administrator if problems persist</li>
-            </ul>
-        </details>
-    </article>
-</main>
-{% endblock %} 
+.auth-container {
+    max-width: 560px;
+    width: 100%;
+    background: white;
+    border-radius: 1.5rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+}
+
+.error-header {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    text-align: center;
+    padding: 3rem 2rem;
+    color: white;
+}
+
+.error-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    margin-bottom: 1.5rem;
+}
+
+.error-icon svg {
+    width: 48px;
+    height: 48px;
+}
+
+.error-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+}
+
+.subtitle {
+    font-size: 1.125rem;
+    opacity: 0.95;
+    margin: 0;
+}
+
+.auth-content {
+    padding: 2.5rem 2rem;
+}
+
+.error-message {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.error-message svg {
+    color: #dc2626;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.error-message p {
+    margin: 0;
+    color: #991b1b;
+    font-weight: 500;
+}
+
+.solutions-section {
+    margin-bottom: 2rem;
+}
+
+.solutions-section h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #374151;
+    margin: 0 0 1rem 0;
+}
+
+.solutions-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.solutions-list li {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #e5e7eb;
+    color: #6b7280;
+}
+
+.solutions-list li:last-child {
+    border-bottom: none;
+}
+
+.solutions-list strong {
+    color: #374151;
+    display: inline-block;
+    margin-right: 0.5rem;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.btn {
+    flex: 1;
+    padding: 0.875rem 1.5rem;
+    border-radius: 0.75rem;
+    text-decoration: none;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+}
+
+.btn-secondary {
+    background: white;
+    color: #667eea;
+    border: 2px solid #667eea;
+}
+
+.btn-secondary:hover {
+    background: #f3f4f6;
+}
+
+.help-section {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.help-section summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: #6b7280;
+    font-size: 0.95rem;
+    padding: 0.5rem 0;
+}
+
+.help-section summary:hover {
+    color: #667eea;
+}
+
+.help-content {
+    margin-top: 1rem;
+    color: #6b7280;
+    font-size: 0.95rem;
+}
+
+.help-content p {
+    margin: 0 0 0.75rem 0;
+}
+
+.help-content ul {
+    list-style: disc;
+    padding-left: 1.5rem;
+    margin: 0;
+}
+
+.help-content li {
+    padding: 0.25rem 0;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .auth-page {
+        padding: 1rem;
+    }
+    
+    .auth-container {
+        border-radius: 1rem;
+    }
+    
+    .error-header {
+        padding: 2rem 1.5rem;
+    }
+    
+    .error-header h1 {
+        font-size: 1.75rem;
+    }
+    
+    .auth-content {
+        padding: 1.5rem;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+}
+</style>
+{% endblock %}

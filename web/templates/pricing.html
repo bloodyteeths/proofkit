@@ -1,18 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProofKit Pricing - Choose Your Plan</title>
-    <meta name="description" content="Choose the perfect ProofKit plan for your temperature validation needs. From free trial to enterprise solutions.">
+{% extends "modern_base.html" %}
+
+{% block title %}ProofKit Pricing - Choose Your Plan{% endblock %}
+{% block description %}Choose the perfect ProofKit plan for your temperature validation needs. From free trial to enterprise solutions.{% endblock %}
+
+{% block head %}
     
-    <!-- Modern CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', path='css/modern.css') }}">
-    
-    <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', path='brand/proofkit_favicon.svg') }}">
-    
-    <style nonce="{{ get_nonce(request) }}">
+    <style{% if get_nonce(request) %} nonce="{{ get_nonce(request) }}"{% endif %}>
         .pricing-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -214,11 +207,9 @@
             }
         }
     </style>
-</head>
-<body>
-    <!-- Navigation -->
-    {% include 'nav.html' %}
-    
+{% endblock %}
+
+{% block content %}
     <main class="container">
         <!-- Header Section -->
         <header style="text-align: center; padding: 4rem 0 2rem;">
@@ -429,13 +420,10 @@
             </div>
         </section>
     </main>
-    
-    <!-- Footer -->
-    {# Footer component not available yet #}
-    
-    <!-- JavaScript -->
-    <script src="{{ url_for('static', path='js/htmx.min.js') }}" nonce="{{ get_nonce(request) }}"></script>
-    <script nonce="{{ get_nonce(request) }}">
+{% endblock %}
+
+{% block scripts %}
+    <script{% if get_nonce(request) %} nonce="{{ get_nonce(request) }}"{% endif %}>
         async function upgradeToStarter() {
             await upgradeToplan('starter');
         }
@@ -503,5 +491,4 @@
             });
         }
     </script>
-</body>
-</html>
+{% endblock %}

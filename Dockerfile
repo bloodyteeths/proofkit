@@ -69,8 +69,9 @@ RUN mkdir -p storage && chown -R proofkit:proofkit storage
 # Switch to non-root user
 USER proofkit
 
-# Ensure local packages are in PATH
+# Ensure local packages are in PATH and PYTHONPATH
 ENV PATH="/home/proofkit/.local/bin:$PATH"
+ENV PYTHONPATH="/home/proofkit/.local/lib/python3.11/site-packages:$PYTHONPATH"
 
 # Register DejaVu Sans font for ReportLab (production PDF generation)
 RUN python -c "\

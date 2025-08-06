@@ -9,7 +9,7 @@ Usage:
 import os
 import sys
 import json
-import requests
+import httpx
 from datetime import datetime, timezone
 
 def send_postmark_email(recipient: str, magic_link: str) -> bool:
@@ -115,7 +115,8 @@ def send_postmark_email(recipient: str, magic_link: str) -> bool:
         print(f"   Reply-To: {reply_to}")
         print(f"   Magic Link: {magic_link}")
         
-        response = requests.post(url, headers=headers, json=data)
+        with httpx.Client() as client:
+            response = client.post(url, headers=headers, json=data)
         
         if response.status_code == 200:
             result = response.json()

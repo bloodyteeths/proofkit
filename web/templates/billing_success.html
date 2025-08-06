@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Successful - ProofKit</title>
+    <meta name="description" content="Your payment was successful! Your ProofKit plan has been activated.">
+    
+    <!-- Modern CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', path='css/modern.css') }}">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', path='brand/proofkit_favicon.svg') }}">
+    
+    <style nonce="{{ get_nonce(request) }}">
+        .success-container {
+            max-width: 600px;
+            margin: 4rem auto;
+            padding: 3rem;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 2rem;
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2.5rem;
+        }
+        
+        .success-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #1a202c;
+            margin-bottom: 1rem;
+        }
+        
+        .success-subtitle {
+            font-size: 1.25rem;
+            color: #4a5568;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        
+        .plan-info {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .plan-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        
+        .plan-details {
+            color: #4a5568;
+            line-height: 1.6;
+        }
+        
+        .next-steps {
+            text-align: left;
+            margin: 2rem 0;
+        }
+        
+        .next-steps h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 1rem;
+        }
+        
+        .next-steps ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .next-steps li {
+            padding: 0.5rem 0;
+            color: #4a5568;
+            display: flex;
+            align-items: center;
+        }
+        
+        .next-steps li:before {
+            content: "→";
+            color: #667eea;
+            font-weight: bold;
+            width: 1.5rem;
+            margin-right: 0.75rem;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .btn {
+            padding: 1rem 2rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5a67d8, #6b46c1);
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .success-container {
+                margin: 2rem 1rem;
+                padding: 2rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    {% include 'nav.html' %}
+    
+    <main class="container">
+        <div class="success-container">
+            <div class="success-icon">✓</div>
+            <h1 class="success-title">Payment Successful!</h1>
+            <p class="success-subtitle">
+                Thank you for your payment. Your account has been updated and you can start using your new plan immediately.
+            </p>
+            
+            {% if plan %}
+            <div class="plan-info">
+                <div class="plan-name">{{ plan.title() }} Plan Activated</div>
+                <div class="plan-details">
+                    Your {{ plan }} plan is now active and ready to use. All features are immediately available.
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="next-steps">
+                <h3>What's Next?</h3>
+                <ul>
+                    <li>Your account has been upgraded with new quotas and features</li>
+                    <li>You'll receive a receipt via email within a few minutes</li>
+                    <li>Start creating temperature validation certificates immediately</li>
+                    {% if plan == 'pro' or plan == 'business' %}
+                    <li>Upload your company logo in your dashboard settings</li>
+                    {% endif %}
+                    <li>Need help? Our support team is here to assist you</li>
+                </ul>
+            </div>
+            
+            <div class="action-buttons">
+                <a href="/dashboard" class="btn btn-primary">Go to Dashboard</a>
+                <a href="/app" class="btn btn-secondary">Create Certificate</a>
+            </div>
+            
+            {% if session_id %}
+            <p style="margin-top: 2rem; font-size: 0.875rem; color: #718096;">
+                Session ID: {{ session_id }}
+            </p>
+            {% endif %}
+        </div>
+    </main>
+    
+    <!-- Footer -->
+    {# Footer component not available yet #}
+</body>
+</html>

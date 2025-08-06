@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Cancelled - ProofKit</title>
+    <meta name="description" content="Your payment was cancelled. No charges were made to your account.">
+    
+    <!-- Modern CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', path='css/modern.css') }}">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', path='brand/proofkit_favicon.svg') }}">
+    
+    <style nonce="{{ get_nonce(request) }}">
+        .cancel-container {
+            max-width: 600px;
+            margin: 4rem auto;
+            padding: 3rem;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .cancel-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 2rem;
+            background: linear-gradient(135deg, #f56565, #e53e3e);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2.5rem;
+        }
+        
+        .cancel-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #1a202c;
+            margin-bottom: 1rem;
+        }
+        
+        .cancel-subtitle {
+            font-size: 1.25rem;
+            color: #4a5568;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        
+        .reassurance {
+            background: #f0fff4;
+            border: 1px solid #c6f6d5;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            color: #276749;
+        }
+        
+        .reassurance-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .next-steps {
+            text-align: left;
+            margin: 2rem 0;
+        }
+        
+        .next-steps h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 1rem;
+        }
+        
+        .next-steps ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .next-steps li {
+            padding: 0.5rem 0;
+            color: #4a5568;
+            display: flex;
+            align-items: center;
+        }
+        
+        .next-steps li:before {
+            content: "→";
+            color: #667eea;
+            font-weight: bold;
+            width: 1.5rem;
+            margin-right: 0.75rem;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .btn {
+            padding: 1rem 2rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5a67d8, #6b46c1);
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .btn-outline:hover {
+            background: #f7fafc;
+            border-color: #cbd5e0;
+        }
+        
+        @media (max-width: 768px) {
+            .cancel-container {
+                margin: 2rem 1rem;
+                padding: 2rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    {% include 'nav.html' %}
+    
+    <main class="container">
+        <div class="cancel-container">
+            <div class="cancel-icon">×</div>
+            <h1 class="cancel-title">Payment Cancelled</h1>
+            <p class="cancel-subtitle">
+                Your payment was cancelled and no charges were made to your account.
+            </p>
+            
+            <div class="reassurance">
+                <div class="reassurance-title">Don't worry!</div>
+                <div>No payment was processed and your account remains unchanged. You can try again anytime or continue with your current plan.</div>
+            </div>
+            
+            <div class="next-steps">
+                <h3>What would you like to do next?</h3>
+                <ul>
+                    <li>Try the payment process again with a different payment method</li>
+                    <li>Continue using ProofKit with your current plan</li>
+                    <li>Contact our support team if you encountered any issues</li>
+                    <li>Review our pricing plans to find the best fit for your needs</li>
+                </ul>
+            </div>
+            
+            <div class="action-buttons">
+                <a href="/pricing" class="btn btn-primary">Try Again</a>
+                <a href="/app" class="btn btn-secondary">Continue with Current Plan</a>
+                <a href="mailto:support@proofkit.net" class="btn btn-outline">Contact Support</a>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Footer -->
+    {# Footer component not available yet #}
+</body>
+</html>

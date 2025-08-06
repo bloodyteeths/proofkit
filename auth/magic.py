@@ -119,6 +119,9 @@ class MagicLinkAuth:
     def send_magic_link_email(self, email: str, magic_link: str, role: UserRole) -> bool:
         """Send magic link email via Postmark."""
         try:
+            # Ensure role is a UserRole instance
+            if isinstance(role, str):
+                role = UserRole(role)
             # Create verification URL
             base_url = os.environ.get("BASE_URL", "https://www.proofkit.net")
             verify_url = f"{base_url}/auth/verify?token={magic_link}"
@@ -224,7 +227,7 @@ class MagicLinkAuth:
                     "MessageStream": "outbound"
                 }
                 
-                logger.info(f"Sending Postmark email to {email} with token starting with {postmark_token[:10]}...")
+                logger.info(f"Sending Postmark email to {email} with token starting with {postmark_token[:10] if postmark_token else 'MISSING'}...")
                 
                 with httpx.Client() as client:
                     response = client.post(url, headers=headers, json=data)
@@ -237,10 +240,11 @@ class MagicLinkAuth:
                     return True
                 else:
                     logger.error(f"Postmark API error: {response.status_code} - {response.text}")
-                    # Fall back to development mode
-                    logger.info(f"Falling back to development mode. Magic link for {email}: {verify_url}")
-                    self._store_dev_link(email, verify_url)
-                    return True
+                    # Only fall back to dev mode if explicitly enabled
+                    if email_dev_mode:
+                        logger.info(f"Falling back to development mode. Magic link for {email}: {verify_url}")
+                        self._store_dev_link(email, verify_url)
+                    return False  # Return False if Postmark fails in production
             else:
                 # Development mode - log the link and show it in response
                 logger.info(f"Development mode or no Postmark token. Magic link for {email}: {verify_url}")
@@ -250,12 +254,14 @@ class MagicLinkAuth:
                 
         except Exception as e:
             logger.error(f"Failed to send magic link email to {email}: {e}")
-            # Try to at least store the dev link
-            try:
-                self._store_dev_link(email, verify_url)
-                return True
-            except:
-                return False
+            # Only store dev link if in dev mode
+            if email_dev_mode:
+                try:
+                    self._store_dev_link(email, verify_url)
+                    return True
+                except:
+                    pass
+            return False
     
     def _store_dev_link(self, email: str, verify_url: str) -> None:
         """Store development magic link for temporary access."""
@@ -449,4 +455,41 @@ def require_role(required_role: UserRole):
 
 def require_qa(request: Request) -> User:
     """Require QA role."""
-    return require_role(UserRole.QA)(request) 
+    return require_role(UserRole.QA)(request)
+
+
+def require_auth_redirect(request: Request) -> User:
+    """Require authentication - redirect to login if not authenticated."""
+    user = get_current_user(request)
+    if not user:
+        # Get the current URL for return redirect
+        return_url = str(request.url)
+        login_url = f"/auth/login?return_url={return_url}"
+        raise HTTPException(
+            status_code=302,
+            detail="Redirect to login",
+            headers={"Location": login_url}
+        )
+    return user
+
+
+def require_role_redirect(required_role: UserRole):
+    """Decorator to require specific role with redirect."""
+    def decorator(request: Request) -> User:
+        user = require_auth_redirect(request)
+        if user.role != required_role:
+            # Get the current URL for return redirect
+            return_url = str(request.url)
+            login_url = f"/auth/login?return_url={return_url}&error=insufficient_role"
+            raise HTTPException(
+                status_code=302,
+                detail="Redirect to login",
+                headers={"Location": login_url}
+            )
+        return user
+    return decorator
+
+
+def require_qa_redirect(request: Request) -> User:
+    """Require QA role with redirect to login."""
+    return require_role_redirect(UserRole.QA)(request) 

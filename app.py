@@ -32,7 +32,7 @@ from datetime import datetime, timezone
 from io import StringIO
 
 from fastapi import FastAPI, Request, Form, File, UploadFile, HTTPException, Depends, Response
-from fastapi.responses import JSONResponse, HTMLResponse, FileResponse, RedirectResponse
+from fastapi.responses import JSONResponse, HTMLResponse, FileResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
@@ -60,8 +60,11 @@ from core.cleanup import schedule_cleanup
 from core.validation import create_validation_pack, get_validation_pack_info
 
 # Import auth modules
-from auth.magic import auth_handler, AuthMiddleware, get_current_user, require_auth, require_qa
+from auth.magic import auth_handler, AuthMiddleware, get_current_user, require_auth, require_qa, require_qa_redirect
 from auth.models import UserRole
+
+# Import middleware
+from middleware.quota import get_user_usage_summary
 
 # Import API routes
 from api.routes.pay import router as payment_router
@@ -544,6 +547,90 @@ def generate_job_id(spec_data: Dict[str, Any], csv_content: bytes) -> str:
     return full_hash[:10]  # First 10 characters as short ID
 
 
+def generate_usage_chart_data(recent_jobs: list) -> dict:
+    """
+    Generate usage chart data from user's job history.
+    
+    Args:
+        recent_jobs: List of user's recent jobs
+        
+    Returns:
+        Dictionary with labels and data for chart
+    """
+    from collections import defaultdict
+    from datetime import datetime, timedelta
+    
+    try:
+        # Initialize monthly counts for last 6 months
+        now = datetime.now()
+        monthly_data = defaultdict(int)
+        
+        # Generate last 6 months
+        months = []
+        for i in range(5, -1, -1):  # 6 months ago to current
+            month_date = now.replace(day=1) - timedelta(days=30 * i)
+            month_key = month_date.strftime('%Y-%m')
+            month_label = month_date.strftime('%b')
+            months.append((month_key, month_label))
+            monthly_data[month_key] = 0  # Initialize to 0
+        
+        # Count jobs by month
+        jobs_processed = 0
+        for job in recent_jobs or []:
+            try:
+                if job.get('created_at'):
+                    # Parse the created_at timestamp
+                    if isinstance(job['created_at'], str):
+                        # Handle various timestamp formats
+                        created_at_str = job['created_at']
+                        if created_at_str.endswith('Z'):
+                            created_at_str = created_at_str[:-1] + '+00:00'
+                        elif '+' not in created_at_str and 'T' in created_at_str:
+                            created_at_str += '+00:00'
+                        job_date = datetime.fromisoformat(created_at_str)
+                    else:
+                        job_date = job['created_at']
+                    
+                    month_key = job_date.strftime('%Y-%m')
+                    if month_key in monthly_data:
+                        monthly_data[month_key] += 1
+                        jobs_processed += 1
+            except (ValueError, TypeError, AttributeError) as e:
+                logger.debug(f"Error processing job date: {e}")
+                continue
+        
+        # Extract labels and data
+        labels = [month[1] for month in months]
+        data = [monthly_data[month[0]] for month in months]
+        
+        logger.info(f"Generated usage chart data: {jobs_processed} jobs processed, data: {data}")
+        
+        # Ensure we have valid data - if all zeros but we have jobs, distribute them to current month
+        if jobs_processed > 0 and all(d == 0 for d in data):
+            # Put all jobs in the current month if date parsing failed
+            data[-1] = jobs_processed
+            logger.info(f"Fallback: Put {jobs_processed} jobs in current month due to date parsing issues")
+        
+        return {
+            'labels': labels,
+            'data': data
+        }
+    
+    except Exception as e:
+        logger.error(f"Error generating usage chart data: {e}")
+        # Return fallback data
+        now = datetime.now()
+        labels = []
+        for i in range(5, -1, -1):
+            month_date = now.replace(day=1) - timedelta(days=30 * i)
+            labels.append(month_date.strftime('%b'))
+        
+        return {
+            'labels': labels,
+            'data': [0] * 6  # 6 months of zero data
+        }
+
+
 def create_job_storage_path(job_id: str) -> Path:
     """
     Create storage path for job using path hashing.
@@ -757,7 +844,7 @@ def process_csv_and_spec(csv_content: bytes, spec_data: Dict[str, Any],
         },
         "creator": {
             "email": creator.email if creator else None,
-            "role": creator.role.value if creator else None,
+            "role": creator.role if creator else None,  # role is already a string due to use_enum_values
             "plan": creator.plan if creator else "free"
         } if creator else None
     }
@@ -994,6 +1081,28 @@ async def compile_csv_html(
                 }
             )
         
+        # Check quota before processing
+        if current_user:
+            from middleware.quota import check_compilation_quota, record_usage, get_user_usage_summary
+            can_compile, quota_error = check_compilation_quota(current_user)
+            if not can_compile:
+                logger.warning(f"[{request_id}] Quota exceeded for {current_user.email}")
+                
+                # Get usage details for better UX
+                usage_summary = get_user_usage_summary(current_user.email)
+                
+                # Handle HTMX requests with proper redirect headers
+                if request.headers.get('HX-Request'):
+                    response = Response(status_code=303)
+                    response.headers['HX-Redirect'] = '/upgrade-required'
+                    return response
+                else:
+                    # Regular redirect for non-HTMX requests
+                    return RedirectResponse(
+                        url="/upgrade-required",
+                        status_code=303
+                    )
+        
         # Generate deterministic job ID
         job_id = generate_job_id(spec_data, csv_content)
         logger.info(f"[{request_id}] Generated job ID: {job_id}")
@@ -1006,6 +1115,10 @@ async def compile_csv_html(
         # Process through complete pipeline
         try:
             result = process_csv_and_spec(csv_content, spec_data, job_dir, job_id, creator=current_user)
+            
+            # Record usage after successful processing
+            if current_user:
+                record_usage(current_user, 'certificate_compiled')
             logger.info(f"[{request_id}] Processing completed: {'PASS' if result['pass'] else 'FAIL'}")
             
             # Check approval status
@@ -1265,15 +1378,64 @@ async def verify_bundle(request: Request, bundle_id: str) -> HTMLResponse:
         # Load decision result
         decision_path = job_dir / "decision.json"
         if not decision_path.exists():
-            raise FileNotFoundError("Decision file not found")
+            logger.warning(f"[{request_id}] Decision file not found: {decision_path}")
+            failed_verification = {
+                "valid": False,
+                "integrity_valid": False,
+                "decision_valid": False,
+                "manifest_valid": False,
+                "errors": ["Decision file not found in bundle"]
+            }
+            return templates.TemplateResponse(
+                "verify.html",
+                {
+                    "request": request,
+                    "bundle_id": bundle_id,
+                    "verification": failed_verification
+                }
+            )
         
-        with open(decision_path, 'r') as f:
-            decision_data = json.load(f)
+        try:
+            with open(decision_path, 'r') as f:
+                decision_data = json.load(f)
+        except (json.JSONDecodeError, IOError) as e:
+            logger.warning(f"[{request_id}] Failed to load decision file: {e}")
+            failed_verification = {
+                "valid": False,
+                "integrity_valid": False,
+                "decision_valid": False,
+                "manifest_valid": False,
+                "errors": [f"Invalid or corrupted decision file: {str(e)}"]
+            }
+            return templates.TemplateResponse(
+                "verify.html",
+                {
+                    "request": request,
+                    "bundle_id": bundle_id,
+                    "verification": failed_verification
+                }
+            )
         
         # Load evidence bundle for verification
         zip_path = job_dir / "evidence.zip"
         if not zip_path.exists():
-            raise FileNotFoundError("Evidence bundle not found")
+            logger.warning(f"[{request_id}] Evidence bundle not found: {zip_path}")
+            failed_verification = {
+                "valid": False,
+                "integrity_valid": False,
+                "decision_valid": True,  # We have decision data
+                "manifest_valid": False,
+                "errors": ["Evidence ZIP bundle not found"],
+                "decision": decision_data  # Include what we have
+            }
+            return templates.TemplateResponse(
+                "verify.html",
+                {
+                    "request": request,
+                    "bundle_id": bundle_id,
+                    "verification": failed_verification
+                }
+            )
         
         # Import verification function
         from core.pack import verify_evidence_bundle
@@ -1998,17 +2160,17 @@ async def request_magic_link_unified(
     """
     try:
         # Generate magic link (works for both new and existing users)
-        magic_token = auth_handler.generate_magic_link(email, "op")
+        magic_token = auth_handler.generate_magic_link(email, UserRole.OPERATOR)
         
         # In development mode, include the link
-        dev_mode = os.environ.get("ENV", "development") == "development"
+        dev_mode = os.environ.get("EMAIL_DEV_MODE", "false").lower() == "true"
         dev_link = None
         if dev_mode:
             base_url = os.environ.get("BASE_URL", "https://www.proofkit.net")
             dev_link = f"{base_url}/auth/verify?token={magic_token}"
         
         # Send magic link email
-        email_sent = auth_handler.send_magic_link_email(email, magic_token, "op")
+        email_sent = auth_handler.send_magic_link_email(email, magic_token, UserRole.OPERATOR)
         
         if not email_sent:
             logger.error(f"Failed to send magic link email to {email}")
@@ -2063,18 +2225,40 @@ async def signup_submit(
         HTMLResponse: Magic link sent confirmation page
     """
     try:
+        # Check for trial abuse
+        from middleware.trial_protection import check_trial_abuse, record_trial_signup
+        is_abuse, abuse_reason = check_trial_abuse(request, email)
+        
+        if is_abuse:
+            logger.warning(f"Trial abuse blocked for {email}: {abuse_reason}")
+            return templates.TemplateResponse(
+                "auth/error.html",
+                {
+                    "request": request,
+                    "error": abuse_reason,
+                    "suggestions": [
+                        "Use your existing account to continue",
+                        "Upgrade your current plan for more certificates",
+                        "Contact support if you believe this is an error"
+                    ]
+                }
+            )
+        
+        # Record the trial signup for tracking
+        record_trial_signup(request, email)
+        
         # Generate magic link using auth handler
-        magic_token = auth_handler.generate_magic_link(email, "op")
+        magic_token = auth_handler.generate_magic_link(email, UserRole.OPERATOR)
         
         # In development mode, include the link
-        dev_mode = os.environ.get("ENV", "development") == "development"
+        dev_mode = os.environ.get("EMAIL_DEV_MODE", "false").lower() == "true"
         dev_link = None
         if dev_mode:
             base_url = os.environ.get("BASE_URL", "https://www.proofkit.net")
             dev_link = f"{base_url}/auth/verify?token={magic_token}"
         
         # Send magic link email
-        email_sent = auth_handler.send_magic_link_email(email, magic_token, "op")
+        email_sent = auth_handler.send_magic_link_email(email, magic_token, UserRole.OPERATOR)
         
         if not email_sent:
             logger.error(f"Failed to send magic link email to {email}")
@@ -2119,6 +2303,25 @@ async def request_magic_link(request: Request, email: str = Form(...), role: str
         JSONResponse: Success message or error
     """
     try:
+        # Check for trial abuse if it's a new user
+        from middleware.trial_protection import check_trial_abuse, record_trial_signup
+        
+        # Only check for abuse on operator role (trial users)
+        if role == "op":
+            is_abuse, abuse_reason = check_trial_abuse(request, email)
+            
+            if is_abuse:
+                logger.warning(f"Trial abuse blocked for {email}: {abuse_reason}")
+                return JSONResponse(
+                    status_code=403,
+                    content={
+                        "success": False,
+                        "error": abuse_reason
+                    }
+                )
+            
+            # Record the trial signup for tracking
+            record_trial_signup(request, email)
         # Validate role
         if role not in ["op", "qa"]:
             raise HTTPException(status_code=400, detail="Invalid role. Must be 'op' or 'qa'")
@@ -2253,8 +2456,13 @@ async def approve_job_page(request: Request, job_id: str) -> HTMLResponse:
     Returns:
         HTMLResponse: Approval page with job details
     """
-    # Require QA role
-    user = require_qa(request)
+    # Require QA role with redirect to login
+    try:
+        user = require_qa_redirect(request)
+    except HTTPException as e:
+        if e.status_code == 302:
+            return RedirectResponse(url=e.headers["Location"], status_code=302)
+        raise
     
     try:
         # Load job metadata
@@ -2305,8 +2513,13 @@ async def approve_job(request: Request, job_id: str) -> JSONResponse:
     Returns:
         JSONResponse: Success message
     """
-    # Require QA role
-    user = require_qa(request)
+    # Require QA role with redirect to login
+    try:
+        user = require_qa_redirect(request)
+    except HTTPException as e:
+        if e.status_code == 302:
+            return RedirectResponse(url=e.headers["Location"], status_code=302)
+        raise
     
     try:
         # Load job metadata
@@ -2407,6 +2620,40 @@ def save_job_metadata(job_dir: Path, job_id: str, metadata: Dict[str, Any]) -> N
         json.dump(metadata, f, indent=2)
 
 
+@app.get("/upgrade-required", response_class=HTMLResponse, tags=["auth"])
+async def upgrade_required_page(request: Request) -> HTMLResponse:
+    """
+    Show upgrade required page when quota is exceeded.
+    
+    Args:
+        request: FastAPI request object
+        
+    Returns:
+        HTMLResponse: Upgrade required page
+    """
+    try:
+        current_user = get_current_user(request)
+        if not current_user:
+            return RedirectResponse(url="/auth/login", status_code=302)
+        
+        # Get usage details for display
+        usage_summary = get_user_usage_summary(current_user.email)
+        
+        return templates.TemplateResponse(
+            "quota_exceeded.html",
+            {
+                "request": request,
+                "used": usage_summary.get('monthly_used', usage_summary.get('total_used', 2)),
+                "limit": usage_summary.get('monthly_limit', usage_summary.get('total_limit', 2)),
+                "plan": usage_summary.get('plan', 'free'),
+                "user": current_user
+            }
+        )
+    except Exception as e:
+        logger.error(f"Error loading upgrade required page: {e}")
+        return RedirectResponse(url="/pricing", status_code=302)
+
+
 @app.get("/dashboard", response_class=HTMLResponse, tags=["auth"])
 async def dashboard_page(request: Request) -> HTMLResponse:
     """
@@ -2417,49 +2664,121 @@ async def dashboard_page(request: Request) -> HTMLResponse:
         return RedirectResponse(url="/auth/get-started", status_code=302)
     
     try:
-        # Get user's quota information
-        from middleware.quota import get_user_usage_summary
-        quota_data = get_user_usage_summary(user.email)
+        # Get user's quota information (with fallback)
+        try:
+            quota_data = get_user_usage_summary(user.email)
+        except Exception as quota_error:
+            logger.warning(f"Failed to get user quota data: {quota_error}")
+            # Fallback quota data for free tier
+            quota_data = {
+                'plan': 'free',
+                'plan_name': 'Free',
+                'monthly_used': 0,
+                'monthly_limit': 2,
+                'monthly_remaining': 2,
+                'total_used': 0,
+                'total_limit': 2,
+                'total_remaining': 2,
+                'is_unlimited': False,
+                'overage_available': False,
+                'subscription': None,
+                'next_billing_date': 'N/A'
+            }
         
         # Get user's recent jobs
         recent_jobs = []
-        for job_dir in STORAGE_DIR.iterdir():
-            if not job_dir.is_dir():
+        jobs_found = 0
+        jobs_checked = 0
+        
+        logger.info(f"Dashboard: Searching for jobs for user: {user.email}")
+        
+        # Search through all directories in storage
+        for item in STORAGE_DIR.iterdir():
+            if not item.is_dir():
                 continue
-            meta_path = job_dir / "meta.json"
-            if not meta_path.exists():
+            
+            # Skip special directories
+            if item.name in ['auth', 'test', 'trial_tracking', 'quota']:
                 continue
-            try:
-                with open(meta_path, "r") as f:
-                    meta = json.load(f)
-                creator = meta.get("creator", {})
-                
-                # Only show user's own jobs
-                if creator.get("email") == user.email:
-                    decision_path = job_dir / "decision.json"
-                    pass_fail = False
-                    if decision_path.exists():
-                        with open(decision_path, "r") as f:
-                            decision = json.load(f)
-                            pass_fail = decision.get("pass", False)
+            
+            # Check if this is a hash directory (2 chars) with job subdirs
+            if len(item.name) == 2:  # Hash directory like '68'
+                for job_dir in item.iterdir():
+                    if not job_dir.is_dir():
+                        continue
                     
-                    recent_jobs.append({
-                        "job_id": meta.get("job_id"),
-                        "created_at": meta.get("created_at"),
-                        "approved": meta.get("approved", False),
-                        "pass": pass_fail,
-                        "meta": meta
-                    })
-            except Exception:
-                continue
+                    meta_path = job_dir / "meta.json"
+                    if not meta_path.exists():
+                        continue
+                    
+                    jobs_checked += 1
+                    try:
+                        with open(meta_path, "r") as f:
+                            meta = json.load(f)
+                        creator = meta.get("creator", {})
+                        
+                        # Handle both dict and None creator
+                        if creator:
+                            creator_email = creator.get("email", "").lower().strip()
+                        else:
+                            creator_email = ""
+                        
+                        user_email_normalized = user.email.lower().strip()
+                        
+                        if creator_email == user_email_normalized:
+                            decision_path = job_dir / "decision.json"
+                            pass_fail = False
+                            if decision_path.exists():
+                                with open(decision_path, "r") as f:
+                                    decision = json.load(f)
+                                    pass_fail = decision.get("pass", False)
+                            
+                            recent_jobs.append({
+                                "job_id": meta.get("job_id"),
+                                "created_at": meta.get("created_at"),
+                                "approved": meta.get("approved", False),
+                                "pass": pass_fail,
+                                "meta": meta
+                            })
+                            jobs_found += 1
+                            logger.debug(f"Found job {meta.get('job_id')} for user")
+                    except Exception as e:
+                        logger.debug(f"Error reading job {job_dir}: {e}")
+                        continue
         
-        # Sort by created_at desc and take top 5
+        logger.info(f"Dashboard: Checked {jobs_checked} jobs, found {jobs_found} for {user.email}")
+        
+        # Sort by created_at desc
         recent_jobs.sort(key=lambda j: j["created_at"] or "", reverse=True)
-        recent_jobs = recent_jobs[:5]
         
-        # Get pricing info for the user's plan
-        from core.billing import get_plan
-        plan_info = get_plan(quota_data.get('plan', 'free'))
+        # Generate usage data for chart based on ALL user's jobs (not just top 5)
+        usage_data = generate_usage_chart_data(recent_jobs)  # Pass all jobs for chart
+        logger.info(f"Dashboard for {user.email}: Found {len(recent_jobs)} total jobs, usage_data: {usage_data}")
+        
+        # Get only top 5 for the recent compilations table
+        recent_jobs_display = recent_jobs[:5]
+        
+        # Get pricing info for the user's plan (with fallback)
+        try:
+            from core.billing import get_plan
+            plan_info = get_plan(quota_data.get('plan', 'free'))
+            if not plan_info:
+                # Fallback to default plan info
+                plan_info = {
+                    'name': 'Free',
+                    'price_eur': 0,
+                    'single_cert_price_eur': 7,
+                    'jobs_month': 2
+                }
+        except (ImportError, Exception) as e:
+            logger.warning(f"Failed to import billing module or get plan info: {e}")
+            # Fallback plan info
+            plan_info = {
+                'name': 'Free', 
+                'price_eur': 0,
+                'single_cert_price_eur': 7,
+                'jobs_month': 2
+            }
         
         # Prepare template context
         context = {
@@ -2478,17 +2797,36 @@ async def dashboard_page(request: Request) -> HTMLResponse:
                 "subscription": quota_data.get('subscription'),
                 "next_billing_date": quota_data.get('next_billing_date', 'N/A')
             },
-            "recent_jobs": recent_jobs
+            "recent_jobs": recent_jobs_display,  # Only show top 5 in table
+            "usage_data": usage_data
         }
         
         return templates.TemplateResponse("dashboard.html", context)
         
     except Exception as e:
         logger.error(f"Dashboard error for {user.email}: {e}")
-        return templates.TemplateResponse("auth/error.html", {
-            "request": request, 
-            "error": "Failed to load dashboard data"
-        })
+        # Return a basic dashboard with minimal data instead of error page
+        fallback_context = {
+            "request": request,
+            "user": user,
+            "quota": {
+                "plan": "free",
+                "plan_name": "Free",
+                "price": 0,
+                "monthly_used": 0,
+                "monthly_limit": 2,
+                "monthly_remaining": 2,
+                "total_used": 0,
+                "total_remaining": 2,
+                "single_cert_price": 7,
+                "subscription": None,
+                "next_billing_date": 'N/A'
+            },
+            "recent_jobs": [],
+            "usage_data": {"labels": ["Jan", "Feb", "Mar", "Apr", "May", "Jun"], "data": [0, 0, 0, 0, 0, 0]}
+        }
+        logger.warning(f"Using fallback dashboard data for {user.email}")
+        return templates.TemplateResponse("dashboard.html", fallback_context)
 
 @app.get("/my-jobs", response_class=HTMLResponse, tags=["auth"])
 async def my_jobs_page(request: Request) -> HTMLResponse:
@@ -2512,7 +2850,10 @@ async def my_jobs_page(request: Request) -> HTMLResponse:
                 created_at = meta.get("created_at")
                 approved_at = meta.get("approved_at")
                 # OP: jobs they submitted; QA: jobs not yet approved
-                if (user.role == UserRole.OPERATOR and creator.get("email") == user.email) or (user.role == UserRole.QA and not approved):
+                creator_email = creator.get("email", "").lower().strip()
+                user_email_normalized = user.email.lower().strip()
+                
+                if (user.role == UserRole.OPERATOR and creator_email == user_email_normalized) or (user.role == UserRole.QA and not approved):
                     jobs.append({
                         "job_id": job_id,
                         "created_at": created_at,
@@ -2623,6 +2964,86 @@ async def download_validation_pack(
     except Exception as e:
         logger.error(f"Failed to download validation pack for job {job_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to download validation pack")
+
+
+# Billing success/cancel pages
+@app.get("/billing/success", response_class=HTMLResponse, tags=["billing"])
+async def billing_success_page(
+    request: Request,
+    session_id: Optional[str] = None,
+    plan: Optional[str] = None
+) -> HTMLResponse:
+    """
+    Display billing success page after successful payment.
+    
+    Args:
+        request: FastAPI request object
+        session_id: Stripe checkout session ID
+        plan: Plan name for subscription upgrades
+        
+    Returns:
+        HTML success page
+    """
+    try:
+        current_user = None
+        try:
+            current_user = get_current_user(request)
+        except:
+            pass
+        
+        # Get session details if available
+        session_details = None
+        if session_id:
+            from core.stripe_util import get_checkout_session
+            session_details = get_checkout_session(session_id)
+        
+        return templates.TemplateResponse(
+            "billing_success.html",
+            {
+                "request": request,
+                "current_user": current_user,
+                "session_id": session_id,
+                "plan": plan,
+                "session_details": session_details,
+                "title": "Payment Successful - ProofKit"
+            }
+        )
+    except Exception as e:
+        logger.error(f"Error rendering billing success page: {e}")
+        # Fallback to dashboard or pricing page
+        return RedirectResponse(url="/dashboard" if current_user else "/pricing", status_code=302)
+
+
+@app.get("/billing/cancel", response_class=HTMLResponse, tags=["billing"])
+async def billing_cancel_page(request: Request) -> HTMLResponse:
+    """
+    Display billing cancellation page after cancelled payment.
+    
+    Args:
+        request: FastAPI request object
+        
+    Returns:
+        HTML cancellation page
+    """
+    try:
+        current_user = None
+        try:
+            current_user = get_current_user(request)
+        except:
+            pass
+        
+        return templates.TemplateResponse(
+            "billing_cancel.html",
+            {
+                "request": request,
+                "current_user": current_user,
+                "title": "Payment Cancelled - ProofKit"
+            }
+        )
+    except Exception as e:
+        logger.error(f"Error rendering billing cancel page: {e}")
+        # Fallback to pricing page
+        return RedirectResponse(url="/pricing", status_code=302)
 
 
 # Event handlers for background tasks

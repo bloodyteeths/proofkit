@@ -62,7 +62,7 @@ PLANS: Dict[str, Dict[str, Any]] = {
         ],
         "pdf_template": "standard",
         "stripe_product_id": "proofkit_starter",
-        "stripe_price_id": "price_starter_month",
+        "stripe_price_id": os.environ.get("STRIPE_PRICE_ID_STARTER", "price_starter_month"),
         "stripe_overage_price_id": "price_starter_over",
         "single_cert_price_id": "price_single_cert"
     },
@@ -80,7 +80,7 @@ PLANS: Dict[str, Dict[str, Any]] = {
         ],
         "pdf_template": "pro",
         "stripe_product_id": "proofkit_pro", 
-        "stripe_price_id": "price_pro_month",
+        "stripe_price_id": os.environ.get("STRIPE_PRICE_ID_PRO", "price_pro_month"),
         "stripe_overage_price_id": "price_pro_over",
         "single_cert_price_id": "price_single_cert"
     },
@@ -98,7 +98,7 @@ PLANS: Dict[str, Dict[str, Any]] = {
         ],
         "pdf_template": "business",
         "stripe_product_id": "proofkit_business",
-        "stripe_price_id": "price_business_month", 
+        "stripe_price_id": os.environ.get("STRIPE_PRICE_ID_BUSINESS", "price_business_month"), 
         "stripe_overage_price_id": "price_business_over",
         "single_cert_price_id": "price_single_cert"
     },

@@ -76,6 +76,7 @@
                 
                 <!-- Authentication Links -->
                 {% if user %}
+                <span class="nav-user">Welcome, {{ user.email.split('@')[0] }}</span>
                 <a href="/dashboard" class="nav-link">Dashboard</a>
                 <a href="/auth/logout" class="nav-link">Logout</a>
                 {% else %}

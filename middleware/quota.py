@@ -22,8 +22,33 @@ from typing import Dict, Any, Optional, Tuple, List
 from fastapi import Request, HTTPException
 from fastapi.responses import JSONResponse
 
-from core.billing import get_plan, get_single_cert_price, get_stripe_price_id
-from core.stripe_util import create_oneoff_checkout, create_usage_record
+# Temporary fix - import only if available
+try:
+    from core.billing import get_plan, get_single_cert_price, get_stripe_price_id
+    from core.stripe_util import create_oneoff_checkout, create_usage_record
+except ImportError:
+    # Fallback for when Stripe is not configured
+    def get_plan(plan_name):
+        plans = {
+            'free': {'name': 'Free', 'price_eur': 0, 'certificates_per_month': 0, 'single_cert_price_eur': 7},
+            'starter': {'name': 'Starter', 'price_eur': 49, 'certificates_per_month': 20, 'single_cert_price_eur': 3.50},
+            'pro': {'name': 'Pro', 'price_eur': 149, 'certificates_per_month': 100, 'single_cert_price_eur': 2.50},
+            'enterprise': {'name': 'Enterprise', 'price_eur': 499, 'certificates_per_month': -1, 'single_cert_price_eur': 0}
+        }
+        return plans.get(plan_name, plans['free'])
+    
+    def get_single_cert_price(plan_name):
+        plan = get_plan(plan_name)
+        return plan.get('single_cert_price_eur', 7)
+    
+    def get_stripe_price_id(plan_name):
+        return None
+    
+    def create_oneoff_checkout(*args, **kwargs):
+        return None
+    
+    def create_usage_record(*args, **kwargs):
+        return None
 from core.logging import get_logger
 from auth.models import User
 
@@ -366,27 +391,41 @@ def get_user_usage_summary(user_email: str) -> Dict[str, Any]:
         return {
             'plan': user_plan,
             'plan_name': plan['name'],
-            'total_used': total_used,
+            'monthly_used': total_used,  # For free tier, show total usage as "monthly"
+            'monthly_limit': 2,          # For free tier, show limit as "monthly"
+            'total_used': total_used,    # Keep original keys for backward compatibility
             'total_limit': 2,
             'total_remaining': max(0, 2 - total_used),
+            'monthly_remaining': max(0, 2 - total_used),
             'is_unlimited': False,
-            'overage_available': False
+            'overage_available': False,
+            'subscription': None,
+            'next_billing_date': 'N/A'
         }
     else:
-        monthly_quota = plan['jobs_month']
-        monthly_remaining = max(0, monthly_quota - current_month_usage)
+        monthly_quota = plan.get('jobs_month', 0)
+        # Handle unlimited plans
+        if monthly_quota == -1:
+            monthly_quota = float('inf')
+        
+        monthly_remaining = max(0, monthly_quota - current_month_usage) if monthly_quota != float('inf') else float('inf')
         overage_used = quota_data['current_month']['overage_used']
         
         return {
             'plan': user_plan,
             'plan_name': plan['name'],
             'monthly_used': current_month_usage,
-            'monthly_limit': monthly_quota,
-            'monthly_remaining': monthly_remaining,
+            'monthly_limit': monthly_quota if monthly_quota != float('inf') else None,
+            'monthly_remaining': monthly_remaining if monthly_remaining != float('inf') else None,
+            'total_used': current_month_usage,  # For paid plans, total is same as monthly
+            'total_limit': monthly_quota if monthly_quota != float('inf') else None,
+            'total_remaining': monthly_remaining if monthly_remaining != float('inf') else None,
             'overage_used': overage_used,
             'overage_price': plan.get('overage_price_eur'),
             'is_unlimited': monthly_quota == float('inf'),
-            'overage_available': bool(plan.get('overage_price_eur'))
+            'overage_available': bool(plan.get('overage_price_eur')),
+            'subscription': quota_data.get('subscription'),
+            'next_billing_date': 'N/A'  # TODO: Calculate from subscription data
         }
 
 

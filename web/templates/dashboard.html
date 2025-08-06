@@ -53,7 +53,7 @@
         </div>
 
         <!-- Billing Status Card -->
-        <div class="stat-card billing-card">
+        <div class="stat-card billing-card{% if quota.plan == 'free' and not quota.subscription %} clickable-card{% endif %}" {% if quota.plan == 'free' and not quota.subscription %}onclick="window.location.href='/pricing'" style="cursor: pointer;"{% endif %}>
             <div class="stat-icon">💳</div>
             <div class="stat-content">
                 <h3>Billing Status</h3>
@@ -63,7 +63,7 @@
                 {% else %}
                 <div class="status-badge inactive">No Subscription</div>
                 {% if quota.plan == 'free' %}
-                <p class="stat-description">Using free tier</p>
+                <p class="stat-description">Click to upgrade and get more certificates</p>
                 {% else %}
                 <p class="stat-description">Pay-as-you-go</p>
                 {% endif %}
@@ -242,6 +242,16 @@
 .stat-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.clickable-card {
+    transition: all 0.3s ease;
+}
+
+.clickable-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
+    border: 2px solid #667eea;
 }
 
 .stat-icon {
@@ -666,10 +676,10 @@
 </style>
 
 <script{% if get_nonce(request) %} nonce="{{ get_nonce(request) }}"{% endif %}>
-// Mock usage data for chart
+// Real usage data from server
 const usageData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-    data: [5, 8, 12, 10, 15, 18]
+    labels: {{ usage_data.labels | tojson }},
+    data: {{ usage_data.data | tojson }}
 };
 
 // Draw simple usage chart
@@ -687,26 +697,39 @@ function drawUsageChart() {
     // Simple bar chart
     const barWidth = width / usageData.labels.length * 0.6;
     const spacing = width / usageData.labels.length * 0.4;
-    const maxValue = Math.max(...usageData.data);
+    const maxValue = Math.max(...usageData.data, 1); // At least 1 to avoid division by zero
     
     usageData.data.forEach((value, index) => {
-        const barHeight = (value / maxValue) * (height - 40);
+        const barHeight = maxValue > 0 ? (value / maxValue) * (height - 40) : 0;
         const x = index * (barWidth + spacing) + spacing;
         const y = height - barHeight - 20;
         
-        // Draw bar
-        ctx.fillStyle = '#667eea';
-        ctx.fillRect(x, y, barWidth, barHeight);
+        // Draw bar (only if value > 0)
+        if (value > 0) {
+            ctx.fillStyle = '#667eea';
+            ctx.fillRect(x, y, barWidth, barHeight);
+            
+            // Draw value on top of bar
+            ctx.fillStyle = '#374151';
+            ctx.font = 'bold 12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(value, x + barWidth / 2, y - 5);
+        }
         
         // Draw label
         ctx.fillStyle = '#6b7280';
         ctx.font = '12px sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText(usageData.labels[index], x + barWidth / 2, height - 5);
-        
-        // Draw value
-        ctx.fillText(value, x + barWidth / 2, y - 5);
     });
+    
+    // If no data, show a message
+    if (usageData.data.every(d => d === 0)) {
+        ctx.fillStyle = '#9ca3af';
+        ctx.font = '16px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('No usage data yet', width / 2, height / 2);
+    }
 }
 
 // Billing management functions

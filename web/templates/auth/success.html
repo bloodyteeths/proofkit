@@ -1,72 +1,302 @@
-{% extends "base.html" %}
+{% extends "modern_base.html" %}
 
 {% block title %}Authentication Successful - ProofKit{% endblock %}
+{% block description %}Successfully authenticated with ProofKit{% endblock %}
 
 {% block content %}
-<main class="container">
-    <article>
-        <header>
-            <h1>✅ Authentication Successful</h1>
-            <p>Welcome to ProofKit!</p>
-        </header>
-
-        <div class="success-banner">
-            <h3>🎉 You're now logged in</h3>
-            <p><strong>Email:</strong> {{ email }}</p>
-            <p><strong>Role:</strong> {{ role.upper() }}</p>
-            <p><small>Your session will remain active for 24 hours.</small></p>
+<div class="auth-page">
+    <div class="auth-container">
+        <!-- Success Header -->
+        <div class="auth-header success-header">
+            <div class="success-icon">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                    <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+            </div>
+            <h1>Welcome to ProofKit!</h1>
+            <p class="subtitle">You're successfully authenticated</p>
         </div>
-
-        <div style="margin-top: 2rem;">
-            <h3>What's Next?</h3>
-            <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem;">
-                <a href="/" class="primary" role="button">
-                    🚀 Start Processing Files
+        
+        <!-- User Info -->
+        <div class="auth-content">
+            <div class="success-info">
+                <div class="info-item">
+                    <span class="info-label">Email:</span>
+                    <span class="info-value">{{ email }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Role:</span>
+                    <span class="info-value role-badge">{{ role|upper }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Session:</span>
+                    <span class="info-value">Active for 24 hours</span>
+                </div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="action-buttons">
+                <a href="/dashboard" class="btn btn-primary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                        <polyline points="9 22 9 12 15 12 15 22"/>
+                    </svg>
+                    Go to Dashboard
                 </a>
-                <a href="/examples" class="secondary" role="button">
-                    📋 View Examples
+                <a href="/" class="btn btn-secondary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                        <polyline points="10 9 9 9 8 9"/>
+                    </svg>
+                    Process Files
                 </a>
-                {% if role == "qa" %}
-                <a href="/trust" class="outline" role="button">
-                    🔒 QA Dashboard
-                </a>
-                {% endif %}
+            </div>
+            
+            <!-- Quick Access -->
+            <div class="quick-links">
+                <h3>Quick Access</h3>
+                <div class="links-grid">
+                    <a href="/examples" class="quick-link">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+                            <polyline points="13 2 13 9 20 9"/>
+                        </svg>
+                        <span>Examples</span>
+                    </a>
+                    <a href="/docs" class="quick-link">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                        </svg>
+                        <span>Documentation</span>
+                    </a>
+                    {% if role == "qa" %}
+                    <a href="/trust" class="quick-link">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                        <span>QA Dashboard</span>
+                    </a>
+                    {% endif %}
+                </div>
             </div>
         </div>
+    </div>
+</div>
 
-        <details style="margin-top: 2rem;">
-            <summary>Session Information</summary>
-            <ul>
-                <li><strong>Login Time:</strong> <span id="login-time"></span></li>
-                <li><strong>Session Expires:</strong> <span id="expires-time"></span></li>
-                <li><strong>Role Permissions:</strong> 
-                    {% if role == "op" %}
-                        Process files, view results
-                    {% else %}
-                        Process files, view results, approve jobs
-                    {% endif %}
-                </li>
-            </ul>
-        </details>
+<style>
+.auth-page {
+    min-height: calc(100vh - 140px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
 
-        <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--muted-border-color);">
-            <form method="POST" action="/auth/logout" style="display: inline;">
-                <button type="submit" class="outline">
-                    🚪 Logout
-                </button>
-            </form>
-        </div>
-    </article>
-</main>
+.auth-container {
+    max-width: 560px;
+    width: 100%;
+    background: white;
+    border-radius: 1.5rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+}
+
+.success-header {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    text-align: center;
+    padding: 3rem 2rem;
+    color: white;
+}
+
+.success-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    margin-bottom: 1.5rem;
+}
+
+.success-icon svg {
+    width: 48px;
+    height: 48px;
+}
+
+.success-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+}
+
+.subtitle {
+    font-size: 1.125rem;
+    opacity: 0.95;
+    margin: 0;
+}
+
+.auth-content {
+    padding: 2.5rem 2rem;
+}
+
+.success-info {
+    background: #f9fafb;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #6b7280;
+}
+
+.info-value {
+    color: #374151;
+    font-weight: 500;
+}
+
+.role-badge {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.btn {
+    flex: 1;
+    padding: 0.875rem 1.5rem;
+    border-radius: 0.75rem;
+    text-decoration: none;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+}
+
+.btn-secondary {
+    background: white;
+    color: #667eea;
+    border: 2px solid #667eea;
+}
+
+.btn-secondary:hover {
+    background: #f3f4f6;
+}
+
+.quick-links {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.quick-links h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #6b7280;
+    margin: 0 0 1rem 0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.links-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+}
+
+.quick-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: #f9fafb;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    color: #374151;
+    transition: all 0.2s ease;
+}
+
+.quick-link:hover {
+    background: #f3f4f6;
+    transform: translateX(4px);
+}
+
+.quick-link svg {
+    color: #667eea;
+    flex-shrink: 0;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .auth-page {
+        padding: 1rem;
+    }
+    
+    .auth-container {
+        border-radius: 1rem;
+    }
+    
+    .success-header {
+        padding: 2rem 1.5rem;
+    }
+    
+    .success-header h1 {
+        font-size: 1.75rem;
+    }
+    
+    .auth-content {
+        padding: 1.5rem;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+}
+</style>
 
 <script>
-// Set login time information
-document.addEventListener('DOMContentLoaded', function() {
-    const now = new Date();
-    const expires = new Date(now.getTime() + (24 * 60 * 60 * 1000)); // 24 hours
-    
-    document.getElementById('login-time').textContent = now.toLocaleString();
-    document.getElementById('expires-time').textContent = expires.toLocaleString();
-});
+// Auto-redirect to dashboard after a few seconds
+setTimeout(() => {
+    window.location.href = '/dashboard';
+}, 5000);
 </script>
-{% endblock %} 
+{% endblock %}
