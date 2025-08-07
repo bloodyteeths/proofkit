@@ -40,15 +40,15 @@
                     <div class="plan-badge">POPULAR</div>
                     <h3 class="plan-name">Starter</h3>
                     <div class="plan-price">
-                        <span class="currency">€</span>
-                        <span class="amount">14</span>
+                        <span class="currency">$</span>
+                        <span class="amount">19</span>
                         <span class="period">/month</span>
                     </div>
                     <ul class="plan-features">
                         <li>10 certificates/month</li>
                         <li>Standard PDF template</li>
                         <li>Email support</li>
-                        <li>€3 per extra certificate</li>
+                        <li>$3 per extra certificate</li>
                     </ul>
                     <button class="plan-button" onclick="selectPlan('starter')">
                         Get Started
@@ -60,15 +60,15 @@
                     <div class="plan-badge">BEST VALUE</div>
                     <h3 class="plan-name">Pro</h3>
                     <div class="plan-price">
-                        <span class="currency">€</span>
-                        <span class="amount">59</span>
+                        <span class="currency">$</span>
+                        <span class="amount">79</span>
                         <span class="period">/month</span>
                     </div>
                     <ul class="plan-features">
                         <li>75 certificates/month</li>
                         <li>Custom logo template</li>
                         <li>Priority support</li>
-                        <li>€1.50 per extra certificate</li>
+                        <li>$2 per extra certificate</li>
                     </ul>
                     <button class="plan-button primary" onclick="selectPlan('pro')">
                         Most Popular
@@ -79,15 +79,15 @@
                 <div class="plan-card">
                     <h3 class="plan-name">Business</h3>
                     <div class="plan-price">
-                        <span class="currency">€</span>
-                        <span class="amount">199</span>
+                        <span class="currency">$</span>
+                        <span class="amount">249</span>
                         <span class="period">/month</span>
                     </div>
                     <ul class="plan-features">
                         <li>300 certificates/month</li>
                         <li>Custom branding</li>
                         <li>Phone & email support</li>
-                        <li>€0.75 per extra certificate</li>
+                        <li>$1 per extra certificate</li>
                     </ul>
                     <button class="plan-button" onclick="selectPlan('business')">
                         Scale Up
@@ -100,7 +100,7 @@
                     <span>OR</span>
                 </div>
                 <button class="one-time-button" onclick="purchaseSingle()">
-                    Purchase Single Certificate (€7)
+                    Purchase Single Certificate ($9)
                 </button>
             </div>
         </div>
@@ -427,23 +427,28 @@ function selectPlan(plan) {
         });
     }
     
-    // Redirect to checkout
-    fetch('/api/pay/checkout', {
+    // Use unified Stripe upgrade flow
+    fetch(`/api/upgrade/${plan}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
-            plan: plan,
-            payment_type: 'subscription'
+            success_url: window.location.origin + '/billing/success?plan=' + plan,
+            cancel_url: window.location.origin + '/pricing'
         })
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.checkout_url) {
+    .then(async response => {
+        if (response.status === 401) {
+            window.location.href = '/auth/login?return_url=' + encodeURIComponent('/pricing');
+            return;
+        }
+        const data = await response.json();
+        if (response.ok && data.checkout_url) {
             window.location.href = data.checkout_url;
         } else {
-            alert('Payment system is being configured. Please try again later.');
+            alert('Upgrade failed: ' + (data.detail || 'Please try again later.'));
         }
     })
     .catch(error => {
@@ -466,23 +471,29 @@ function purchaseSingle() {
         });
     }
     
-    // Redirect to single certificate checkout
-    fetch('/api/pay/checkout', {
+    // Unified single cert purchase flow
+    fetch('/api/buy-single', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
-            payment_type: 'one_time',
-            quantity: 1
+            certificate_count: 1,
+            success_url: window.location.origin + '/dashboard',
+            cancel_url: window.location.origin + '/pricing'
         })
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.checkout_url) {
+    .then(async response => {
+        if (response.status === 401) {
+            window.location.href = '/auth/login?return_url=' + encodeURIComponent('/pricing');
+            return;
+        }
+        const data = await response.json();
+        if (response.ok && data.checkout_url) {
             window.location.href = data.checkout_url;
         } else {
-            alert('Payment system is being configured. Please try again later.');
+            alert('Purchase failed: ' + (data.detail || 'Please try again later.'));
         }
     })
     .catch(error => {

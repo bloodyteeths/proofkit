@@ -23,7 +23,7 @@
                 {% if quota.plan == 'free' %}
                 <p class="stat-description">{{ quota.total_remaining }} certificates remaining (lifetime)</p>
                 {% else %}
-                <p class="stat-description">€{{ quota.price }}/month</p>
+                <p class="stat-description">${{ quota.price }}/month</p>
                 {% endif %}
             </div>
             <div class="stat-action">
@@ -175,7 +175,7 @@
                  <a href="#" class="action-card" onclick="buySingleCert(event)">
                     <div class="action-icon">🎫</div>
                     <h3>Buy Single Certificate</h3>
-                    <p>€{{ quota.single_cert_price }} per certificate</p>
+                    <p>${{ quota.single_cert_price }} per certificate</p>
                 </a>
                 {% endif %}
                 

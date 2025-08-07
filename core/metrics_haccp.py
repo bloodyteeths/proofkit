@@ -25,10 +25,7 @@ import logging
 
 from core.models import SpecV1, DecisionResult, SensorMode
 from core.sensor_utils import combine_sensor_readings
-from core.decide import (
-    detect_temperature_columns,
-    DecisionError
-)
+from core.temperature_utils import detect_temperature_columns, DecisionError
 
 logger = logging.getLogger(__name__)
 

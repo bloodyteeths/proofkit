@@ -27,11 +27,8 @@ import logging
 
 from core.models import SpecV1, DecisionResult, SensorMode
 from core.sensor_utils import combine_sensor_readings
-from core.decide import (
-    detect_temperature_columns,
-    calculate_continuous_hold_time,
-    DecisionError
-)
+from core.temperature_utils import detect_temperature_columns, DecisionError
+from core.decide import calculate_continuous_hold_time
 
 logger = logging.getLogger(__name__)
 

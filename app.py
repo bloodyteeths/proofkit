@@ -2856,20 +2856,20 @@ async def dashboard_page(request: Request, page: int = Query(1, ge=1)) -> HTMLRe
             from core.billing import get_plan
             plan_info = get_plan(quota_data.get('plan', 'free'))
             if not plan_info:
-                # Fallback to default plan info
+                # Fallback to default plan info (USD)
                 plan_info = {
                     'name': 'Free',
-                    'price_eur': 0,
-                    'single_cert_price_eur': 7,
+                    'price_usd': 0,
+                    'single_cert_price_usd': 9,
                     'jobs_month': 2
                 }
         except (ImportError, Exception) as e:
             logger.warning(f"Failed to import billing module or get plan info: {e}")
-            # Fallback plan info
+            # Fallback plan info (USD)
             plan_info = {
                 'name': 'Free', 
-                'price_eur': 0,
-                'single_cert_price_eur': 7,
+                'price_usd': 0,
+                'single_cert_price_usd': 9,
                 'jobs_month': 2
             }
         
@@ -2880,13 +2880,13 @@ async def dashboard_page(request: Request, page: int = Query(1, ge=1)) -> HTMLRe
             "quota": {
                 "plan": quota_data.get('plan', 'free'),
                 "plan_name": plan_info.get('name', 'Free'),
-                "price": plan_info.get('price_eur', 0),
+                "price": plan_info.get('price_usd', 0),
                 "monthly_used": quota_data.get('monthly_used', 0),
                 "monthly_limit": quota_data.get('monthly_limit'),
                 "monthly_remaining": quota_data.get('monthly_remaining'),
                 "total_used": quota_data.get('total_used', 0),
                 "total_remaining": quota_data.get('total_remaining', 2),
-                "single_cert_price": plan_info.get('single_cert_price_eur', 7),
+                "single_cert_price": plan_info.get('single_cert_price_usd', 9),
                 "subscription": quota_data.get('subscription'),
                 "next_billing_date": quota_data.get('next_billing_date', 'N/A')
             },

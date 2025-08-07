@@ -26,6 +26,7 @@ from datetime import datetime, timezone
 import logging
 
 from core.models import SpecV1, DecisionResult, SensorMode
+from core.temperature_utils import detect_temperature_columns, DecisionError
 
 logger = logging.getLogger(__name__)
 
@@ -58,9 +59,7 @@ INDUSTRY_METRICS: Dict[str, Optional[Callable[[pd.DataFrame, SpecV1], DecisionRe
 }
 
 
-class DecisionError(Exception):
-    """Raised when decision algorithm encounters fatal errors."""
-    pass
+# DecisionError moved to core.temperature_utils to avoid circular imports
 
 
 def validate_preconditions(df: pd.DataFrame, spec: SpecV1) -> Tuple[bool, List[str]]:
@@ -192,36 +191,7 @@ def combine_sensor_readings(df: pd.DataFrame, temp_columns: List[str],
         raise DecisionError(f"Unknown sensor combination mode: {mode}")
 
 
-def detect_temperature_columns(df: pd.DataFrame) -> List[str]:
-    """
-    Detect temperature columns in the DataFrame.
-    
-    Args:
-        df: Input DataFrame
-        
-    Returns:
-        List of temperature column names
-    """
-    import re
-    
-    temp_patterns = [
-        r'.*temp.*', r'.*temperature.*', r'.*pmt.*', r'.*sensor.*',
-        r'.*°[cf].*', r'.*deg[cf].*', r'.*_c$', r'.*_f$'
-    ]
-    
-    temp_columns = []
-    
-    for col in df.columns:
-        if col.lower() == 'timestamp' or 'time' in col.lower():
-            continue
-            
-        col_lower = col.lower()
-        if any(re.match(pattern, col_lower) for pattern in temp_patterns):
-            # Verify it's numeric
-            if pd.api.types.is_numeric_dtype(df[col]):
-                temp_columns.append(col)
-    
-    return temp_columns
+# detect_temperature_columns moved to core.temperature_utils to avoid circular imports
 
 
 def calculate_ramp_rate(temperature_series: pd.Series, time_series: pd.Series) -> pd.Series:
