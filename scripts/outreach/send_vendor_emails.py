@@ -20,7 +20,7 @@ import sys
 import time
 import argparse
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 import httpx
 
@@ -39,6 +39,9 @@ def extract_subject_and_body(rendered: str) -> Dict[str, str]:
     for i, line in enumerate(lines):
         if line.startswith("**Subject**:"):
             subject = line.split(":", 1)[1].strip()
+            continue
+        # Drop template artifacts
+        if line.strip().lower().startswith("**email body**"):
             continue
         body_lines.append(line)
     # Strip markdown headings and separators
@@ -84,14 +87,17 @@ def send_postmark(to_email: str, subject: str, html_body: str, text_body: str) -
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dry-run", action="store_true", default=True)
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--dry-run", dest="dry_run", action="store_true", default=True)
+    group.add_argument("--send", dest="dry_run", action="store_false", help="Actually send emails via Postmark")
     parser.add_argument("--limit", type=int, default=10)
     parser.add_argument("--only", type=str, choices=["High", "Medium", "Low"], default=None)
     parser.add_argument("--resume", type=str, default=None)
+    parser.add_argument("--csv", type=str, default=None, help="Path to CSV of targets (defaults to vendor-list.csv)")
     args = parser.parse_args()
 
     root = Path(__file__).resolve().parents[2]
-    csv_path = root / "marketing" / "partnerships" / "vendor-list.csv"
+    csv_path = Path(args.csv) if args.csv else (root / "marketing" / "partnerships" / "vendor-list.csv")
     tmpl_path = root / "marketing" / "outreach" / "vendor-email-templates.md"
     if not csv_path.exists() or not tmpl_path.exists():
         print("ERROR: Required files missing")
@@ -105,6 +111,19 @@ def main() -> int:
 
     sent = 0
     resume_reached = args.resume is None
+    website_url = os.getenv("WEBSITE_URL", "https://www.proofkit.net")
+
+    # Optional vendor-specific personalization hooks
+    vendor_ps: Dict[str, str] = {
+        "Monnit": "P.S. I noticed your ALTA sensor platform and partner ecosystem — we can auto-generate PDF/A-3 certificates from Monnit temperature streams to help your customers close audit loops.",
+        "E+E Elektronik": "P.S. Your accredited calibration lab and EE series fit well with our CFR 21 Part 11-ready outputs — happy to showcase an integrated report.",
+        "Berlinger": "P.S. We work with VFC/UL cold-chain logs similar to Fridge-tag and Q-tag — we can ingest PDFs and generate validated certificate bundles.",
+        "Sensitech": "P.S. We work with VFC/UL cold-chain logs similar to Fridge-tag and Q-tag — we can ingest PDFs and generate validated certificate bundles.",
+        "TempSen": "P.S. Your Tempod series (incl. –90°C dry ice) aligns with our pharma templates — we can produce site-ready PDF/A-3 certificates.",
+        "Gemini": "P.S. Tinytag deployments in pharma/food map neatly to our industry templates — we can provide co-branded certificates for your end-users.",
+        "T&D": "P.S. TR7/TR-71/75 data and WebStorage exports drop straight into our certificate pipeline — we can show a full audit-ready bundle.",
+        "Elitech": "P.S. Your iCold platform and RC series logs integrate well — we can generate compliant PDF/A-3 reports for audits in seconds.",
+    }
     with open(csv_path, newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for row in reader:
@@ -134,15 +153,28 @@ def main() -> int:
             subject = parsed["subject"].replace("[VENDOR]", company)
             body = parsed["body"]
 
+            # Insert one-line personalization if available
+            ps_line: Optional[str] = None
+            for key, val in vendor_ps.items():
+                if key.lower() in company.lower():
+                    ps_line = val
+                    break
+            if ps_line:
+                body = body + f"\n\n{ps_line}"
+
             # Build HTML minimal wrapper
             html_body = f"""
             <div style='font-family: Inter, Arial, sans-serif; line-height: 1.6;'>
               {body.replace('\n', '<br>')}
               <hr>
-              <p style='font-size:12px;color:#6b7280'>ProofKit • proofkit.net</p>
+              <p style='font-size:12px;color:#6b7280'>
+                Tamsar, Inc. • <a href='{website_url}'>{website_url}</a><br>
+                131 CONTINENTAL DR, STE 305, New Castle, DE 19713<br>
+                Don’t want emails from us? Reply with "unsubscribe".
+              </p>
             </div>
             """
-            text_body = body
+            text_body = body + f"\n\n---\nTamsar, Inc. • {website_url}\n131 CONTINENTAL DR, STE 305, New Castle, DE 19713\nUnsubscribe: reply with 'unsubscribe'\n"
 
             if args.dry_run:
                 print("\n--- DRY RUN ---")

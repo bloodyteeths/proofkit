@@ -339,4 +339,42 @@
     <priority>0.5</priority>
   </url>
 
+  <!-- Newly Added 2025 Blog Posts -->
+  <url>
+    <loc>https://www.proofkit.net/blog/powder-coating-qualicoat-audit-failures-playbook</loc>
+    <lastmod>2025-08-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.proofkit.net/blog/haccp-135-70-41-cooling-violations-fix-checklist</loc>
+    <lastmod>2025-08-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.proofkit.net/blog/cfr21-part11-autoclave-validation-electronic-records-guide</loc>
+    <lastmod>2025-08-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.proofkit.net/blog/astm-c31-concrete-temperature-mistakes-cure-right</loc>
+    <lastmod>2025-08-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.proofkit.net/blog/usp797-vaccine-storage-end-to-end-compliance-guide</loc>
+    <lastmod>2025-08-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.proofkit.net/blog/qa-digital-transformation-what-fails-and-how-to-fix</loc>
+    <lastmod>2025-08-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
 </urlset>

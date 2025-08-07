@@ -894,6 +894,18 @@ def process_csv_and_spec(csv_content: bytes, spec_data: Dict[str, Any],
 app = create_app()
 
 
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon_ico_redirect() -> RedirectResponse:
+    """Redirect legacy favicon path to the SVG in static assets."""
+    return RedirectResponse(url="/static/brand/proofkit_favicon.svg", status_code=307)
+
+
+@app.get("/favicon.svg", include_in_schema=False)
+async def favicon_svg() -> FileResponse:
+    """Serve the SVG favicon directly for browsers that request it explicitly."""
+    return FileResponse(static_dir / "brand" / "proofkit_favicon.svg", media_type="image/svg+xml")
+
+
 @app.get("/health", tags=["health"])
 async def health_check() -> JSONResponse:
     """
@@ -1965,17 +1977,17 @@ async def blog_index(request: Request) -> HTMLResponse:
                     lines = content.split('\n')
                     title = lines[0].replace('# ', '') if lines else blog_file.stem
                     
-                    # Extract description from content (first paragraph after title)
-                    description = ""
+                    # Extract excerpt from content (first paragraph after title)
+                    excerpt = ""
                     for line in lines[1:]:
                         if line.strip() and not line.startswith('*'):
-                            description = line.strip()[:200] + "..."
+                            excerpt = line.strip()[:200] + "..."
                             break
                     
                     blog_posts.append({
                         'slug': blog_file.stem,
                         'title': title,
-                        'description': description,
+                        'excerpt': excerpt,
                         'filename': blog_file.name
                     })
             except Exception as e:
@@ -2010,6 +2022,14 @@ async def blog_post(request: Request, slug: str) -> HTMLResponse:
         # Simple markdown parsing - extract title and content
         lines = content.split('\n')
         title = lines[0].replace('# ', '') if lines else slug.replace('-', ' ').title()
+        
+        # Compute excerpt: first non-empty paragraph after title
+        excerpt = ""
+        for line in lines[1:]:
+            stripped_line = line.strip()
+            if stripped_line and not stripped_line.startswith('*') and not stripped_line.startswith('#'):
+                excerpt = stripped_line[:200] + "..."
+                break
         
         # Proper markdown to HTML conversion with Jinja2 safety
         def markdown_to_html(md_text):
@@ -2088,6 +2108,7 @@ async def blog_post(request: Request, slug: str) -> HTMLResponse:
                 "title": title,
                 "content": html_content,
                 "slug": slug,
+                "excerpt": excerpt,
                 "date": "Recently Published",  # Add default date
                 "reading_time": 5  # Add default reading time
             }

@@ -100,7 +100,7 @@ def main():
         fieldnames = [
             "Directory Name", "Website", "Submission URL", "Category", "Industry Focus",
             "Submission Cost", "Authority Score", "Estimated Traffic", "Contact Email",
-            "Title", "ShortDescription", "Features", "URL"
+            "Title", "ShortDescription", "Features", "URL", "Industry"
         ]
         writer = csv.DictWriter(cf, fieldnames=fieldnames)
         writer.writeheader()
