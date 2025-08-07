@@ -15,9 +15,25 @@
             <p class="subtitle">Professional temperature validation certificates in seconds</p>
         </div>
         
+        <!-- Error Message (if any) -->
+        {% if error == 'insufficient_role' %}
+        <div class="error-message" style="background: #fef2f2; border: 1px solid #dc2626; color: #991b1b; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+            <strong>Access Denied:</strong> You need special permissions to access that page. Please contact an administrator.
+        </div>
+        {% elif error %}
+        <div class="error-message" style="background: #fef2f2; border: 1px solid #dc2626; color: #991b1b; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+            {{ error }}
+        </div>
+        {% endif %}
+        
         <!-- Main Form -->
         <div class="auth-form-container">
             <form id="auth-form" method="POST" action="/auth/magic-link">
+                <!-- Hidden field for return URL -->
+                {% if return_url %}
+                <input type="hidden" name="return_url" value="{{ return_url }}">
+                {% endif %}
+                
                 <!-- Email Field -->
                 <div class="form-group">
                     <label for="email" class="form-label">

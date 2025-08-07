@@ -33,10 +33,10 @@ class PlanTier(str, Enum):
 PLANS: Dict[str, Dict[str, Any]] = {
     "free": {
         "name": "Free",
-        "price_eur": 0,
+        "price_usd": 0,
         "jobs_month": 2,  # 2 total certificates allowed
-        "overage_price_eur": None,  # No overage allowed
-        "single_cert_price_eur": 7,
+        "overage_price_usd": None,  # No overage allowed
+        "single_cert_price_usd": 9,
         "features": [
             "2 total certificates",
             "Basic PDF template",
@@ -46,68 +46,68 @@ PLANS: Dict[str, Dict[str, Any]] = {
         "stripe_product_id": None,
         "stripe_price_id": None,
         "stripe_overage_price_id": None,
-        "single_cert_price_id": "price_single_cert"  # €7 one-off cert
+        "single_cert_price_id": os.environ.get("STRIPE_SINGLE_CERT_FREE", "price_single_cert_free")
     },
     "starter": {
         "name": "Starter",
-        "price_eur": 14,
+        "price_usd": 19,
         "jobs_month": 10,
-        "overage_price_eur": 3,
-        "single_cert_price_eur": 5,
+        "overage_price_usd": 3,
+        "single_cert_price_usd": 7,
         "features": [
             "10 certificates/month",
             "Standard PDF template", 
             "Email support",
-            "€3 overage per certificate"
+            "$3 overage per certificate"
         ],
         "pdf_template": "standard",
         "stripe_product_id": "proofkit_starter",
         "stripe_price_id": os.environ.get("STRIPE_PRICE_ID_STARTER", "price_starter_month"),
-        "stripe_overage_price_id": "price_starter_over",
-        "single_cert_price_id": "price_single_cert"
+        "stripe_overage_price_id": os.environ.get("STRIPE_OVERAGE_STARTER", "price_starter_over"),
+        "single_cert_price_id": os.environ.get("STRIPE_SINGLE_CERT_STARTER", "price_single_cert_starter")
     },
     "pro": {
         "name": "Pro",
-        "price_eur": 59,
+        "price_usd": 79,
         "jobs_month": 75,
-        "overage_price_eur": 1.5,
-        "single_cert_price_eur": 4,
+        "overage_price_usd": 2,
+        "single_cert_price_usd": 5,
         "features": [
             "75 certificates/month",
             "Custom logo template",
             "Priority support",
-            "€1.50 overage per certificate"
+            "$2 overage per certificate"
         ],
         "pdf_template": "pro",
         "stripe_product_id": "proofkit_pro", 
         "stripe_price_id": os.environ.get("STRIPE_PRICE_ID_PRO", "price_pro_month"),
-        "stripe_overage_price_id": "price_pro_over",
-        "single_cert_price_id": "price_single_cert"
+        "stripe_overage_price_id": os.environ.get("STRIPE_OVERAGE_PRO", "price_pro_over"),
+        "single_cert_price_id": os.environ.get("STRIPE_SINGLE_CERT_PRO", "price_single_cert_pro")
     },
     "business": {
         "name": "Business",
-        "price_eur": 199,
+        "price_usd": 249,
         "jobs_month": 300,
-        "overage_price_eur": 0.75,
-        "single_cert_price_eur": 4,
+        "overage_price_usd": 1,
+        "single_cert_price_usd": 5,
         "features": [
             "300 certificates/month",
             "Custom logo + header template",
             "Phone & email support",
-            "€0.75 overage per certificate"
+            "$1 overage per certificate"
         ],
         "pdf_template": "business",
         "stripe_product_id": "proofkit_business",
         "stripe_price_id": os.environ.get("STRIPE_PRICE_ID_BUSINESS", "price_business_month"), 
-        "stripe_overage_price_id": "price_business_over",
-        "single_cert_price_id": "price_single_cert"
+        "stripe_overage_price_id": os.environ.get("STRIPE_OVERAGE_BUSINESS", "price_business_over"),
+        "single_cert_price_id": os.environ.get("STRIPE_SINGLE_CERT_PRO", "price_single_cert_pro")
     },
     "enterprise": {
         "name": "Enterprise",
-        "price_eur": None,  # Custom pricing
+        "price_usd": None,  # Custom pricing
         "jobs_month": float('inf'),  # Unlimited
-        "overage_price_eur": None,
-        "single_cert_price_eur": None,
+        "overage_price_usd": None,
+        "single_cert_price_usd": None,
         "features": [
             "Unlimited certificates",
             "White-label template",
@@ -214,7 +214,7 @@ def get_overage_price(plan_name: str) -> Optional[float]:
         plan_name: Plan identifier
         
     Returns:
-        Overage price in EUR or None if no overage allowed
+        Overage price in USD or None if no overage allowed
         
     Example:
         >>> get_overage_price('starter')
@@ -223,7 +223,7 @@ def get_overage_price(plan_name: str) -> Optional[float]:
         None
     """
     plan = get_plan(plan_name)
-    return plan.get('overage_price_eur') if plan else None
+    return plan.get('overage_price_usd') if plan else None
 
 
 def get_single_cert_price(plan_name: str) -> Optional[float]:
@@ -234,16 +234,16 @@ def get_single_cert_price(plan_name: str) -> Optional[float]:
         plan_name: Plan identifier
         
     Returns:
-        Single certificate price in EUR or None if not available
+        Single certificate price in USD or None if not available
         
     Example:
         >>> get_single_cert_price('free')
-        7.0
+        9.0
         >>> get_single_cert_price('starter')
-        5.0
+        7.0
     """
     plan = get_plan(plan_name)
-    return plan.get('single_cert_price_eur') if plan else None
+    return plan.get('single_cert_price_usd') if plan else None
 
 
 def get_stripe_price_id(plan_name: str, price_type: str = 'monthly') -> Optional[str]:
@@ -290,16 +290,16 @@ def calculate_monthly_cost(plan_name: str, jobs_used: int) -> Dict[str, float]:
         
     Example:
         >>> cost = calculate_monthly_cost('starter', 15)
-        >>> print(f"Total: €{cost['total']}")
-        Total: €29.0
+        >>> print(f"Total: ${cost['total']}")
+        Total: $34.0
     """
     plan = get_plan(plan_name)
     if not plan:
         return {'base': 0, 'overage': 0, 'total': 0, 'overage_count': 0}
     
-    base_cost = plan['price_eur'] or 0
+    base_cost = plan['price_usd'] or 0
     jobs_included = plan['jobs_month']
-    overage_price = plan['overage_price_eur'] or 0
+    overage_price = plan['overage_price_usd'] or 0
     
     # Calculate overage
     if jobs_used > jobs_included and overage_price > 0:

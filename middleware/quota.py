@@ -19,6 +19,10 @@ import os
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Dict, Any, Optional, Tuple, List
+try:
+    import fcntl  # Unix-based file locking
+except ImportError:  # pragma: no cover - Windows fallback
+    fcntl = None
 from fastapi import Request, HTTPException
 from fastapi.responses import JSONResponse
 
@@ -30,16 +34,16 @@ except ImportError:
     # Fallback for when Stripe is not configured
     def get_plan(plan_name):
         plans = {
-            'free': {'name': 'Free', 'price_eur': 0, 'certificates_per_month': 0, 'single_cert_price_eur': 7},
-            'starter': {'name': 'Starter', 'price_eur': 49, 'certificates_per_month': 20, 'single_cert_price_eur': 3.50},
-            'pro': {'name': 'Pro', 'price_eur': 149, 'certificates_per_month': 100, 'single_cert_price_eur': 2.50},
-            'enterprise': {'name': 'Enterprise', 'price_eur': 499, 'certificates_per_month': -1, 'single_cert_price_eur': 0}
+            'free': {'name': 'Free', 'price_usd': 0, 'jobs_month': 2, 'certificates_per_month': 0, 'single_cert_price_usd': 9},
+            'starter': {'name': 'Starter', 'price_usd': 19, 'jobs_month': 10, 'certificates_per_month': 10, 'single_cert_price_usd': 7},
+            'pro': {'name': 'Pro', 'price_usd': 79, 'jobs_month': 75, 'certificates_per_month': 75, 'single_cert_price_usd': 5},
+            'enterprise': {'name': 'Enterprise', 'price_usd': None, 'jobs_month': -1, 'certificates_per_month': -1, 'single_cert_price_usd': None}
         }
         return plans.get(plan_name, plans['free'])
     
     def get_single_cert_price(plan_name):
         plan = get_plan(plan_name)
-        return plan.get('single_cert_price_eur', 7)
+        return plan.get('single_cert_price_usd', 9)
     
     def get_stripe_price_id(plan_name):
         return None
@@ -155,10 +159,18 @@ def save_user_quota_data(user_email: str, data: Dict[str, Any]) -> bool:
     try:
         quota_file = get_user_quota_file(user_email)
         data['last_updated'] = datetime.now(timezone.utc).isoformat()
-        
-        with open(quota_file, 'w') as f:
-            json.dump(data, f, indent=2)
-            
+
+        # Basic file lock to avoid concurrent writes
+        lock_file = quota_file.with_suffix('.lock')
+        if fcntl is not None:
+            with open(lock_file, 'w') as lf:
+                fcntl.flock(lf, fcntl.LOCK_EX)
+                with open(quota_file, 'w') as f:
+                    json.dump(data, f, indent=2)
+                fcntl.flock(lf, fcntl.LOCK_UN)
+        else:
+            with open(quota_file, 'w') as f:
+                json.dump(data, f, indent=2)
         return True
         
     except Exception as e:
@@ -240,7 +252,7 @@ def check_compilation_quota(user: Optional[User]) -> Tuple[bool, Optional[Dict[s
         
         if current_month_usage >= monthly_quota:
             # Over monthly quota - check if overage is available
-            overage_price = plan.get('overage_price_eur')
+            overage_price = plan.get('overage_price_usd')
             
             if overage_price and overage_price > 0:
                 # Overage allowed - auto-bill and continue
@@ -421,9 +433,9 @@ def get_user_usage_summary(user_email: str) -> Dict[str, Any]:
             'total_limit': monthly_quota if monthly_quota != float('inf') else None,
             'total_remaining': monthly_remaining if monthly_remaining != float('inf') else None,
             'overage_used': overage_used,
-            'overage_price': plan.get('overage_price_eur'),
+            'overage_price': plan.get('overage_price_usd'),
             'is_unlimited': monthly_quota == float('inf'),
-            'overage_available': bool(plan.get('overage_price_eur')),
+            'overage_available': bool(plan.get('overage_price_usd')),
             'subscription': quota_data.get('subscription'),
             'next_billing_date': 'N/A'  # TODO: Calculate from subscription data
         }

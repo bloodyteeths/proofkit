@@ -132,9 +132,13 @@ def get_rate_limit_decorator():
         return limiter.limit(f"{RATE_LIMIT_PER_MIN}/minute")
 
 # Environment configuration
-CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "*").split(",")
+# Safer CORS defaults: production domains and local dev
+DEFAULT_CORS_ORIGINS = "https://www.proofkit.net,https://proofkit-prod.fly.dev,http://localhost:8000,http://127.0.0.1:8000"
+CORS_ORIGINS = [o.strip() for o in os.environ.get("CORS_ORIGINS", DEFAULT_CORS_ORIGINS).split(",") if o.strip()]
 RATE_LIMIT_PER_MIN = int(os.environ.get("RATE_LIMIT_PER_MIN", "10"))
-MAX_UPLOAD_SIZE = int(os.environ.get("MAX_UPLOAD_SIZE_MB", "10")) * 1024 * 1024
+# Support both MAX_UPLOAD_SIZE_MB and MAX_UPLOAD_MB
+_max_mb_env = os.environ.get("MAX_UPLOAD_SIZE_MB") or os.environ.get("MAX_UPLOAD_MB") or "10"
+MAX_UPLOAD_SIZE = int(_max_mb_env) * 1024 * 1024
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
@@ -188,10 +192,11 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         # Content Security Policy - Allow inline scripts with nonce, unsafe-inline for event handlers
         # Note: unsafe-inline for scripts is needed for onclick handlers, but nonce provides better security for script blocks
         # For Googlebot, we skip nonce to allow Search Console verification
+        # Added Stripe.js to allowed sources for payment processing
         if is_googlebot:
-            script_src = "'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com"
+            script_src = "'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://js.stripe.com"
         else:
-            script_src = f"'self' 'nonce-{nonce}' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com"
+            script_src = f"'self' 'nonce-{nonce}' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://js.stripe.com"
             
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
@@ -199,7 +204,8 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "font-src 'self' data: https://fonts.gstatic.com; "
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
             f"script-src {script_src}; "
-            "connect-src 'self' https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com;"
+            "frame-src https://js.stripe.com https://hooks.stripe.com; "
+            "connect-src 'self' https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://api.stripe.com;"
         )
         
         return response
@@ -273,6 +279,15 @@ def create_app() -> FastAPI:
         }
     ]
     
+    # Fail fast on insecure JWT secret in production
+    try:
+        _jwt_secret = os.environ.get("JWT_SECRET", "")
+        if (len(_jwt_secret) < 32 or _jwt_secret == "your-secret-key-change-in-production") and os.environ.get("ENVIRONMENT", "").lower() == "production":
+            raise RuntimeError("Insecure JWT_SECRET; set a strong value in environment")
+    except Exception as e:
+        # Re-raise to prevent starting with insecure configuration
+        raise
+
     app = FastAPI(
         title="ProofKit",
         description="Generate inspector-ready proof PDFs from CSV temperature logs",
@@ -286,11 +301,13 @@ def create_app() -> FastAPI:
     app.add_middleware(SecurityHeadersMiddleware)
     
     # Configure CORS
+    # With credentials, browsers require explicit origins (not *)
+    _allow_origins = CORS_ORIGINS if CORS_ORIGINS != ["*"] else ["https://www.proofkit.net"]
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=CORS_ORIGINS,
+        allow_origins=_allow_origins,
         allow_credentials=True,
-        allow_methods=["GET", "POST"],
+        allow_methods=["GET", "POST", "OPTIONS"],
         allow_headers=["*"],
         max_age=3600,
     )
@@ -1212,6 +1229,14 @@ async def compile_csv_json(
     logger.info(f"[{request_id}] Starting JSON compile request from {request.client.host if request.client else 'unknown'}")
     
     try:
+        # Require authentication for API usage
+        current_user = get_current_user(request)
+        if not current_user:
+            return JSONResponse(
+                status_code=401,
+                content={"error": "Authentication required", "message": "Sign in to use the API"}
+            )
+
         # Validate and read file upload
         csv_content = validate_file_upload(csv_file, request)
         logger.info(f"[{request_id}] File validated: {csv_file.filename} ({len(csv_content)} bytes)")
@@ -1238,6 +1263,15 @@ async def compile_csv_json(
                 }
             )
         
+        # Check quota before processing
+        try:
+            from middleware.quota import check_compilation_quota, record_usage
+            can_compile, quota_error = check_compilation_quota(current_user)
+            if not can_compile:
+                return JSONResponse(status_code=402, content=quota_error)
+        except Exception as e:
+            logger.warning(f"[{request_id}] Quota check failed: {e}")
+
         # Generate deterministic job ID
         job_id = generate_job_id(spec_data, csv_content)
         logger.info(f"[{request_id}] Generated job ID: {job_id}")
@@ -1247,13 +1281,15 @@ async def compile_csv_json(
             job_dir = create_job_storage_path(job_id)
             logger.info(f"[{request_id}] Created storage path: {job_dir}")
         
-        # Get current user for approval status and job creator
-        current_user = get_current_user(request)
-        
         # Process through complete pipeline
         try:
             result = process_csv_and_spec(csv_content, spec_data, job_dir, job_id, creator=current_user)
             logger.info(f"[{request_id}] Processing completed: {'PASS' if result['pass'] else 'FAIL'}")
+            # Record usage after successful processing
+            try:
+                record_usage(current_user, 'certificate_compiled')
+            except Exception:
+                pass
             
             return JSONResponse(
                 status_code=200,
@@ -2112,29 +2148,46 @@ async def security_txt():
 
 # Authentication routes
 @app.get("/auth/get-started", response_class=HTMLResponse, tags=["auth"])
-async def get_started_page(request: Request) -> HTMLResponse:
+async def get_started_page(request: Request, return_url: Optional[str] = None, error: Optional[str] = None) -> HTMLResponse:
     """
     Unified authentication page for login/signup via magic link.
     
     Returns:
         HTMLResponse: Magic link request form
     """
-    # If user is already authenticated, redirect to app
+    # If user is already authenticated, redirect to return_url or app
     user = get_current_user(request)
     if user:
+        # If there's a return_url, try to use it (but validate it's safe)
+        if return_url and return_url.startswith('/'):
+            return RedirectResponse(url=return_url, status_code=302)
         return RedirectResponse(url="/app", status_code=302)
     
+    # Pass return_url and error to template for display
     return templates.TemplateResponse(
         "auth/get_started.html",
-        {"request": request}
+        {
+            "request": request,
+            "return_url": return_url,
+            "error": error
+        }
     )
 
 
 # Keep old endpoints for backward compatibility but redirect
 @app.get("/auth/login", response_class=HTMLResponse, tags=["auth"])
-async def login_page(request: Request) -> HTMLResponse:
-    """Legacy login endpoint - redirects to get-started."""
-    return RedirectResponse(url="/auth/get-started", status_code=302)
+async def login_page(request: Request, return_url: Optional[str] = None, error: Optional[str] = None) -> HTMLResponse:
+    """Legacy login endpoint - redirects to get-started preserving parameters."""
+    # Preserve return_url and error parameters when redirecting
+    redirect_url = "/auth/get-started"
+    params = []
+    if return_url:
+        params.append(f"return_url={return_url}")
+    if error:
+        params.append(f"error={error}")
+    if params:
+        redirect_url += "?" + "&".join(params)
+    return RedirectResponse(url=redirect_url, status_code=302)
 
 
 @app.get("/auth/signup", response_class=HTMLResponse, tags=["auth"])
@@ -2146,7 +2199,8 @@ async def signup_page(request: Request) -> HTMLResponse:
 @app.post("/auth/magic-link", response_class=HTMLResponse, tags=["auth"])
 async def request_magic_link_unified(
     request: Request,
-    email: str = Form(...)
+    email: str = Form(...),
+    return_url: Optional[str] = Form(None)
 ) -> HTMLResponse:
     """
     Unified magic link handler for both login and signup.
@@ -2160,7 +2214,7 @@ async def request_magic_link_unified(
     """
     try:
         # Generate magic link (works for both new and existing users)
-        magic_token = auth_handler.generate_magic_link(email, UserRole.OPERATOR)
+        magic_token = auth_handler.generate_magic_link(email, UserRole.OPERATOR, return_url)
         
         # In development mode, include the link
         dev_mode = os.environ.get("EMAIL_DEV_MODE", "false").lower() == "true"
@@ -2341,7 +2395,7 @@ async def request_magic_link(request: Request, email: str = Form(...), role: str
             }
             
             # In development mode, include the actual link
-            if os.environ.get("EMAIL_DEV_MODE", "true").lower() == "true":
+            if os.environ.get("EMAIL_DEV_MODE", "false").lower() == "true":
                 dev_link = auth_handler.get_dev_link(email)
                 if dev_link:
                     response_data["dev_link"] = dev_link
@@ -2383,6 +2437,20 @@ async def verify_magic_link(request: Request, token: str) -> HTMLResponse:
         
         # Create JWT token
         jwt_token = auth_handler.create_jwt_token(link_data["email"], UserRole(link_data["role"]))
+
+        # Get and sanitize return_url from link data if available
+        _ru = link_data.get("return_url")
+        def _is_safe_return_url(path: Optional[str]) -> bool:
+            if not path or not isinstance(path, str):
+                return False
+            if not path.startswith("/"):
+                return False
+            if path.startswith("//"):
+                return False
+            if "://" in path:
+                return False
+            return True
+        return_url = _ru if _is_safe_return_url(_ru) else None
         
         # Create response with cookie
         response = templates.TemplateResponse(
@@ -2390,17 +2458,19 @@ async def verify_magic_link(request: Request, token: str) -> HTMLResponse:
             {
                 "request": request,
                 "email": link_data["email"],
-                "role": link_data["role"]
+                "role": link_data["role"],
+                "return_url": return_url  # Pass to template for redirect
             }
         )
         
-        # Set secure cookie
+        # Set secure cookie (detect HTTPS or proxy header)
+        is_https = (request.url.scheme == "https") or (request.headers.get("x-forwarded-proto", "") == "https")
         response.set_cookie(
             key="auth_token",
             value=jwt_token,
             max_age=24 * 60 * 60,  # 24 hours
             httponly=True,
-            secure=os.environ.get("ENVIRONMENT") == "production",
+            secure=is_https,
             samesite="lax"
         )
         
@@ -2551,7 +2621,7 @@ async def approve_job(request: Request, job_id: str) -> JSONResponse:
             decision_path = job_dir / "decision.json"
             spec_path = job_dir / "specification.json"
             plot_path = job_dir / "plot.png"
-            normalized_csv_path = job_dir / "normalized.csv"
+            normalized_csv_path = job_dir / "normalized_data.csv"
             
             if all(p.exists() for p in [decision_path, spec_path, plot_path, normalized_csv_path]):
                 with open(decision_path, 'r') as f:
@@ -2568,16 +2638,27 @@ async def approve_job(request: Request, job_id: str) -> JSONResponse:
                 creator_info = job_meta.get("creator", {})
                 creator_plan = creator_info.get("plan", "free")
                 
-                # Regenerate PDF without draft watermark
+                # Regenerate PDF without draft watermark (convert dicts to models)
                 pdf_path = job_dir / "proof.pdf"
+                from core.models import SpecV1, DecisionResult
+                try:
+                    spec_model = SpecV1(**spec_data)
+                except Exception:
+                    # If spec_data already matches, pass through
+                    spec_model = spec_data
+                try:
+                    decision_model = DecisionResult(**decision_data)
+                except Exception:
+                    decision_model = decision_data
+
                 generate_proof_pdf(
-                    spec=spec_data,
-                    decision=decision_data,
+                    spec=spec_model,
+                    decision=decision_model,
                     plot_path=str(plot_path),
                     normalized_csv_path=str(normalized_csv_path),
                     verification_hash=verification_hash,
                     output_path=str(pdf_path),
-                    is_draft=False,  # No draft watermark
+                    is_draft=False,
                     user_plan=creator_plan
                 )
                 

@@ -93,9 +93,13 @@ def create_watermark_canvas(canvas_obj, doc):
     # Add page numbers
     canvas_obj.setFont("Helvetica", 8)
     canvas_obj.setFillColor(COLOR_SLATE)
-    page_num = getattr(doc, '_pageNumber', 1)
-    total_pages = getattr(doc, '_totalPages', 1) 
-    canvas_obj.drawRightString(PAGE_WIDTH - MARGIN, MARGIN - 8*mm, f"Page {page_num} of {total_pages}")
+    page_num = canvas_obj.getPageNumber()
+    # Only show page numbers if multiple pages
+    if page_num > 1:
+        canvas_obj.drawRightString(PAGE_WIDTH - MARGIN, MARGIN - 8*mm, f"Page {page_num}")
+    else:
+        # For single page, show certificate number instead
+        canvas_obj.drawRightString(PAGE_WIDTH - MARGIN, MARGIN - 8*mm, "ProofKit Certificate")
     
     canvas_obj.restoreState()
 
@@ -139,7 +143,7 @@ def create_header_section(spec: SpecV1) -> list:
         fontSize=8,
         textColor=COLOR_SLATE,
         alignment=TA_CENTER,
-        spaceAfter=3*mm
+        spaceAfter=2*mm  # Reduced from 3mm
     )
     elements.append(Paragraph(f"ProofKit Certificate – {spec.job.job_id}", header_style))
     
@@ -150,8 +154,8 @@ def create_header_section(spec: SpecV1) -> list:
         fontSize=16,
         textColor=COLOR_NAVY,
         alignment=TA_CENTER,
-        spaceAfter=8*mm,
-        leading=20
+        spaceAfter=5*mm,  # Reduced from 8mm
+        leading=18  # Tighter leading
     )
     elements.append(Paragraph("Powder-Coat Cure Validation Certificate", title_style))
     
@@ -400,7 +404,7 @@ def create_verification_section(verification_hash: str, job_id: Optional[str] = 
 
 
 def create_signature_section() -> Table:
-    """Create signature fields for Process Engineer and Quality Manager."""
+    """Create compact signature fields for Process Engineer and Quality Manager."""
     sig_style = ParagraphStyle('SigLabel', fontSize=8, textColor=COLOR_SLATE)
     
     sig_data = [
@@ -408,14 +412,9 @@ def create_signature_section() -> Table:
          '', 
          Paragraph('Quality Manager', sig_style)],
         ['_' * 30, '', '_' * 30],
-        [Paragraph('Signature', sig_style), 
+        [Paragraph('Signature / Date', sig_style), 
          '', 
-         Paragraph('Signature', sig_style)],
-        ['', '', ''],
-        ['_' * 20, '', '_' * 20],
-        [Paragraph('Date', sig_style), 
-         '', 
-         Paragraph('Date', sig_style)],
+         Paragraph('Signature / Date', sig_style)],
     ]
     
     sig_table = Table(sig_data, colWidths=[70*mm, 30*mm, 70*mm])
@@ -423,7 +422,8 @@ def create_signature_section() -> Table:
         ('ALIGN', (0, 0), (2, -1), 'CENTER'),
         ('FONTSIZE', (0, 0), (2, -1), 8),
         ('TEXTCOLOR', (0, 0), (2, -1), COLOR_SLATE),
-        ('TOPPADDING', (0, 0), (2, -1), 2*mm),
+        ('TOPPADDING', (0, 0), (2, -1), 1*mm),  # Reduced padding
+        ('BOTTOMPADDING', (0, 0), (2, -1), 1*mm),  # Reduced padding
     ]))
     
     return sig_table
@@ -468,7 +468,8 @@ def generate_certificate_pdf(
     plot_path: Union[str, Path],
     verification_hash: Optional[str] = None,
     output_path: Optional[Union[str, Path]] = None,
-    timestamp: Optional[datetime] = None
+    timestamp: Optional[datetime] = None,
+    include_graph: bool = False
 ) -> bytes:
     """
     Generate ISO-style single-page A4 certificate.
@@ -516,20 +517,20 @@ def generate_certificate_pdf(
         
         # Status badge
         elements.append(create_status_badge(decision))
-        elements.append(Spacer(1, 8*mm))
+        elements.append(Spacer(1, 5*mm))  # Reduced from 8mm
         
         # Two-column section
         elements.append(create_two_column_section(spec, decision))
-        elements.append(Spacer(1, 6*mm))
+        elements.append(Spacer(1, 4*mm))  # Reduced from 6mm
         
         # Decision reasons
         reasons = create_decision_reasons(decision)
         if reasons:
             elements.extend(reasons)
-            elements.append(Spacer(1, 5*mm))
+            elements.append(Spacer(1, 3*mm))  # Reduced from 5mm
         
-        # Temperature plot (if exists)
-        if os.path.exists(plot_path):
+        # Temperature plot (only if include_graph is True and file exists)
+        if include_graph and os.path.exists(plot_path):
             try:
                 # Add plot title
                 plot_style = ParagraphStyle(
@@ -552,11 +553,16 @@ def generate_certificate_pdf(
         
         # Verification section
         elements.append(create_verification_section(verification_hash, spec.job.job_id))
-        elements.append(Spacer(1, 10*mm))
+        
+        # Adjust spacing based on whether graph is included
+        if include_graph:
+            elements.append(Spacer(1, 8*mm))
+        else:
+            elements.append(Spacer(1, 5*mm))  # Less space when no graph
         
         # Signature section
         elements.append(create_signature_section())
-        elements.append(Spacer(1, 8*mm))
+        elements.append(Spacer(1, 5*mm))  # Reduced from 8mm
         
         # Footer
         elements.extend(create_footer(timestamp))

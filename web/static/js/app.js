@@ -11,7 +11,59 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeFormValidation();
     initializeProgressIndicator();
     initializeCookieConsent();
+    initializePurchaseHandlers();
 });
+
+/**
+ * Global helper function for single certificate purchase
+ */
+window.buySingleCert = function(event) {
+    if (event) event.preventDefault();
+    
+    fetch('/api/buy-single', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            certificate_count: 1,
+            success_url: window.location.origin + '/dashboard?purchase=success',
+            cancel_url: window.location.href
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.checkout_url) {
+            window.location.href = data.checkout_url;
+        } else {
+            throw new Error('No checkout URL received');
+        }
+    })
+    .catch(error => {
+        console.error('Purchase failed:', error);
+        alert('Purchase failed. Please try again.');
+    });
+    
+    return false;
+};
+
+/**
+ * Initialize purchase-related event handlers
+ */
+function initializePurchaseHandlers() {
+    // Add click handlers for any buy-single links
+    document.querySelectorAll('a[href="/api/buy-single"]').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            window.buySingleCert(e);
+        });
+    });
+}
 
 /**
  * Initialize file upload functionality with drag & drop support

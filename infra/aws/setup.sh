@@ -162,7 +162,7 @@ if ! aws rds describe-db-instances --db-instance-identifier "$RDS_INSTANCE" --re
         --db-instance-identifier "$RDS_INSTANCE" \
         --db-instance-class db.t3.micro \
         --engine postgres \
-        --engine-version "15.4" \
+        --engine-version "15" \
         --allocated-storage 20 \
         --storage-type gp2 \
         --db-name "$RDS_DB" \

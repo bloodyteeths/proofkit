@@ -1158,6 +1158,60 @@ def generate_proof_pdf(
         hash_data = f"{spec.job.job_id}{decision.pass_}{decision.actual_hold_time_s}"
         verification_hash = hashlib.sha256(hash_data.encode()).hexdigest()
     
+    # Route to appropriate certificate renderer based on user plan
+    plan = user_plan or 'free'
+    
+    # Use the premium certificate templates based on plan
+    if plan in ['business', 'enterprise', 'premium']:
+        # Use premium certificate template
+        from core.render_certificate_premium import generate_premium_certificate
+        return generate_premium_certificate(
+            spec=spec,
+            decision=decision,
+            plot_path=plot_path,
+            certificate_no=spec.job.job_id,
+            verification_hash=verification_hash,
+            output_path=output_path,
+            timestamp=now_provider() if now_provider else None
+        )
+    elif plan in ['pro', 'professional']:
+        # Use pro certificate template
+        from core.render_certificate_pro import generate_certificate_pdf as generate_pro_certificate
+        return generate_pro_certificate(
+            spec=spec,
+            decision=decision,
+            plot_path=plot_path,
+            certificate_no=spec.job.job_id,
+            verification_hash=verification_hash,
+            output_path=output_path,
+            timestamp=now_provider() if now_provider else None
+        )
+    elif plan in ['starter', 'basic']:
+        # Use basic certificate template without graph for starter
+        from core.render_certificate import generate_certificate_pdf as generate_basic_certificate
+        return generate_basic_certificate(
+            spec=spec,
+            decision=decision,
+            plot_path=plot_path,
+            verification_hash=verification_hash,
+            output_path=output_path,
+            timestamp=now_provider() if now_provider else None,
+            include_graph=False  # Starter tier doesn't get the temperature graph
+        )
+    else:
+        # Free plan - use basic certificate with graph but with watermark
+        from core.render_certificate import generate_certificate_pdf as generate_basic_certificate
+        return generate_basic_certificate(
+            spec=spec,
+            decision=decision,
+            plot_path=plot_path,
+            verification_hash=verification_hash,
+            output_path=output_path,
+            timestamp=now_provider() if now_provider else None,
+            include_graph=True  # Free tier gets graph but with watermark
+        )
+    
+    # Old implementation below (kept for reference, but not executed)
     # Determine template configuration based on user plan
     template_config = _get_template_config(user_plan or 'free')
     

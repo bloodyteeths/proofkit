@@ -12,7 +12,7 @@ Example usage:
 
 import json
 from typing import Dict, Any, Optional
-from fastapi import APIRouter, Request, HTTPException, Depends
+from fastapi import APIRouter, Request, HTTPException, Depends, Body
 from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import BaseModel, EmailStr
 
@@ -57,8 +57,8 @@ class SinglePurchaseRequest(BaseModel):
 async def create_upgrade_checkout(
     plan_name: str,
     request: Request,
-    upgrade_request: UpgradeRequest,
-    user: User = Depends(require_auth)
+    user: User = Depends(require_auth),
+    upgrade_request: Optional[UpgradeRequest] = Body(default=None)
 ) -> JSONResponse:
     """
     Create Stripe checkout session for plan upgrade.
@@ -98,18 +98,31 @@ async def create_upgrade_checkout(
         current_plan = quota_data.get('plan', 'free')
         
         # Check if upgrade is allowed
+        if current_plan == plan_name:
+            # User already has this plan - redirect to customer portal for management
+            raise HTTPException(
+                status_code=409,
+                detail=f"You already have the {plan_name} plan. Use the customer portal to manage your subscription."
+            )
+        
         if not can_upgrade_from_plan(current_plan, plan_name):
             raise HTTPException(
                 status_code=400,
-                detail=f"Cannot upgrade from {current_plan} to {plan_name}"
+                detail=f"Cannot change from {current_plan} to {plan_name}. Please contact support if you need to downgrade."
             )
         
         # Create checkout session
+        success_url = None
+        cancel_url = None
+        if upgrade_request:
+            success_url = upgrade_request.success_url
+            cancel_url = upgrade_request.cancel_url
+        
         session = create_subscription_checkout(
             plan_name=plan_name,
             user_email=user.email,
-            success_url=upgrade_request.success_url,
-            cancel_url=upgrade_request.cancel_url,
+            success_url=success_url,
+            cancel_url=cancel_url,
             metadata={'current_plan': current_plan}
         )
         
@@ -272,12 +285,17 @@ async def get_available_plans(request: Request) -> JSONResponse:
         # Remove internal Stripe IDs from public API
         public_plans = {}
         for plan_name, plan_data in plans.items():
+            # Handle infinity values for JSON serialization
+            jobs_month = plan_data['jobs_month']
+            if jobs_month == float('inf'):
+                jobs_month = None  # Use None to represent unlimited
+                
             public_plan = {
                 'name': plan_data['name'],
-                'price_eur': plan_data['price_eur'],
-                'jobs_month': plan_data['jobs_month'],
-                'overage_price_eur': plan_data.get('overage_price_eur'),
-                'single_cert_price_eur': plan_data.get('single_cert_price_eur'),
+                'price_usd': plan_data.get('price_usd', plan_data.get('price_eur', 0)),
+                'jobs_month': jobs_month,
+                'overage_price_usd': plan_data.get('overage_price_usd', plan_data.get('overage_price_eur')),
+                'single_cert_price_usd': plan_data.get('single_cert_price_usd', plan_data.get('single_cert_price_eur')),
                 'features': plan_data['features'],
                 'pdf_template': plan_data['pdf_template']
             }
@@ -545,3 +563,77 @@ async def cert_purchase_success(
             "Check your email for receipt"
         ]
     })
+
+
+@router.get("/stripe-config")
+async def get_stripe_config(request: Request) -> JSONResponse:
+    """
+    Get Stripe publishable key for frontend initialization.
+    
+    Returns:
+        JSONResponse with Stripe publishable key
+    """
+    from core.billing import STRIPE_PUBLISHABLE_KEY
+    
+    return JSONResponse({
+        "publishableKey": STRIPE_PUBLISHABLE_KEY,
+        "testMode": STRIPE_PUBLISHABLE_KEY.startswith("pk_test_") if STRIPE_PUBLISHABLE_KEY else True
+    })
+
+
+@router.post("/customer-portal")
+async def create_customer_portal_session(
+    request: Request,
+    user: User = Depends(require_auth)
+) -> JSONResponse:
+    """
+    Create Stripe Customer Portal session for subscription management.
+    
+    Args:
+        request: FastAPI request object
+        user: Authenticated user
+        
+    Returns:
+        JSONResponse with portal URL or error
+    """
+    if not is_stripe_configured():
+        raise HTTPException(
+            status_code=503,
+            detail="Customer portal not available"
+        )
+    
+    try:
+        import stripe
+        from core.stripe_util import get_customer_subscriptions
+        
+        # Get customer subscriptions
+        subscriptions = get_customer_subscriptions(user.email)
+        if not subscriptions or not subscriptions.data:
+            raise HTTPException(
+                status_code=404,
+                detail="No active subscription found"
+            )
+        
+        # Get customer ID from first subscription
+        customer_id = subscriptions.data[0].customer
+        
+        # Create portal session
+        session = stripe.billing_portal.Session.create(
+            customer=customer_id,
+            return_url=f"{os.environ.get('BASE_URL', 'http://localhost:8080')}/dashboard"
+        )
+        
+        logger.info(f"Created customer portal session for {user.email}")
+        
+        return JSONResponse({
+            "url": session.url
+        })
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating customer portal session: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to create customer portal session"
+        )

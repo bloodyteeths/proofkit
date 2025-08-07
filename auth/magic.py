@@ -46,7 +46,7 @@ class MagicLinkAuth:
         self.storage_dir = Path("storage/auth")
         self.storage_dir.mkdir(exist_ok=True)
     
-    def generate_magic_link(self, email: str, role: UserRole = UserRole.OPERATOR) -> str:
+    def generate_magic_link(self, email: str, role: UserRole = UserRole.OPERATOR, return_url: Optional[str] = None) -> str:
         """Generate a magic link for authentication."""
         # Create a secure random token
         token = secrets.token_urlsafe(32)
@@ -54,15 +54,26 @@ class MagicLinkAuth:
         # Store the magic link data
         expires_at = datetime.now(timezone.utc) + timedelta(minutes=MAGIC_LINK_EXPIRY_MINUTES)
         
-        MAGIC_LINKS[token] = {
+        link_data = {
             "email": email,
             "role": role,
             "expires_at": expires_at.isoformat(),
             "used": False
         }
         
+        # Add return_url if provided and safe (relative path only)
+        if return_url and isinstance(return_url, str):
+            try:
+                is_safe = return_url.startswith('/') and not return_url.startswith('//') and '://' not in return_url
+            except Exception:
+                is_safe = False
+            if is_safe:
+                link_data["return_url"] = return_url
+        
+        MAGIC_LINKS[token] = link_data
+        
         # Save to persistent storage
-        self._save_magic_link(token, MAGIC_LINKS[token])
+        self._save_magic_link(token, link_data)
         
         logger.info(f"Generated magic link for {email} with role {role}")
         return token
@@ -134,8 +145,8 @@ class MagicLinkAuth:
             # Evaluate dev mode at runtime
             email_dev_mode = os.environ.get("EMAIL_DEV_MODE", "false").lower() == "true"
             
-            # Log configuration for debugging
-            logger.info(f"Email config - Token present: {bool(postmark_token)}, Token prefix: {postmark_token[:5] if postmark_token else 'None'}, Dev mode: {email_dev_mode}, From: {from_email}")
+            # Log configuration for debugging (avoid leaking token parts)
+            logger.info(f"Email config - Token present: {bool(postmark_token)}, Dev mode: {email_dev_mode}, From: {from_email}")
             
             # Check if we should use Postmark or development mode
             # Always use Postmark if token is present and dev mode is not explicitly enabled

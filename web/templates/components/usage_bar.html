@@ -246,9 +246,31 @@ function buySingleCert() {
     // This will be handled by the main dashboard.js
     if (typeof window.showBuySingleModal === 'function') {
         window.showBuySingleModal();
+    } else if (typeof dashboard !== 'undefined' && dashboard.handleBuySingle) {
+        dashboard.handleBuySingle();
     } else {
-        // Fallback to direct purchase
-        window.location.href = '/api/buy-single';
+        // Create POST request as fallback
+        fetch('/api/buy-single', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                certificate_count: 1,
+                success_url: window.location.origin + '/dashboard?purchase=success',
+                cancel_url: window.location.href
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.checkout_url) {
+                window.location.href = data.checkout_url;
+            }
+        })
+        .catch(error => {
+            console.error('Purchase failed:', error);
+            alert('Purchase failed. Please try again.');
+        });
     }
 }
 

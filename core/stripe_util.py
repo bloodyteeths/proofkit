@@ -117,8 +117,8 @@ def create_subscription_checkout(
             'id': session.id,
             'url': session.url,
             'plan': plan_name,
-            'amount': plan['price_eur'] * 100,  # Stripe uses cents
-            'currency': 'eur'
+            'amount': plan['price_usd'] * 100,  # Stripe uses cents
+            'currency': 'usd'
         }
         
     except stripe.error.StripeError as e:
@@ -208,7 +208,7 @@ def create_oneoff_checkout(
             'certificate_count': certificate_count,
             'unit_price': cert_price,
             'total_amount': cert_price * certificate_count * 100,  # Stripe uses cents
-            'currency': 'eur'
+            'currency': 'usd'
         }
         
     except stripe.error.StripeError as e:

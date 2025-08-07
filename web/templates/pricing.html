@@ -24,6 +24,9 @@
             position: relative;
             transition: all 0.3s ease;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            min-height: 600px;
         }
         
         .pricing-card:hover {
@@ -108,15 +111,18 @@
         }
         
         .cta-button {
+            display: block;
             width: 100%;
             padding: 1rem 2rem;
             border-radius: 0.75rem;
             font-weight: 600;
             text-decoration: none;
+            text-align: center;
             transition: all 0.3s ease;
             border: none;
             cursor: pointer;
             font-size: 1rem;
+            margin-top: auto;
         }
         
         .cta-button.primary {
@@ -191,6 +197,16 @@
             color: #667eea;
         }
         
+        .cta-button.current-plan {
+            background: #48bb78;
+            border-color: #48bb78;
+        }
+        
+        .cta-button.current-plan:hover {
+            background: #38a169;
+            border-color: #38a169;
+        }
+        
         @media (max-width: 768px) {
             .pricing-grid {
                 grid-template-columns: 1fr;
@@ -227,7 +243,7 @@
             <div class="pricing-card">
                 <div class="plan-name">Free</div>
                 <div class="plan-price">
-                    <span class="currency">€</span>0
+                    <span class="currency">$</span>0
                 </div>
                 <div class="plan-period">Forever free</div>
                 <div class="plan-description">
@@ -243,7 +259,7 @@
                 </ul>
                 
                 <div class="single-cert-option">
-                    Need more? Buy individual certificates for <span class="single-cert-price">€7 each</span>
+                    Need more? Buy individual certificates for <span class="single-cert-price">$9 each</span>
                 </div>
                 
                 <a href="/app" class="cta-button secondary">
@@ -255,7 +271,7 @@
             <div class="pricing-card">
                 <div class="plan-name">Starter</div>
                 <div class="plan-price">
-                    <span class="currency">€</span>14
+                    <span class="currency">$</span>19
                 </div>
                 <div class="plan-period">per month</div>
                 <div class="plan-description">
@@ -268,14 +284,14 @@
                     <li>All industry templates</li>
                     <li>Email support</li>
                     <li>CSV data validation</li>
-                    <li>Overage: €3 per certificate</li>
+                    <li>Overage: $3 per certificate</li>
                 </ul>
                 
                 <div class="single-cert-option">
-                    Or buy individual certificates for <span class="single-cert-price">€5 each</span>
+                    Or buy individual certificates for <span class="single-cert-price">$7 each</span>
                 </div>
                 
-                <button class="cta-button primary" onclick="upgradeToStarter()">
+                <button class="cta-button primary" data-plan="starter">
                     Choose Starter
                 </button>
             </div>
@@ -285,7 +301,7 @@
                 <div class="popular-badge">Most Popular</div>
                 <div class="plan-name">Pro</div>
                 <div class="plan-price">
-                    <span class="currency">€</span>59
+                    <span class="currency">$</span>79
                 </div>
                 <div class="plan-period">per month</div>
                 <div class="plan-description">
@@ -299,14 +315,14 @@
                     <li>Priority email support</li>
                     <li>Advanced data validation</li>
                     <li>API access (coming soon)</li>
-                    <li>Overage: €1.50 per certificate</li>
+                    <li>Overage: $2 per certificate</li>
                 </ul>
                 
                 <div class="single-cert-option">
-                    Or buy individual certificates for <span class="single-cert-price">€4 each</span>
+                    Or buy individual certificates for <span class="single-cert-price">$5 each</span>
                 </div>
                 
-                <button class="cta-button primary" onclick="upgradeToPro()">
+                <button class="cta-button primary" data-plan="pro">
                     Choose Pro
                 </button>
             </div>
@@ -315,7 +331,7 @@
             <div class="pricing-card">
                 <div class="plan-name">Business</div>
                 <div class="plan-price">
-                    <span class="currency">€</span>199
+                    <span class="currency">$</span>249
                 </div>
                 <div class="plan-period">per month</div>
                 <div class="plan-description">
@@ -330,14 +346,14 @@
                     <li>Team collaboration tools</li>
                     <li>API access with rate limits</li>
                     <li>Custom integrations</li>
-                    <li>Overage: €0.75 per certificate</li>
+                    <li>Overage: $1 per certificate</li>
                 </ul>
                 
                 <div class="single-cert-option">
-                    Or buy individual certificates for <span class="single-cert-price">€4 each</span>
+                    Or buy individual certificates for <span class="single-cert-price">$5 each</span>
                 </div>
                 
-                <button class="cta-button primary" onclick="upgradeToBusiness()">
+                <button class="cta-button primary" data-plan="business">
                     Choose Business
                 </button>
             </div>
@@ -365,7 +381,7 @@
                     <li>On-premise deployment</li>
                 </ul>
                 
-                <button class="cta-button enterprise-contact" onclick="contactEnterprise()">
+                <button class="cta-button enterprise-contact" data-action="contact-enterprise">
                     Contact Sales
                 </button>
             </div>
@@ -423,27 +439,55 @@
 {% endblock %}
 
 {% block scripts %}
+    <!-- Stripe.js -->
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="/static/js/stripe.js"></script>
+    
     <script{% if get_nonce(request) %} nonce="{{ get_nonce(request) }}"{% endif %}>
-        async function upgradeToStarter() {
-            await upgradeToplan('starter');
-        }
+        // Track current user plan
+        let currentUserPlan = null;
         
-        async function upgradeToPro() {
-            await upgradeToplan('pro');
-        }
-        
-        async function upgradeToBusiness() {
-            await upgradeToplan('business');
-        }
+        // Add event listeners when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check user's current plan
+            checkUserPlan();
+            // Add click handlers for plan buttons
+            document.querySelectorAll('button[data-plan]').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    const planName = this.getAttribute('data-plan');
+                    // Pass the event to the function
+                    window.event = e;
+                    
+                    // Check if this is the user's current plan
+                    if (currentUserPlan === planName) {
+                        if (confirm('You already have the ' + planName + ' plan. Would you like to manage your subscription?')) {
+                            if (window.stripeIntegration && window.stripeIntegration.openCustomerPortal) {
+                                window.stripeIntegration.openCustomerPortal();
+                            } else {
+                                alert('Customer portal is not available. Please contact support.');
+                            }
+                        }
+                    } else {
+                        upgradeToplan(planName);
+                    }
+                });
+            });
+            
+            // Add click handler for enterprise contact
+            const enterpriseBtn = document.querySelector('button[data-action="contact-enterprise"]');
+            if (enterpriseBtn) {
+                enterpriseBtn.addEventListener('click', contactEnterprise);
+            }
+        });
         
         async function upgradeToplan(planName) {
-            // Check if user is authenticated
-            const isAuthenticated = await checkAuth();
-            if (!isAuthenticated) {
-                window.location.href = '/auth/login?redirect=' + encodeURIComponent('/pricing');
+            // Use the Stripe integration from stripe.js if available
+            if (window.stripeIntegration && window.stripeIntegration.upgradeToplan) {
+                await window.stripeIntegration.upgradeToplan(planName);
                 return;
             }
             
+            // Fallback to direct API call
             try {
                 const response = await fetch(`/api/upgrade/${planName}`, {
                     method: 'POST',
@@ -481,6 +525,25 @@
                 return response.status !== 401;
             } catch {
                 return false;
+            }
+        }
+        
+        async function checkUserPlan() {
+            try {
+                const response = await fetch('/api/usage');
+                if (response.ok) {
+                    const data = await response.json();
+                    currentUserPlan = data.plan || 'free';
+                    
+                    // Update button text for current plan
+                    const currentPlanButton = document.querySelector(`button[data-plan="${currentUserPlan}"]`);
+                    if (currentPlanButton) {
+                        currentPlanButton.textContent = 'Manage Plan';
+                        currentPlanButton.classList.add('current-plan');
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to check user plan:', error);
             }
         }
         
