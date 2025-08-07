@@ -25,6 +25,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}ProofKit - Industrial Temperature Validation{% endblock %}</title>
     <meta name="description" content="{% block description %}Professional temperature validation and compliance documentation{% endblock %}">
+    <link rel="canonical" href="{{ request.url if request else '' }}" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="ProofKit">
+    <meta property="og:title" content="{% block og_title %}{{ self.title() if self.title else 'ProofKit - Industrial Temperature Validation' }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}{{ self.description() if self.description else 'Professional temperature validation and compliance documentation' }}{% endblock %}">
+    <meta property="og:url" content="{{ request.url if request else '' }}">
+    <meta property="og:image" content="https://www.proofkit.net/static/brand/proofkit_logo_icon.png">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}{{ self.title() if self.title else 'ProofKit - Industrial Temperature Validation' }}{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}{{ self.description() if self.description else 'Professional temperature validation and compliance documentation' }}{% endblock %}">
+    <meta name="twitter:image" content="https://www.proofkit.net/static/brand/proofkit_logo_icon.png">
     
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/static/brand/proofkit_favicon.svg">
@@ -36,6 +51,33 @@
     <!-- Modern CSS -->
     <link rel="stylesheet" href="/static/css/modern.css">
     
+    <!-- Structured Data: Organization & Website -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "ProofKit",
+      "url": "https://www.proofkit.net/",
+      "logo": "https://www.proofkit.net/static/brand/proofkit_logo_icon.svg",
+      "sameAs": [
+        "https://www.linkedin.com/company/proofkit"
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "ProofKit",
+      "url": "https://www.proofkit.net/",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://www.proofkit.net/search?q={query}",
+        "query-input": "required name=query"
+      }
+    }
+    </script>
+
     {% block head %}{% endblock %}
 </head>
 <body>

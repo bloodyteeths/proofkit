@@ -10,6 +10,53 @@
     {"icon": "✅", "text": "GMP Validated"}
 ] %}
 
+{% set value_props = {
+  "title": "Why this matters for sterilization teams",
+  "items": [
+    {"icon": "🧮", "title": "Automatic F₀ & lethality", "desc": "Accurate F₀ with Z=10°C at 121°C, integrated over time across all probes."},
+    {"icon": "🧾", "title": "Inspector‑ready docs", "desc": "USP/ISO aligned PDFs, deviation logs, and signed evidence bundles in minutes."},
+    {"icon": "🔐", "title": "21 CFR Part 11", "desc": "Tamper‑evident hashes, user attestation, and audit trail baked in."},
+    {"icon": "📦", "title": "Load mapping clarity", "desc": "Cold‑spot detection and proof that every probe met hold time."}
+  ]
+} %}
+
+{% set penalties = {
+  "title": "If validation is mishandled",
+  "items": [
+    {"icon": "⚠️", "text": "483 observations", "detail": "FDA Form 483 for inadequate sterilization validation or records."},
+    {"icon": "⛔", "text": "Batch quarantine/destroy", "detail": "Failed proof forces product hold, re‑processing, or destruction."},
+    {"icon": "💸", "text": "Costly revalidation", "detail": "Repeat heat distribution/penetration studies due to missing data."},
+    {"icon": "📉", "text": "Market delays", "detail": "Delayed release and lost revenue while CAPAs are implemented."}
+  ],
+  "disclaimer": "Regulatory outcomes depend on your QMS and regulator. ProofKit helps you demonstrate due diligence."
+} %}
+
+{% set why_proofkit = {
+  "title": "Why ProofKit for moist heat",
+  "features": [
+    {"icon": "🧪", "title": "Probe‑level evidence", "desc": "Hold time begins only when <em>all</em> load sensors reach target. We prove it."},
+    {"icon": "📈", "title": "Deviation intelligence", "desc": "Automatically flags slow heat‑up, vacuum issues, and thermal lag."},
+    {"icon": "🔗", "title": "Traceability", "desc": "Link cycles to lots, devices, and CAPAs; export signed certificates."}
+  ]
+} %}
+
+{% set roi = {
+  "title": "Time and risk saved",
+  "points": [
+    {"headline": "Save 4–8 hrs per cycle", "detail": "No manual spreadsheets. Instant PDFs."},
+    {"headline": "Reduce failed audits", "detail": "Standardized, Part 11‑aligned documentation."},
+    {"headline": "Train new staff faster", "detail": "Guided defaults aligned to USP/ISO."}
+  ]
+} %}
+
+{% set testimonials = {
+  "title": "What QA leaders say",
+  "items": [
+    {"quote": "We closed two 483s by standardizing sterilization proof with ProofKit.", "author": "Quality Director", "role": "Pharma"},
+    {"quote": "Load mapping is finally defensible without endless Excel.", "author": "Validation Manager", "role": "Med Device"}
+  ]
+} %}
+
 {% set examples = {
     "title": "Need sterilization example data to test with?",
     "description": "Download example temperature log files from autoclave validation runs:",

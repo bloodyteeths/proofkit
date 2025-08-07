@@ -10,6 +10,53 @@
     {"icon": "✅", "text": "EN 556 Compliant"}
 ] %}
 
+{% set value_props = {
+  "title": "Why this matters for EtO facilities",
+  "items": [
+    {"icon": "🧪", "title": "Chamber uniformity", "desc": "Quantifies hot/cold spots across probes to prove uniformity (±3°C)."},
+    {"icon": "🧾", "title": "Device‑ready records", "desc": "ISO 11135 aligned PDFs stitched by lot and device family."},
+    {"icon": "⚠️", "title": "Safety envelope", "desc": "Flags >60°C risk zones and prolonged exposure automatically."},
+    {"icon": "🔐", "title": "Part 11 evidence", "desc": "Tamper‑evident hashes and attestation for QA release."}
+  ]
+} %}
+
+{% set penalties = {
+  "title": "If EtO proof is weak",
+  "items": [
+    {"icon": "⚠️", "text": "Regulatory findings", "detail": "ISO 11135 non‑conformities; 483s for incomplete validation."},
+    {"icon": "⛔", "text": "Production holds", "detail": "Lots quarantined pending revalidation and CAPAs."},
+    {"icon": "💸", "text": "Contract penalties", "detail": "OEM customers demand defensible records or credits."},
+    {"icon": "🧯", "text": "Safety incidents", "detail": "Thermal control lapses raise OSHA/EPA concerns."}
+  ],
+  "disclaimer": "Safety/regulatory outcomes vary. ProofKit strengthens objective evidence."
+} %}
+
+{% set why_proofkit = {
+  "title": "Why ProofKit for EtO",
+  "features": [
+    {"icon": "📈", "title": "Phase‑aware analysis", "desc": "Preconditioning, exposure, aeration segmented for clarity."},
+    {"icon": "🧭", "title": "Actionable deviations", "desc": "Pinpoint root causes like ramp overshoot or poor mixing."},
+    {"icon": "🔗", "title": "Traceability", "desc": "Link cycles to lots, CAPAs, and device families."}
+  ]
+} %}
+
+{% set roi = {
+  "title": "Time and risk saved",
+  "points": [
+    {"headline": "Standardize release", "detail": "Faster QA decisions with consistent evidence."},
+    {"headline": "Reduce reprocessing", "detail": "Early detection of drift and hot spots."},
+    {"headline": "Audit confidence", "detail": "Defensible, signed records on demand."}
+  ]
+} %}
+
+{% set testimonials = {
+  "title": "What validation leads say",
+  "items": [
+    {"quote": "ProofKit gave us phase‑by‑phase clarity we could defend.", "author": "Validation Lead", "role": "Med Device"},
+    {"quote": "Finally a Part 11‑aligned way to release EtO lots.", "author": "QA Manager", "role": "Contract Sterilizer"}
+  ]
+} %}
+
 {% set examples = {
     "title": "Need EtO sterilization example data to test with?",
     "description": "Download example temperature log files from ethylene oxide sterilization cycles:",

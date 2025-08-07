@@ -1689,8 +1689,8 @@ async def nav_demo_page(request: Request) -> HTMLResponse:
     )
 
 
-@app.get("/examples/{filename}", tags=["compile"])
-async def serve_example_file(filename: str) -> FileResponse:
+@app.get("/examples/{path:path}", tags=["compile"])
+async def serve_example_file(path: str) -> FileResponse:
     """
     Serve example files for users to download and test.
     
@@ -1704,19 +1704,42 @@ async def serve_example_file(filename: str) -> FileResponse:
         HTTPException: If file not found
     """
     try:
-        examples_dir = BASE_DIR / "examples"
-        file_path = examples_dir / filename
+        # Support nested paths and multiple example roots while preventing traversal
+        requested = Path(path)
+        if requested.is_absolute() or ".." in requested.parts:
+            raise HTTPException(status_code=400, detail="Invalid path")
+
+        candidates = [
+            BASE_DIR / "examples" / requested,
+            BASE_DIR / "marketing" / "csv-examples" / requested.name,  # flat filename fallback
+            BASE_DIR / "marketing" / "spec-examples" / requested.name,
+        ]
+
+        file_path = None
+        for candidate in candidates:
+            try:
+                if candidate.exists() and candidate.is_file():
+                    file_path = candidate
+                    break
+            except Exception:
+                continue
         
-        if not file_path.exists() or not file_path.is_file():
-            raise HTTPException(status_code=404, detail=f"Example file '{filename}' not found")
+        if not file_path:
+            raise HTTPException(status_code=404, detail=f"Example file '{path}' not found")
         
-        # Security check: ensure file is in examples directory
-        if not str(file_path.resolve()).startswith(str(examples_dir.resolve())):
+        # Security check: ensure file is under allowed roots
+        allowed_roots = [
+            (BASE_DIR / "examples").resolve(),
+            (BASE_DIR / "marketing" / "csv-examples").resolve(),
+            (BASE_DIR / "marketing" / "spec-examples").resolve(),
+        ]
+        resolved = file_path.resolve()
+        if not any(str(resolved).startswith(str(root)) for root in allowed_roots):
             raise HTTPException(status_code=403, detail="Access denied")
         
         return FileResponse(
             path=str(file_path),
-            filename=filename,
+            filename=file_path.name,
             media_type='application/octet-stream'
         )
         

@@ -2,6 +2,37 @@
 
 {% block title %}{{ title }} - ProofKit Blog{% endblock %}
 {% block description %}{{ excerpt if excerpt else "Expert insights on temperature validation and compliance from the ProofKit team." }}{% endblock %}
+{% block head %}
+<meta property="og:type" content="article">
+<meta property="og:title" content="{{ title }} - ProofKit Blog">
+<meta property="og:description" content="{{ excerpt if excerpt else 'Expert insights on temperature validation and compliance.' }}">
+<meta property="og:url" content="https://www.proofkit.net/blog/{{ slug }}">
+<meta property="article:author" content="ProofKit Technical Team">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "{{ title }}",
+  "author": {
+    "@type": "Organization",
+    "name": "ProofKit Technical Team"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ProofKit",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://www.proofkit.net/static/brand/proofkit_logo_icon.svg"
+    }
+  },
+  "datePublished": "{{ date if date else '2024-01-01' }}",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://www.proofkit.net/blog/{{ slug }}"
+  }
+}
+</script>
+{% endblock %}
 
 {% block content %}
 <!-- Blog Header -->

@@ -10,6 +10,53 @@
     {"icon": "✅", "text": "ISO 9001 Compatible"}
 ] %}
 
+{% set value_props = {
+  "title": "Why this matters for finishers",
+  "items": [
+    {"icon": "🎯", "title": "Right‑first‑time cures", "desc": "Proves each part met target temp for the full hold time."},
+    {"icon": "🧾", "title": "OEM/AAMA proof", "desc": "Inspector‑ready PDFs for submittals and warranty support."},
+    {"icon": "🔎", "title": "Defect prevention", "desc": "Flags over‑ramp, under‑cure, and zone imbalance automatically."},
+    {"icon": "⚙️", "title": "Fits your shop", "desc": "Works with simple CSVs from your existing loggers."}
+  ]
+} %}
+
+{% set penalties = {
+  "title": "If cure isn’t proven",
+  "items": [
+    {"icon": "⚠️", "text": "Warranty claims", "detail": "Peel, chalking, or gloss loss disputes without proof."},
+    {"icon": "⛔", "text": "Rejected lots", "detail": "OEMs/GCs can reject deliveries lacking records."},
+    {"icon": "💸", "text": "Rework costs", "detail": "Strip and re‑coat cycles kill margins."},
+    {"icon": "📉", "text": "Lost contracts", "detail": "Competitive bids require validation capability."}
+  ],
+  "disclaimer": "Requirements vary by spec and customer. ProofKit provides objective, exportable evidence."
+} %}
+
+{% set why_proofkit = {
+  "title": "Why ProofKit for powder",
+  "features": [
+    {"icon": "📈", "title": "Zone‑aware logic", "desc": "Minimum/mean/majority modes for multi‑zone ovens."},
+    {"icon": "🧰", "title": "Shop‑floor simple", "desc": "Drag‑and‑drop CSVs; instant proof PDFs."},
+    {"icon": "🔗", "title": "Traceability", "desc": "Tie batches to part IDs and coatings."}
+  ]
+} %}
+
+{% set roi = {
+  "title": "Profits protected",
+  "points": [
+    {"headline": "Fewer re‑coats", "detail": "Catch under‑cures before shipment."},
+    {"headline": "Win bigger bids", "detail": "Offer validation as a capability."},
+    {"headline": "Minutes to proof", "detail": "Stop wrestling with spreadsheets."}
+  ]
+} %}
+
+{% set testimonials = {
+  "title": "What coaters say",
+  "items": [
+    {"quote": "We cut rework by half once we started attaching ProofKit PDFs.", "author": "Owner", "role": "Job Shop"},
+    {"quote": "Architectural submittals are now a one‑click export.", "author": "QC Lead", "role": "Facade Coater"}
+  ]
+} %}
+
 {% set examples = {
     "title": "Need powder coating example data to test with?",
     "description": "Download example temperature log files from actual powder coating ovens:",
