@@ -91,7 +91,7 @@ async function upgradeToplan(planName) {
         if (!response.ok) {
             if (response.status === 401 || response.status === 422) {
                 // User not authenticated, redirect to login
-                window.location.href = '/auth/login?redirect=' + encodeURIComponent('/pricing');
+                window.location.href = '/auth/login?return_url=' + encodeURIComponent('/pricing');
                 return;
             }
             if (response.status === 409) {

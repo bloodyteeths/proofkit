@@ -172,7 +172,7 @@
                 </a>
                 
                 {% if quota.plan == 'free' and quota.total_remaining == 0 %}
-                <a href="#" class="action-card" onclick="event.preventDefault(); dashboard.handleBuySingle(event)">
+                 <a href="#" class="action-card" onclick="buySingleCert(event)">
                     <div class="action-icon">🎫</div>
                     <h3>Buy Single Certificate</h3>
                     <p>€{{ quota.single_cert_price }} per certificate</p>
