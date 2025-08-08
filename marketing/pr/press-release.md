@@ -52,33 +52,33 @@ ProofKit's open-source specification library enables standardized quality valida
 
 ### Availability and Pricing
 
-ProofKit's enhanced compliance suite is available immediately at proofkit.io with a freemium model supporting three certificates monthly. Professional subscriptions start at €49/month for unlimited certificates with custom branding. Enterprise deployments include API access, multi-location management, and dedicated compliance support.
+ProofKit's enhanced compliance suite is available immediately at https://www.proofkit.net with a freemium model supporting three certificates monthly. Professional subscriptions start at €49/month for unlimited certificates with custom branding. Enterprise deployments include API access, multi-location management, and dedicated compliance support.
 
 ### About ProofKit
 
 Founded in 2024, ProofKit transforms manual quality control processes into automated, tamper-proof digital certificates. The platform serves manufacturing, food service, healthcare, construction, and pharmaceutical industries with deterministic validation algorithms and blockchain-verified documentation. ProofKit is trusted by over 500 facilities worldwide for critical compliance validation.
 
-For more information, visit **proofkit.io** or contact **press@proofkit.io**.
+For more information, visit **https://www.proofkit.net** or contact **press@proofkit.net**.
 
 ### Media Contact
 
 **ProofKit Press Team**  
-Email: press@proofkit.io  
+Email: press@proofkit.net  
 Phone: +32-2-555-0199  
-Website: proofkit.io/press  
+Website: https://www.proofkit.net/press  
 
 ### Technical Contact
 
 **ProofKit Engineering**  
-Email: technical@proofkit.io  
-Documentation: docs.proofkit.io  
-GitHub: github.com/proofkit/specifications  
+Email: technical@proofkit.net  
+Documentation: https://www.proofkit.net/docs  
+GitHub: https://github.com/proofkit/specifications  
 
 ---
 
 ### High-Resolution Images & Assets
 
-**Press Kit Available:** proofkit.io/press-kit
+**Press Kit Available:** https://www.proofkit.net/press-kit
 - Product screenshots and interface mockups
 - Industry-specific certificate examples
 - Technical architecture diagrams

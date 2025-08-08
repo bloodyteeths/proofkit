@@ -506,3 +506,12 @@ footer {
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
+
+/* Hero image */
+.hero-image {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 1rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}

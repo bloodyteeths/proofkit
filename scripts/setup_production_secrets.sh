@@ -19,6 +19,9 @@ read
 echo "Setting JWT secret..."
 JWT_SECRET=$(openssl rand -base64 32)
 flyctl secrets set JWT_SECRET="$JWT_SECRET" --app proofkit-prod
+flyctl secrets set POSTMARK_API_TOKEN="${POSTMARK_API_TOKEN:-$POSTMARK_TOKEN}" --app proofkit-prod
+flyctl secrets set EMAIL_FROM="John <john@proofkit.net>" --app proofkit-prod
+flyctl secrets set POSTMARK_STREAM="outbound" --app proofkit-prod
 
 # Stripe Configuration
 echo ""

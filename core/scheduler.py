@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from core.cleanup import cleanup_old_artifacts
+from core.upsell import process_queue_once
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -123,6 +124,11 @@ class BackgroundScheduler:
                         
                 else:
                     # Sleep for 30 seconds and check again
+                    # Also run upsell queue processor every 30s
+                    try:
+                        process_queue_once(current_time)
+                    except Exception as e:
+                        logger.error(f"Upsell queue processing error: {e}")
                     time.sleep(30)
                     
             except Exception as e:

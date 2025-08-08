@@ -23,7 +23,7 @@ We'd like to offer your customers co-branded PDF certificates that feature both 
 
 **What We're Offering**
 - Co-branded PDF output featuring [VENDOR] logo and contact information
-- Dedicated resource page link on proofkit.com/partners/[vendor]
+ - Dedicated resource page link on proofkit.net/partners/[vendor]
 - Revenue sharing: 15% of all certificates generated using [VENDOR] templates
 - Custom CSV import templates optimized for [VENDOR] logger formats
 
@@ -41,7 +41,7 @@ Best regards,
 ProofKit Partnership Team
 [EMAIL] | [PHONE]
 
-P.S. You can see our current platform in action at proofkit.com - we'd love to create a [VENDOR]-specific demo for you.
+ P.S. You can see our current platform in action at proofkit.net - we'd love to create a [VENDOR]-specific demo for you.
 
 ---
 

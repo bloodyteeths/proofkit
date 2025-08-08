@@ -26,6 +26,7 @@
     <title>{% block title %}ProofKit - Industrial Temperature Validation{% endblock %}</title>
     <meta name="description" content="{% block description %}Professional temperature validation and compliance documentation{% endblock %}">
     <link rel="canonical" href="{{ request.url if request else '' }}" />
+    <meta name="robots" content="index, follow">
 
     <!-- Open Graph -->
     <meta property="og:type" content="website">
@@ -42,7 +43,9 @@
     <meta name="twitter:image" content="https://www.proofkit.net/static/brand/proofkit_logo_icon.png">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="/static/brand/proofkit_favicon.svg">
+    <link rel="icon" type="image/svg+xml" sizes="any" href="/static/brand/proofkit_favicon.svg?v=2">
+    <link rel="shortcut icon" type="image/svg+xml" href="/static/brand/proofkit_favicon.svg?v=2">
+    <link rel="mask-icon" href="/static/brand/proofkit_favicon.svg?v=2" color="#0050FF">
     <link rel="apple-touch-icon" href="/static/brand/proofkit_logo_icon.svg">
     
     <!-- Inter Font -->
@@ -86,7 +89,7 @@
         <div class="nav-container">
             <!-- Logo -->
             <a href="/" class="logo-link">
-                <img src="/static/brand/proofkit_logo_icon.svg" alt="ProofKit" style="height: 32px; width: auto;">
+                <img src="/static/brand/proofkit_logo_icon.svg" alt="ProofKit" width="32" height="32" style="height: 32px; width: auto;">
                 <span>ProofKit</span>
             </a>
             
@@ -123,8 +126,7 @@
                 <a href="/dashboard" class="nav-link">Dashboard</a>
                 <a href="/auth/logout" class="nav-link">Logout</a>
                 {% else %}
-                <a href="/auth/login" class="nav-link">Login</a>
-                <a href="/auth/signup" class="nav-link">Sign Up</a>
+                 <a href="/auth/get-started" class="nav-link">Get Started</a>
                 {% endif %}
                 
                 <a href="/app" class="btn btn-primary">Start Validating</a>
@@ -159,8 +161,7 @@
             <a href="/dashboard" class="mobile-menu-link">Dashboard</a>
             <a href="/auth/logout" class="mobile-menu-link">Logout</a>
             {% else %}
-            <a href="/auth/login" class="mobile-menu-link">Login</a>
-            <a href="/auth/signup" class="mobile-menu-link">Sign Up</a>
+            <a href="/auth/get-started" class="mobile-menu-link">Get Started</a>
             {% endif %}
             <a href="/app" class="mobile-menu-link mobile-menu-cta">Start Validating</a>
         </div>

@@ -1,0 +1,20 @@
+{% extends "modern_base.html" %}
+
+{#
+  Compatibility base template.
+  Pages that previously extended `base.html` now inherit the full SEO/meta setup from `modern_base.html`.
+  This file simply passes through blocks so legacy templates work without changes.
+#}
+
+{% block content %}
+  {% block content %}{% endblock %}
+{% endblock %}
+
+{% block head %}
+  {{ super() }}
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+{% endblock %}
+

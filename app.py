@@ -58,6 +58,7 @@ from core.pack import create_evidence_bundle, PackingError
 from core.logging import setup_logging, get_logger, RequestLoggingMiddleware
 from core.cleanup import schedule_cleanup
 from core.validation import create_validation_pack, get_validation_pack_info
+from core.upsell import enqueue_upsell
 
 # Import auth modules
 from auth.magic import auth_handler, AuthMiddleware, get_current_user, require_auth, require_qa, require_qa_redirect
@@ -182,6 +183,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         
         # Prevent MIME type sniffing attacks
         response.headers["X-Content-Type-Options"] = "nosniff"
+
+        # Clickjacking protection
+        response.headers["X-Frame-Options"] = "SAMEORIGIN"
         
         # Control referrer information sent when navigating away
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
@@ -867,6 +871,18 @@ def process_csv_and_spec(csv_content: bytes, spec_data: Dict[str, Any],
     }
     save_job_metadata(job_dir, job_id, job_metadata)
     
+    # Schedule upsell sequence for free users
+    try:
+        if (creator and str(creator.plan).lower() == 'free') or not creator:
+            user_email = creator.email if creator else None
+            if user_email:
+                industry = spec_data.get('industry', 'general') if isinstance(spec_data, dict) else 'general'
+                spec_name = spec_data.get('name', 'Certificate') if isinstance(spec_data, dict) else 'Certificate'
+                enqueue_upsell(user_email, job_id, industry, spec_name)
+                logger.info(f"Upsell scheduled for {user_email} job={job_id}")
+    except Exception as e:
+        logger.error(f"Failed to enqueue upsell for job {job_id}: {e}")
+    
     # Return results
     return {
         "id": job_id,
@@ -892,6 +908,67 @@ def process_csv_and_spec(csv_content: bytes, spec_data: Dict[str, Any],
 
 # Create the main app instance
 app = create_app()
+def _render_markdown(md_text: str) -> str:
+    """Very simple Markdown to HTML (headers, paragraphs, lists)."""
+    lines = md_text.split('\n')
+    html_lines = []
+    in_list = False
+    for line in lines:
+        s = line.strip()
+        if s.startswith('### '):
+            if in_list:
+                html_lines.append('</ul>')
+                in_list = False
+            html_lines.append(f"<h3>{html.escape(s[4:])}</h3>")
+        elif s.startswith('## '):
+            if in_list:
+                html_lines.append('</ul>')
+                in_list = False
+            html_lines.append(f"<h2>{html.escape(s[3:])}</h2>")
+        elif s.startswith('# '):
+            if in_list:
+                html_lines.append('</ul>')
+                in_list = False
+            html_lines.append(f"<h1>{html.escape(s[2:])}</h1>")
+        elif s.startswith('- '):
+            if not in_list:
+                html_lines.append('<ul>')
+                in_list = True
+            content = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', html.escape(s[2:]))
+            html_lines.append(f"<li>{content}</li>")
+        elif s == '':
+            if in_list:
+                html_lines.append('</ul>')
+                in_list = False
+            html_lines.append('')
+        else:
+            if in_list:
+                html_lines.append('</ul>')
+                in_list = False
+            content = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', html.escape(s))
+            html_lines.append(f"<p>{content}</p>")
+    if in_list:
+        html_lines.append('</ul>')
+    return '\n'.join(html_lines)
+
+
+@app.get("/press", response_class=HTMLResponse, tags=["marketing"])
+async def press_release_page(request: Request) -> HTMLResponse:
+    md_path = BASE_DIR / "marketing" / "pr" / "press-release.md"
+    if not md_path.exists():
+        raise HTTPException(status_code=404, detail="Press release not found")
+    with open(md_path, 'r', encoding='utf-8') as f:
+        md = f.read()
+    html_content = _render_markdown(md)
+    return templates.TemplateResponse("press.html", {"request": request, "content": html_content})
+
+
+@app.get("/press/download", tags=["marketing"])
+async def press_release_download() -> FileResponse:
+    md_path = BASE_DIR / "marketing" / "pr" / "press-release.md"
+    if not md_path.exists():
+        raise HTTPException(status_code=404, detail="Press release not found")
+    return FileResponse(md_path, media_type="text/markdown", filename="press-release.md")
 
 
 @app.get("/favicon.ico", include_in_schema=False)

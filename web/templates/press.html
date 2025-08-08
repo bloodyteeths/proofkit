@@ -1,0 +1,17 @@
+{% extends "modern_base.html" %}
+
+{% block title %}Press Release - ProofKit{% endblock %}
+{% block description %}Official press release for ProofKit's PDF/A-3 & RFC 3161 compliance suite.{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="section-container" style="max-width: 900px;">
+    <article class="card" style="padding: 2rem;">
+      {{ content | safe }}
+    </article>
+  </div>
+  <div class="section-container" style="max-width: 900px; margin-top: 1rem;">
+    <a class="btn" href="/press/download" style="background:#667eea;color:#fff">Download as Markdown</a>
+  </div>
+{% endblock %}
+
