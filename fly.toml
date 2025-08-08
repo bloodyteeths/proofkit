@@ -31,7 +31,7 @@ kill_timeout = "5s"
 
 [http_service]
   internal_port = 8080
-  force_https = true
+  force_https = false
   auto_stop_machines = true
   auto_start_machines = true
   min_machines_running = 1
@@ -78,7 +78,7 @@ kill_timeout = "5s"
   [[services.ports]]
     port = 80
     handlers = ["http"]
-    force_https = true
+    force_https = false
 
   [[services.ports]]
     port = 443

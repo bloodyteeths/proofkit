@@ -3,7 +3,6 @@
 {% block title %}Get Started - ProofKit{% endblock %}
 {% block description %}Start using ProofKit for professional temperature validation. No credit card required.{% endblock %}
 {% block robots %}<meta name="robots" content="noindex, follow">{% endblock %}
-{% block canonical %}<link rel="canonical" href="https://www.proofkit.net/auth/get-started" />{% endblock %}
 
 {% block content %}
 <div class="auth-page">
@@ -30,7 +29,7 @@
         
         <!-- Main Form -->
         <div class="auth-form-container">
-            <form id="auth-form" method="POST" action="/auth/magic-link">
+            <form id="auth-form" method="POST" action="https://www.proofkit.net/auth/magic-link">
                 <!-- Hidden field for return URL -->
                 {% if return_url %}
                 <input type="hidden" name="return_url" value="{{ return_url }}">

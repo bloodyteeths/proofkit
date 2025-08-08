@@ -23,8 +23,8 @@
     
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}ProofKit - Industrial Temperature Validation{% endblock %}</title>
-    <meta name="description" content="{% block description %}Professional temperature validation and compliance documentation{% endblock %}">
+    <title>{{ (self.title() if self.title else 'ProofKit - Industrial Temperature Validation') | truncate_title }}</title>
+    <meta name="description" content="{{ (self.description() if self.description else 'Professional temperature validation and compliance documentation') | truncate_meta }}">
     {% block canonical %}{% if should_index(request) %}<link rel="canonical" href="{{ request.url if request else '' }}" />{% endif %}{% endblock %}
     {% block robots %}
     {% if should_index(request) %}

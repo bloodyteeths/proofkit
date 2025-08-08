@@ -478,14 +478,16 @@ def validate_coldchain_storage(normalized_df: pd.DataFrame, spec: SpecV1) -> Dec
         # Get sensor selection configuration
         sensor_selection = spec.sensor_selection
         if sensor_selection and sensor_selection.sensors:
-            # Use specified sensors
+            # Use specified sensors when present; otherwise warn and fallback to auto-detected
             available_sensors = [col for col in sensor_selection.sensors if col in temp_columns]
             if not available_sensors:
-                raise DecisionError(f"None of specified sensors found in data: {sensor_selection.sensors}")
-            temp_columns = available_sensors
-            
-            if sensor_selection.require_at_least and len(available_sensors) < sensor_selection.require_at_least:
-                warnings.append(f"Only {len(available_sensors)} sensors available, {sensor_selection.require_at_least} required")
+                warnings.append(
+                    f"Specified sensors not found: {sensor_selection.sensors}. Using auto-detected sensors: {temp_columns}"
+                )
+            else:
+                temp_columns = available_sensors
+                if sensor_selection.require_at_least and len(available_sensors) < sensor_selection.require_at_least:
+                    warnings.append(f"Only {len(available_sensors)} sensors available, {sensor_selection.require_at_least} required")
         
         # Combine sensor readings (majority_over_threshold for conservative cold chain validation)
         sensor_mode = sensor_selection.mode if sensor_selection else SensorMode.MAJORITY_OVER_THRESHOLD

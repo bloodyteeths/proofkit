@@ -163,9 +163,12 @@ def create_header_section(spec: SpecV1) -> list:
 
 
 def create_status_badge(decision: DecisionResult) -> Table:
-    """Create centered PASS/FAIL status badge."""
-    status = "PASS" if decision.pass_ else "FAIL"
-    status_color = COLOR_EMERALD if decision.pass_ else COLOR_CRIMSON
+    """Create centered PASS/FAIL/INDETERMINATE status badge."""
+    status = getattr(decision, 'status', 'PASS') or ("PASS" if decision.pass_ else "FAIL")
+    if status == 'INDETERMINATE':
+        status_color = colors.orange
+    else:
+        status_color = COLOR_EMERALD if (status == 'PASS' and decision.pass_) else COLOR_CRIMSON
     
     # Create badge table with rounded appearance
     badge_data = [[status]]
@@ -258,11 +261,9 @@ def create_results_column(decision: DecisionResult) -> Table:
     ]
     
     # Status with color coding
-    status_color = COLOR_EMERALD if decision.pass_ else COLOR_CRIMSON
-    status_text = '<font color="%s"><b>%s</b></font>' % (
-        status_color.hexval(), 
-        'PASS' if decision.pass_ else 'FAIL'
-    )
+    status = getattr(decision, 'status', 'PASS') or ('PASS' if decision.pass_ else 'FAIL')
+    status_color = COLOR_EMERALD if status == 'PASS' else (colors.orange if status == 'INDETERMINATE' else COLOR_CRIMSON)
+    status_text = '<font color="%s"><b>%s</b></font>' % (status_color.hexval(), status)
     
     details = [
         ('Status', status_text),
@@ -289,6 +290,16 @@ def create_results_column(decision: DecisionResult) -> Table:
                 Paragraph(value, value_style)
             ])
     
+    # Add fallback note if used
+    try:
+        if getattr(decision, 'flags', {}).get('fallback_used'):
+            results_data.append([
+                Paragraph('Note', ParagraphStyle('Field', fontSize=9, textColor=COLOR_SLATE, leftIndent=5*mm)),
+                Paragraph('Auto-detected sensors used', ParagraphStyle('Value', fontSize=9, textColor=COLOR_NAVY, alignment=TA_RIGHT))
+            ])
+    except Exception:
+        pass
+
     results_table = Table(results_data, colWidths=[40*mm, 35*mm])
     results_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (1, 0), COLOR_LIGHT_GREY),

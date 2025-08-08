@@ -4,7 +4,7 @@
     "job_id": "autoclave_medical_device_iso17665"
   },
   "spec": {
-    "method": "STEAM_STERILIZATION",
+    "method": "OVEN_AIR",
     "target_temp_C": 134.0,
     "hold_time_s": 180,
     "temp_band_C": {
@@ -21,7 +21,6 @@
   },
   "sensor_selection": {
     "mode": "min_of_set",
-    "sensors": ["temp_C", "temp_backup_C"],
     "require_at_least": 2
   },
   "pressure_requirements": {

@@ -492,9 +492,15 @@ def validate_eto_sterilization(normalized_df: pd.DataFrame, spec: SpecV1) -> Dec
             available_gas_sensors = [col for col in sensor_selection.sensors if col in gas_columns]
             
             if not available_temp_sensors:
-                raise DecisionError(f"None of specified temperature sensors found in data: {sensor_selection.sensors}")
-            
-            temp_columns = available_temp_sensors
+                # Do not fail; warn and continue with auto-detected temp columns
+                warnings.append(
+                    f"Specified temperature sensors not found: {sensor_selection.sensors}. Using auto-detected sensors: {temp_columns}"
+                )
+                flags = locals().get('flags', {})
+                flags['fallback_used'] = True
+                locals()['flags'] = flags
+            else:
+                temp_columns = available_temp_sensors
             if available_humidity_sensors:
                 humidity_columns = available_humidity_sensors
             if available_gas_sensors:
@@ -539,6 +545,9 @@ def validate_eto_sterilization(normalized_df: pd.DataFrame, spec: SpecV1) -> Dec
                 warnings.append(f"Humidity sensor combination failed: {str(e)}")
         else:
             warnings.append("No humidity sensors detected - validation will proceed without humidity monitoring")
+            flags = locals().get('flags', {})
+            flags['fallback_used'] = True
+            locals()['flags'] = flags
         
         if gas_columns:
             try:
@@ -549,11 +558,25 @@ def validate_eto_sterilization(normalized_df: pd.DataFrame, spec: SpecV1) -> Dec
                 warnings.append(f"Gas concentration sensor combination failed: {str(e)}")
         else:
             warnings.append("No EtO gas sensors detected - validation will proceed without gas concentration monitoring")
+            flags = locals().get('flags', {})
+            flags['fallback_used'] = True
+            locals()['flags'] = flags
         
         # Validate EtO sterilization cycle
         cycle_metrics = validate_eto_sterilization_cycle(
             combined_temp, normalized_df[timestamp_col], combined_humidity, combined_gas
         )
+
+        # Enforce required parameters per spec
+        require_humidity = bool(getattr(spec, 'parameter_requirements', None) and getattr(spec.parameter_requirements, 'require_humidity', False))
+        require_gas = bool(getattr(spec, 'parameter_requirements', None) and getattr(spec.parameter_requirements, 'require_gas_concentration', False))
+
+        if require_humidity and combined_humidity is None:
+            cycle_metrics['humidity_range_valid'] = False
+            cycle_metrics['reasons'].append("Humidity data required by specification but not provided")
+        if require_gas and combined_gas is None:
+            cycle_metrics['gas_concentration_maintained'] = False
+            cycle_metrics['reasons'].append("EtO gas concentration data required by specification but not provided")
         
         # Determine overall pass/fail status
         pass_decision = (
@@ -563,6 +586,13 @@ def validate_eto_sterilization(normalized_df: pd.DataFrame, spec: SpecV1) -> Dec
             cycle_metrics['gas_concentration_maintained'] and
             cycle_metrics['cycle_phases_valid']
         )
+
+        # Determine status with required parameters enforcement
+        status = 'PASS' if pass_decision else 'FAIL'
+        if require_humidity and combined_humidity is None:
+            status = 'INDETERMINATE'
+        if require_gas and combined_gas is None:
+            status = 'INDETERMINATE'
         
         # Add success reasons if passed
         if pass_decision:
@@ -587,6 +617,7 @@ def validate_eto_sterilization(normalized_df: pd.DataFrame, spec: SpecV1) -> Dec
         
         return DecisionResult(
             pass_=pass_decision,
+            status=status,
             job_id=spec.job.job_id,
             target_temp_C=55.0,  # Mid-range EtO sterilization temperature
             conservative_threshold_C=50.0,  # Minimum acceptable temperature
@@ -595,7 +626,8 @@ def validate_eto_sterilization(normalized_df: pd.DataFrame, spec: SpecV1) -> Dec
             max_temp_C=cycle_metrics['max_temp_C'],
             min_temp_C=cycle_metrics['min_temp_C'],
             reasons=reasons,
-            warnings=warnings
+            warnings=warnings,
+            flags=locals().get('flags', {})
         )
     
     except Exception as e:

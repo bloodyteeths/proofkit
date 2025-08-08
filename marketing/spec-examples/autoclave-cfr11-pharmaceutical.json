@@ -4,7 +4,7 @@
     "job_id": "autoclave_cfr11_pharmaceutical_sterilization"
   },
   "spec": {
-    "method": "STEAM_STERILIZATION",
+    "method": "OVEN_AIR",
     "target_temp_C": 132.0,
     "hold_time_s": 240,
     "temp_band_C": {
@@ -21,7 +21,6 @@
   },
   "sensor_selection": {
     "mode": "min_of_set",
-    "sensors": ["temp_C"],
     "require_at_least": 1
   },
   "pressure_requirements": {

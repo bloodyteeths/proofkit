@@ -234,6 +234,30 @@ class SpecV1(BaseModel):
         description="Optional reporting preferences"
     )
     
+    class ParameterRequirements(BaseModel):
+        """Optional requirements for non-temperature parameters by industry."""
+        require_pressure: bool = Field(
+            False,
+            description="If true, pressure data must be present and valid (e.g., autoclave)"
+        )
+        require_fo: bool = Field(
+            False,
+            description="If true, Fo lethality requirement is enforced explicitly (autoclave)"
+        )
+        require_humidity: bool = Field(
+            False,
+            description="If true, humidity data must be present and valid (e.g., concrete, sterile)"
+        )
+        require_gas_concentration: bool = Field(
+            False,
+            description="If true, gas concentration data (e.g., EtO) must be present and valid (sterile)"
+        )
+
+    parameter_requirements: Optional[ParameterRequirements] = Field(
+        None,
+        description="Optional flags declaring which non-temperature parameters are required for pass/fail"
+    )
+    
     @model_validator(mode='after')
     def validate_industry_specification(self):
         """Validate that the industry field matches specification constraints."""
@@ -307,6 +331,10 @@ class DecisionResult(BaseModel):
     and contains pass/fail status, metrics, and detailed reasons.
     """
     pass_: bool = Field(..., alias="pass", description="Whether the cure process passed")
+    status: str = Field(
+        default="PASS",
+        description="Decision status: PASS, FAIL, or INDETERMINATE"
+    )
     job_id: str = Field(..., description="Job identifier from the specification")
     target_temp_C: float = Field(..., description="Target temperature from specification")
     conservative_threshold_C: float = Field(..., description="Calculated threshold (target + uncertainty)")
@@ -316,6 +344,7 @@ class DecisionResult(BaseModel):
     min_temp_C: float = Field(..., description="Minimum temperature recorded")
     reasons: List[str] = Field(default_factory=list, description="List of reasons for pass/fail decision")
     warnings: List[str] = Field(default_factory=list, description="List of warnings about data quality")
+    flags: Dict[str, Any] = Field(default_factory=dict, description="Additional decision flags (e.g., fallback_used)")
     
     model_config = {
         "extra": "forbid",

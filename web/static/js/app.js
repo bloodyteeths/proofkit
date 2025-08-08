@@ -207,6 +207,18 @@ function initializeSpecFormToJSON() {
  * Convert form values to JSON specification
  */
 function updateSpecJSONFromForm() {
+    // Determine selected industry from URL param if present
+    function getSelectedIndustry() {
+        try {
+            const params = new URLSearchParams(window.location.search || "");
+            const ind = (params.get('industry') || '').trim().toLowerCase();
+            if (ind) return ind;
+        } catch (e) {
+            // ignore URL parsing errors
+        }
+        return null;
+    }
+
     const jobId = document.getElementById('job_id')?.value || 'batch_001';
     const targetTemp = parseFloat(document.getElementById('target_temp')?.value) || 180.0;
     const holdTime = parseInt(document.getElementById('hold_time')?.value) || 600;
@@ -218,40 +230,92 @@ function updateSpecJSONFromForm() {
     const holdLogic = document.querySelector('input[name="hold_logic"]:checked')?.value || 'continuous';
     const sensorMode = document.querySelector('input[name="sensor_mode"]:checked')?.value || 'min_of_set';
     
-    const spec = {
-        "version": "1.0",
-        "job": {
-            "job_id": jobId
-        },
-        "spec": {
-            "method": "PMT",
-            "target_temp_C": targetTemp,
-            "hold_time_s": holdTime,
-            "sensor_uncertainty_C": sensorUncertainty
-        },
-        "data_requirements": {
-            "max_sample_period_s": 30.0,
-            "allowed_gaps_s": 60.0
-        },
-        "sensor_selection": {
-            "mode": sensorMode,
-            "sensors": ["pmt_sensor_1", "pmt_sensor_2"],
-            "require_at_least": 1
-        },
-        "logic": {
-            "continuous": holdLogic === 'continuous',
-            "max_total_dips_s": holdLogic === 'cumulative' ? 60 : 0
-        },
-        "preconditions": {
-            "max_ramp_rate_C_per_min": maxRampRate,
-            "max_time_to_threshold_s": maxTimeToThreshold
-        },
-        "reporting": {
-            "units": "C",
-            "language": "en",
-            "timezone": "UTC"
+    // Start from server-provided default spec if available for the page
+    let spec = null;
+    try {
+        if (window.defaultSpec && typeof window.defaultSpec === 'string' && window.defaultSpec.trim().startsWith('{')) {
+            spec = JSON.parse(window.defaultSpec);
         }
-    };
+    } catch (e) {
+        // ignore parse error; will fall back below
+    }
+
+    const industry = (spec?.industry || getSelectedIndustry() || 'powder').toLowerCase();
+
+    // Fallback base spec if server did not provide one
+    if (!spec || typeof spec !== 'object') {
+        spec = {
+            version: '1.0',
+            industry,
+            job: { job_id: jobId },
+            spec: {
+                method: industry === 'powder' ? 'PMT' : 'OVEN_AIR',
+                target_temp_C: targetTemp,
+                hold_time_s: holdTime,
+                sensor_uncertainty_C: sensorUncertainty,
+            },
+            data_requirements: {
+                max_sample_period_s: industry === 'autoclave' ? 10.0 : 30.0,
+                allowed_gaps_s: industry === 'autoclave' ? 30.0 : 60.0,
+            },
+            sensor_selection: {
+                mode: sensorMode,
+                // Do NOT include fixed sensor names; allow backend auto-detection
+                require_at_least: industry === 'autoclave' ? 2 : 1,
+            },
+            logic: {
+                continuous: holdLogic === 'continuous',
+                max_total_dips_s: holdLogic === 'cumulative' ? 60 : 0,
+            },
+            preconditions: {
+                max_ramp_rate_C_per_min: maxRampRate,
+                max_time_to_threshold_s: maxTimeToThreshold,
+            },
+            reporting: {
+                units: 'C',
+                language: 'en',
+                timezone: 'UTC',
+            },
+        };
+    }
+
+    // Ensure required fields and override with current form selections
+    spec.version = '1.0';
+    spec.industry = industry;
+    spec.job = spec.job || {};
+    spec.job.job_id = jobId;
+    spec.spec = spec.spec || {};
+    // Enforce correct method per industry
+    spec.spec.method = industry === 'powder' ? 'PMT' : 'OVEN_AIR';
+    spec.spec.target_temp_C = targetTemp;
+    spec.spec.hold_time_s = holdTime;
+    spec.spec.sensor_uncertainty_C = sensorUncertainty;
+    spec.data_requirements = spec.data_requirements || {};
+    if (typeof spec.data_requirements.max_sample_period_s !== 'number') {
+        spec.data_requirements.max_sample_period_s = industry === 'autoclave' ? 10.0 : 30.0;
+    }
+    if (typeof spec.data_requirements.allowed_gaps_s !== 'number') {
+        spec.data_requirements.allowed_gaps_s = industry === 'autoclave' ? 30.0 : 60.0;
+    }
+    spec.sensor_selection = spec.sensor_selection || {};
+    spec.sensor_selection.mode = sensorMode;
+    // Remove any fixed sensors to allow backend auto-detection
+    if (spec.sensor_selection && spec.sensor_selection.sensors) {
+        delete spec.sensor_selection.sensors;
+    }
+    if (typeof spec.sensor_selection.require_at_least !== 'number') {
+        spec.sensor_selection.require_at_least = industry === 'autoclave' ? 2 : 1;
+    }
+    spec.logic = spec.logic || {};
+    spec.logic.continuous = (holdLogic === 'continuous');
+    spec.logic.max_total_dips_s = (holdLogic === 'cumulative') ? 60 : 0;
+    spec.preconditions = spec.preconditions || {};
+    spec.preconditions.max_ramp_rate_C_per_min = maxRampRate;
+    spec.preconditions.max_time_to_threshold_s = maxTimeToThreshold;
+    spec.reporting = spec.reporting || {};
+    spec.reporting.units = spec.reporting.units || 'C';
+    spec.reporting.language = spec.reporting.language || 'en';
+    spec.reporting.timezone = spec.reporting.timezone || 'UTC';
     
     const specJsonField = document.getElementById('spec_json');
     if (specJsonField) {

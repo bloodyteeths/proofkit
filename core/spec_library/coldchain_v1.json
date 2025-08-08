@@ -22,6 +22,9 @@
     "mode": "majority_over_threshold",
     "require_at_least": 2
   },
+  "parameter_requirements": {
+    "require_humidity": false
+  },
   "logic": {
     "continuous": false,
     "max_total_dips_s": 1200

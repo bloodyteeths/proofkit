@@ -22,6 +22,10 @@
     "mode": "min_of_set",
     "require_at_least": 2
   },
+  "parameter_requirements": {
+    "require_pressure": true,
+    "require_fo": true
+  },
   "logic": {
     "continuous": true,
     "max_total_dips_s": 0

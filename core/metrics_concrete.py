@@ -296,9 +296,16 @@ def validate_concrete_curing(normalized_df: pd.DataFrame, spec: SpecV1) -> Decis
             available_humidity_sensors = [col for col in sensor_selection.sensors if col in humidity_columns]
             
             if not available_temp_sensors:
-                raise DecisionError(f"None of specified temperature sensors found in data: {sensor_selection.sensors}")
+                # Do not fail; warn and continue with auto-detected temp columns
+                warnings.append(
+                    f"Specified temperature sensors not found: {sensor_selection.sensors}. Using auto-detected sensors: {temp_columns}"
+                )
+                flags = locals().get('flags', {})
+                flags['fallback_used'] = True
+                locals()['flags'] = flags
+            else:
+                temp_columns = available_temp_sensors
             
-            temp_columns = available_temp_sensors
             if available_humidity_sensors:
                 humidity_columns = available_humidity_sensors
             
@@ -339,11 +346,20 @@ def validate_concrete_curing(normalized_df: pd.DataFrame, spec: SpecV1) -> Decis
                 warnings.append(f"Humidity sensor combination failed: {str(e)}")
         else:
             warnings.append("No humidity sensors detected - validation will proceed without humidity monitoring")
+            flags = locals().get('flags', {})
+            flags['fallback_used'] = True
+            locals()['flags'] = flags
         
         # Validate concrete curing conditions
         curing_metrics = validate_concrete_curing_conditions(
             combined_temp, normalized_df[timestamp_col], combined_humidity
         )
+
+        # Enforce required parameters per spec
+        require_humidity = bool(getattr(spec, 'parameter_requirements', None) and getattr(spec.parameter_requirements, 'require_humidity', False))
+        if require_humidity and combined_humidity is None:
+            curing_metrics['humidity_valid'] = False
+            curing_metrics['reasons'].append("Humidity data required by specification but not provided")
         
         # Determine overall pass/fail status
         pass_decision = (
@@ -353,6 +369,11 @@ def validate_concrete_curing(normalized_df: pd.DataFrame, spec: SpecV1) -> Decis
             curing_metrics['temperature_stability_valid'] and
             curing_metrics['curing_duration_adequate']
         )
+
+        # Determine status with required parameters enforcement
+        status = 'PASS' if pass_decision else 'FAIL'
+        if require_humidity and combined_humidity is None:
+            status = 'INDETERMINATE'
         
         # Add success reasons if passed
         if pass_decision:
@@ -400,6 +421,7 @@ def validate_concrete_curing(normalized_df: pd.DataFrame, spec: SpecV1) -> Decis
         
         return DecisionResult(
             pass_=pass_decision,
+            status=status,
             job_id=spec.job.job_id,
             target_temp_C=21.5,  # Optimal concrete curing temperature
             conservative_threshold_C=16.0,  # Minimum acceptable temperature
@@ -408,7 +430,8 @@ def validate_concrete_curing(normalized_df: pd.DataFrame, spec: SpecV1) -> Decis
             max_temp_C=curing_metrics['max_temp_C'],
             min_temp_C=curing_metrics['min_temp_C'],
             reasons=reasons,
-            warnings=warnings
+            warnings=warnings,
+            flags=locals().get('flags', {})
         )
     
     except Exception as e:

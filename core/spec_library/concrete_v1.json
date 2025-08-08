@@ -22,6 +22,9 @@
     "mode": "mean_of_set",
     "require_at_least": 2
   },
+  "parameter_requirements": {
+    "require_humidity": true
+  },
   "logic": {
     "continuous": true,
     "max_total_dips_s": 0

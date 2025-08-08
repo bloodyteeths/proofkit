@@ -279,7 +279,7 @@ def validate_autoclave_sterilization(normalized_df: pd.DataFrame, spec: SpecV1) 
         if not temp_columns:
             raise DecisionError("No temperature columns found in normalized data")
         
-        # Detect pressure columns (optional but recommended)
+        # Detect pressure columns (optional by default; may be required by spec)
         pressure_columns = detect_pressure_columns(normalized_df)
         
         # Get sensor selection configuration
@@ -288,8 +288,15 @@ def validate_autoclave_sterilization(normalized_df: pd.DataFrame, spec: SpecV1) 
             # Filter for available temperature sensors
             available_temp_sensors = [col for col in sensor_selection.sensors if col in temp_columns]
             if not available_temp_sensors:
-                raise DecisionError(f"None of specified temperature sensors found in data: {sensor_selection.sensors}")
-            temp_columns = available_temp_sensors
+                # Do not fail; warn and continue with auto-detected temp columns
+                warnings.append(
+                    f"Specified temperature sensors not found: {sensor_selection.sensors}. Using auto-detected sensors: {temp_columns}"
+                )
+                flags = locals().get('flags', {})
+                flags['fallback_used'] = True
+                locals()['flags'] = flags
+            else:
+                temp_columns = available_temp_sensors
             
             # Filter for available pressure sensors
             available_pressure_sensors = [col for col in sensor_selection.sensors if col in pressure_columns]
@@ -333,11 +340,22 @@ def validate_autoclave_sterilization(normalized_df: pd.DataFrame, spec: SpecV1) 
                 warnings.append(f"Pressure sensor combination failed: {str(e)}")
         else:
             warnings.append("No pressure sensors detected - validation will proceed without pressure monitoring")
+            flags = locals().get('flags', {})
+            flags['fallback_used'] = True
+            locals()['flags'] = flags
         
         # Validate autoclave sterilization cycle
         cycle_metrics = validate_autoclave_cycle(
             combined_temp, normalized_df[timestamp_col], combined_pressure
         )
+
+        # Enforce required parameters per spec
+        require_pressure = bool(getattr(spec, 'parameter_requirements', None) and getattr(spec.parameter_requirements, 'require_pressure', False))
+        require_fo = bool(getattr(spec, 'parameter_requirements', None) and getattr(spec.parameter_requirements, 'require_fo', False))
+
+        if require_pressure and combined_pressure is None:
+            cycle_metrics['pressure_valid'] = False
+            cycle_metrics['reasons'].append("Pressure data required by specification but not provided")
         
         # Determine overall pass/fail status
         pass_decision = (
@@ -346,6 +364,13 @@ def validate_autoclave_sterilization(normalized_df: pd.DataFrame, spec: SpecV1) 
             cycle_metrics['fo_value_valid'] and
             cycle_metrics['pressure_valid']
         )
+
+        # Determine status with required parameters enforcement
+        status = 'PASS' if pass_decision else 'FAIL'
+        if require_pressure and combined_pressure is None:
+            status = 'INDETERMINATE'
+        if require_fo and not cycle_metrics.get('fo_value_valid', False):
+            status = 'FAIL'  # Fo invalid is a hard fail
         
         # Add success reasons if passed
         if pass_decision:
@@ -368,6 +393,7 @@ def validate_autoclave_sterilization(normalized_df: pd.DataFrame, spec: SpecV1) 
         
         return DecisionResult(
             pass_=pass_decision,
+            status=status,
             job_id=spec.job.job_id,
             target_temp_C=121.0,  # Standard autoclave temperature
             conservative_threshold_C=119.0,  # Minimum acceptable temperature
@@ -376,7 +402,8 @@ def validate_autoclave_sterilization(normalized_df: pd.DataFrame, spec: SpecV1) 
             max_temp_C=cycle_metrics['max_temp_C'],
             min_temp_C=cycle_metrics['min_temp_C'],
             reasons=reasons,
-            warnings=warnings
+            warnings=warnings,
+            flags=locals().get('flags', {})
         )
     
     except Exception as e:

@@ -1,0 +1,7 @@
+Company,Contact_Email,Contact_Name,Phone,Website,Primary_Products,Target_Industries,Partnership_Priority,Notes
+Primex OneVue Sense,sales@primexinc.com,Sales Team,,https://www.primexinc.com/en/solutions/environmental-monitoring/onevue-sense,"Healthcare EMS; OneVue Sense; compliance reports","Hospitals, clinics, pharmacies",High,"Long praise: Proven Process, certifications, audits, ROI; on-demand reports; SSO; 7-year data retention"
+ebro (Xylem Analytics),info@xylemanalytics.com,Team,,https://www.ebro.com/en/home.html,"Data loggers; certificate software; ISO 9001; calibration","Food, pharma, medical",High,"Long praise: EBI series; calibration; certificate software; seminars; Xylem worldwide support"
+UbiBot,support@ubibot.com,Support,,https://www.ubibot.com,"WiFi/Cellular sensors; cloud; API","Warehousing, labs, SMB",Medium,"Support email listed; API docs; public device gallery; volume pricing/partner program"
+SpotSee (ShockWatch),orders@spotsee.io,Orders,,https://spotsee.io,"Indicators; data loggers; cellular connectivity","Pharma, diagnostics, aerospace",High,"Orders channel verified; WarmMark QR; ColdChain Complete; ShockLog Cellular; distributors WW"
+Monnit,info@monnit.com,Sales,,https://www.monnit.com,"ALTA sensors; gateways; iMonnit","Healthcare, industrial, labs",High,"HQ phone + emails listed; partner program; calibration/docs; awards"
+Comet System (SKIP - already sent),info@cometsystem.com,Team,,https://www.cometsystem.com,"Loggers; GxP monitoring","Pharma, food",Low,"Duplicate: in sent_log; row will be skipped by dedupe"

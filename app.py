@@ -78,6 +78,7 @@ BASE_DIR = Path(__file__).resolve().parent
 # Template and static file setup
 templates = Jinja2Templates(directory=str(BASE_DIR / "web" / "templates"))
 static_dir = BASE_DIR / "web" / "static"
+resources_dir = BASE_DIR / "marketing" / "resources"
 
 # Add custom Jinja2 filters
 def strftime_filter(value, format_str="%Y"):
@@ -118,6 +119,35 @@ def should_index(request: Request) -> bool:
     return not any(path.startswith(prefix) for prefix in disallow_prefixes)
 
 templates.env.globals["should_index"] = should_index
+
+# Jinja filters for SEO-friendly meta
+def truncate_meta_filter(value: str, max_chars: int = 155) -> str:
+    try:
+        text = str(value or "").strip()
+    except Exception:
+        text = ""
+    if len(text) <= max_chars:
+        return text
+    # Avoid cutting in the middle of a word
+    truncated = text[:max_chars]
+    last_space = truncated.rfind(" ")
+    if last_space > 0:
+        truncated = truncated[:last_space]
+    return truncated.rstrip(" .,") + "…"
+
+
+def truncate_title_filter(value: str, max_chars: int = 60) -> str:
+    try:
+        text = str(value or "").strip()
+    except Exception:
+        text = ""
+    if len(text) <= max_chars:
+        return text
+    return text[: max_chars - 1].rstrip() + "…"
+
+
+templates.env.filters["truncate_meta"] = truncate_meta_filter
+templates.env.filters["truncate_title"] = truncate_title_filter
 
 # Storage configuration
 STORAGE_DIR = BASE_DIR / "storage"
@@ -359,7 +389,10 @@ def create_app() -> FastAPI:
     app.include_router(auth_api_router, prefix="/api")
     
     # Mount static files
-    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+# Serve marketing resources (PDFs, assets). Missing files will correctly 404 instead of 500.
+if resources_dir.exists():
+    app.mount("/resources", StaticFiles(directory=str(resources_dir)), name="resources")
     
     # Initialize storage directory
     STORAGE_DIR.mkdir(exist_ok=True)
@@ -922,10 +955,11 @@ def process_csv_and_spec(csv_content: bytes, spec_data: Dict[str, Any],
     except Exception as e:
         logger.error(f"Failed to enqueue upsell for job {job_id}: {e}")
     
-    # Return results
+    # Return results (preserve legacy fields and include status/flags)
     return {
         "id": job_id,
         "pass": decision.pass_,
+        "status": getattr(decision, 'status', 'PASS' if decision.pass_ else 'FAIL'),
         "metrics": {
             "target_temp_C": decision.target_temp_C,
             "conservative_threshold_C": decision.conservative_threshold_C,
@@ -936,6 +970,7 @@ def process_csv_and_spec(csv_content: bytes, spec_data: Dict[str, Any],
         },
         "reasons": decision.reasons,
         "warnings": decision.warnings,
+        "flags": getattr(decision, 'flags', {}),
         "urls": {
             "pdf": f"/download/{job_id}/pdf",
             "zip": f"/download/{job_id}/zip",
@@ -1803,6 +1838,25 @@ async def industry_page(request: Request, industry: str) -> HTMLResponse:
     )
 
 
+# Targeted redirects to eliminate legacy 500s from bad URLs seen in the wild
+@app.get("/industries/medical-devices", include_in_schema=False)
+async def redirect_medical_devices() -> RedirectResponse:
+    # Medical devices map to autoclave sterilization content
+    return RedirectResponse(url="/industries/autoclave", status_code=301)
+
+
+@app.get("/web/templates/index.html", include_in_schema=False)
+async def redirect_templates_index() -> RedirectResponse:
+    # Repo/template paths should point to the site root
+    return RedirectResponse(url="/", status_code=301)
+
+
+@app.get("/web/templates/industry/concrete.html", include_in_schema=False)
+async def redirect_templates_concrete() -> RedirectResponse:
+    # Old path to industry template → live industry page
+    return RedirectResponse(url="/industries/concrete", status_code=301)
+
+
 @app.get("/nav_demo", response_class=HTMLResponse, tags=["compile"])
 async def nav_demo_page(request: Request) -> HTMLResponse:
     """
@@ -1900,6 +1954,7 @@ async def powder_coat_page(request: Request) -> HTMLResponse:
             "request": request,
             "industry": "powder",
             "preset_json": powder_preset_json,
+            "default_spec": powder_preset_json,
             "presets": presets
         }
     )
@@ -1925,6 +1980,7 @@ async def haccp_page(request: Request) -> HTMLResponse:
             "request": request,
             "industry": "haccp",
             "preset_json": haccp_preset_json,
+            "default_spec": haccp_preset_json,
             "presets": presets
         }
     )
@@ -1950,6 +2006,7 @@ async def autoclave_page(request: Request) -> HTMLResponse:
             "request": request,
             "industry": "autoclave",
             "preset_json": autoclave_preset_json,
+            "default_spec": autoclave_preset_json,
             "presets": presets
         }
     )
@@ -1975,6 +2032,7 @@ async def sterile_page(request: Request) -> HTMLResponse:
             "request": request,
             "industry": "sterile",
             "preset_json": sterile_preset_json,
+            "default_spec": sterile_preset_json,
             "presets": presets
         }
     )
@@ -2000,6 +2058,7 @@ async def concrete_page(request: Request) -> HTMLResponse:
             "request": request,
             "industry": "concrete",
             "preset_json": concrete_preset_json,
+            "default_spec": concrete_preset_json,
             "presets": presets
         }
     )
@@ -2025,6 +2084,7 @@ async def cold_chain_page(request: Request) -> HTMLResponse:
             "request": request,
             "industry": "coldchain",
             "preset_json": coldchain_preset_json,
+            "default_spec": coldchain_preset_json,
             "presets": presets
         }
     )

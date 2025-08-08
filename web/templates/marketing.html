@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "modern_base.html" %}
 
 {% block title %}ProofKit - Professional Temperature Log Validation & Compliance{% endblock %}
 
@@ -15,7 +15,7 @@
                     Upload CSV → apply the standard → download a tamper-evident PDF/A-3 with embedded manifest.
                 </p>
                 <div style="display: flex; gap: 1rem;">
-                    <a href="/powder-coat" class="button primary" style="background: #0050FF; color: white; padding: 1rem 2rem; border-radius: 0.75rem; text-decoration: none; font-weight: 600; transition: all 0.2s;">
+                    <a href="/app?industry=powder-coat" class="button primary" style="background: #0050FF; color: white; padding: 1rem 2rem; border-radius: 0.75rem; text-decoration: none; font-weight: 600; transition: all 0.2s;">
                         Upload log
                     </a>
                     <a href="/examples" class="button outline" style="background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255, 255, 255, 0.2); padding: 1rem 2rem; border-radius: 0.75rem; text-decoration: none; font-weight: 600; transition: all 0.2s;">
@@ -52,7 +52,7 @@
 <section class="trust-section" style="padding: 3rem 0; background: #F9FAFB;">
     <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 1.5rem;">
         {% set trust_badges = [
-            {src: '/static/badges/iso-2368.svg', alt: 'ISO 2368 Paints and Varnishes', href: '/powder-coat'},
+            {src: '/static/badges/iso-2368.svg', alt: 'ISO 2368 Paints and Varnishes', href: '/app?industry=powder-coat'},
             {src: '/static/badges/qualicoat.svg', alt: 'Qualicoat Quality Label', href: 'https://www.qualicoat.net/main/specifications.html'},
             {src: '/static/badges/fda-21cfr-part11.svg', alt: 'FDA 21 CFR Part 11', href: 'https://www.fda.gov/about-fda/website-policies/fda-name-and-logo-policy'},
             {src: '/static/badges/iso-13485.svg', alt: 'ISO 13485 Medical Devices', href: 'https://www.iso.org/iso-13485-medical-devices.html'},
