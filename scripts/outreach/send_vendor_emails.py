@@ -443,6 +443,13 @@ def main() -> int:
             "proof": "High‑volume, tamper‑evident bundles produced weekly for regulated environments; validated outputs and usage reporting.",
             "offer": "We pay 15% of certificate fees on Getinge‑branded templates; your pricing/margins untouched. We build, validate, support and report.",
         },
+        "Pluss Advanced Technologies": {
+            "compliment": "Your sav_E_ PCM range and pharma cold‑chain solutions show strong materials R&D and practical deployment across life sciences and logistics.",
+            "pain": "Even with robust PCM packaging, shippers and QA teams still need standardized, inspector‑ready certificate bundles linked to shipment monitors and lanes.",
+            "wiifm": "Pluss‑co‑branded, one‑click PDF/A‑3 certificates from logger/telemetry exports add audit‑ready proof for clients and tenders without extra ops burden.",
+            "proof": "High‑volume, tamper‑evident outputs (PDF/A‑3 + plots + verification JSON) used weekly across pharma and clinical logistics.",
+            "offer": "We pay 15% of certificate fees on Pluss‑branded templates; your pricing/margins remain untouched. We build, validate, support and provide monthly payout reports.",
+        },
         "Rees Scientific": {
             "compliment": "Your Centron Presidio platform plus ISO/IEC 17025 accreditation and the breadth of EMS services (design, installation, validation, calibration) make you a reference in regulated monitoring.",
             "pain": "Even with a strong EMS, QA teams are still asked for inspector‑ready, standardized certificate packets for CAP/TJC/FDA and client audits — often assembled manually from exports.",

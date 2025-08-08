@@ -387,17 +387,18 @@ def create_app() -> FastAPI:
     # Include API routers
     app.include_router(payment_router)
     app.include_router(auth_api_router, prefix="/api")
-    
+
     # Mount static files
-app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
-# Serve marketing resources (PDFs, assets). Missing files will correctly 404 instead of 500.
-if resources_dir.exists():
-    app.mount("/resources", StaticFiles(directory=str(resources_dir)), name="resources")
-    
+    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
+    # Serve marketing resources (PDFs, assets). Missing files will correctly 404 instead of 500.
+    if resources_dir.exists():
+        app.mount("/resources", StaticFiles(directory=str(resources_dir)), name="resources")
+
     # Initialize storage directory
     STORAGE_DIR.mkdir(exist_ok=True)
     logger.info(f"Storage directory initialized: {STORAGE_DIR}")
-    
+
     # Schedule background cleanup
     try:
         retention_days = int(os.environ.get("RETENTION_DAYS", "30"))
@@ -408,7 +409,7 @@ if resources_dir.exists():
             logger.warning("Failed to schedule background cleanup")
     except Exception as e:
         logger.error(f"Error scheduling cleanup: {e}")
-    
+
     return app
 
 
