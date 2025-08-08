@@ -19,6 +19,8 @@ kill_timeout = "5s"
   MPLBACKEND = "Agg"
   PYTHONUNBUFFERED = "1"
   TZ = "UTC"
+  # App-level HTTPS redirect interferes with internal HTTP health checks
+  FORCE_HTTPS = "false"
 
 [experimental]
   auto_rollback = true
