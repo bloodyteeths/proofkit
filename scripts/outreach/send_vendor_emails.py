@@ -330,6 +330,20 @@ def main() -> int:
             "proof": "We support dry ice and multi‑sensor runs; outputs are tamper‑evident with hash verification and structured JSON.",
             "offer": "We pay 15% of certificate fees on DeltaTrak‑branded templates; no impact to your margins. We build and maintain the templates.",
         },
+        "Rees Scientific": {
+            "compliment": "Your Centron Presidio platform plus ISO/IEC 17025 accreditation and the breadth of EMS services (design, installation, validation, calibration) make you a reference in regulated monitoring.",
+            "pain": "Even with a strong EMS, QA teams are still asked for inspector‑ready, standardized certificate packets for CAP/TJC/FDA and client audits — often assembled manually from exports.",
+            "wiifm": "Rees‑branded, single‑click PDF/A‑3 certificates from EMS/log exports reduce support burden, speed audits, and create a clean attach for services — with no changes to your pricing or product.",
+            "proof": "Thousands of compliant bundles weekly across hospital, pharma, cleanroom and CGT; outputs include PDF/A‑3, plots and machine‑readable JSON with integrity hashes.",
+            "offer": "We pay 15% of certificate fees on Rees‑branded templates; your margins remain untouched. We build, validate, and maintain the templates and provide monthly usage + payout reports.",
+        },
+        "DoKaSch Temperature Solutions": {
+            "compliment": "Opticooler RAP/RKN’s reliability and your expanding global footprint (incl. UAE depot near DWC to support Emirates/Etihad lanes) are best‑in‑class for high‑value pharma.",
+            "pain": "Sponsors and 3PLs still request validated, inspector‑ready document bundles tied to lane validations and shipments — many teams assemble these manually under time pressure.",
+            "wiifm": "DoKaSch‑co‑branded, instant PDF/A‑3 certificate bundles from shipment/monitoring exports — higher sponsor confidence and a value‑add partners can share without new ops overhead.",
+            "proof": "Deterministic outputs (PDF/A‑3 + telemetry JSON + plots) with hash verification; consistent across lanes, seasons and networks; aligns with GxP/CFR 21 expectations.",
+            "offer": "We pay 15% of certificate fees on DoKaSch‑branded templates; your container pricing and margins remain unchanged. We handle template build, rollout, and support globally.",
+        },
         "ELPRO": {
             "compliment": "ELPRO’s LIBERO Cx/Gx and liberoMANAGER 3.0 are best‑in‑class for regulated cold chain — impressive upgrade cadence.",
             "pain": "Quality teams still compile certificate packages outside liberoMANAGER for tenders and audits, which drains time.",

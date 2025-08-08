@@ -620,7 +620,7 @@ async def create_customer_portal_session(
         # Create portal session
         session = stripe.billing_portal.Session.create(
             customer=customer_id,
-            return_url=f"{os.environ.get('BASE_URL', 'http://localhost:8080')}/dashboard"
+            return_url=f"{os.environ.get('BASE_URL', 'https://www.proofkit.net')}/dashboard"
         )
         
         logger.info(f"Created customer portal session for {user.email}")

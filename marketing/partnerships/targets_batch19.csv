@@ -1,0 +1,7 @@
+Company,Contact_Email,Contact_Name,Phone,Website,Primary_Products,Target_Industries,Partnership_Priority,Notes
+Lascar Electronics,us-sales@lascarelectronics.com,Sales Team,+1 971-357-2642,https://www.lascarelectronics.com,"EasyLog Cloud; 21 CFR options; WiFi/USB loggers","Healthcare, pharma, museums",High,"NHS case study; EasyLog Cloud; 21 CFR WiFi/USB; AWS-hosted platform"
+Sensitech,info@sensitech.com,Team,+1 978-927-7033,https://www.sensitech.com,"SensiWatch platform; TempTale; indicators; stationary monitoring","Food, life sciences",High,"Carrier-owned; Lynx FacTOR and Logix; Berlinger acquisition; 16M shipments"
+Ellenex,sales@ellenex.com,Sales Team,+1 347-247-2512,https://www.ellenex.com,"LPWAN IIoT sensors (NB-IoT/LoRa); temp/pressure/level","Industrial, logistics",Medium,"US HQ San Francisco; pressure/temperature; partners; blogs"
+Logmore,sales@logmore.com,Sales Team,+44 20 3991 1500,https://www.logmore.com,"QR data loggers; EU cloud; cryo-capable external probe","Pharma, food logistics",High,"Dynamic QR; 2k scan payloads; GDP/CFR; EU data residency"
+XiltriX,info@xiltrixusa.com,Team,,https://xiltrixusa.com,"GxP environmental monitoring","Hospitals, pharma, labs",High,"GxP monitoring vendor; strong QA/compliance ops"
+Swift Sensors,sales@swiftsensors.com,Sales Team,,https://www.swiftsensors.com,"Wireless sensors; cloud monitoring","Foodservice, facilities, labs",Medium,"Broad SMB reach; attach certificates value"

@@ -4,6 +4,7 @@ Disallow: /storage/
 Disallow: /download/*/zip
 Disallow: /download/*/validation-pack
 Disallow: /auth/
+Allow: /auth/get-started
 Disallow: /api/
 Disallow: /approve/
 Disallow: /my-jobs

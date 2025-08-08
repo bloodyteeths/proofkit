@@ -1,9 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>Navigation Demo - ProofKit</title>
-    <style>
+{% extends "modern_base.html" %}
+
+{% block title %}Navigation Demo - ProofKit{% endblock %}
+{% block robots %}<meta name="robots" content="noindex, nofollow">{% endblock %}
+{% block head %}
+{{ super() }}
+<style>
         body { font-family: sans-serif; margin: 2rem; }
         .nav-link, .nav-dropdown-item { 
             display: inline-block; 
@@ -35,8 +36,9 @@
             border-radius: 0.5rem; 
         }
     </style>
-</head>
-<body>
+{% endblock %}
+
+{% block content %}
     {% from 'macros/navigation.html' import nav_class, is_active_nav, is_industry_active, dropdown_toggle_class %}
     
     <h1>ProofKit Navigation Demo</h1>
@@ -107,5 +109,4 @@
         <p><a href="/examples">Examples Page</a></p>
         <p><a href="/trust">Trust Page</a></p>
     </div>
-</body>
-</html>
+{% endblock %}

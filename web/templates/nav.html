@@ -223,12 +223,12 @@
                         </form>
                     </div>
                 {% else %}
-                    <a href="/auth/login" 
-                       class="{{ nav_class(request, '/auth/login', base_classes='nav-link') }}"
+                    <a href="/auth/get-started" 
+                        class="{{ nav_class(request, '/auth/get-started', base_classes='nav-link') }}"
                        style="color: rgba(255, 255, 255, 0.9); text-decoration: none; padding: 0.5rem 0.75rem; border-radius: 0.375rem; font-weight: 500; transition: all 0.2s ease;"
                        onmouseover="this.style.color='white'; this.style.backgroundColor='rgba(255, 255, 255, 0.1)'"
                        onmouseout="this.style.color='rgba(255, 255, 255, 0.9)'; this.style.backgroundColor='transparent'">
-                        🔐 Login
+                        🔐 Get Started
                     </a>
                 {% endif %}
             </div>

@@ -1,0 +1,9 @@
+Company,Contact_Email,Contact_Name,Phone,Website,Primary_Products,Target_Industries,Partnership_Priority,Notes
+Controlant,info@controlant.com,Team,,https://www.controlant.com,"Real-time pharma monitoring platform","Pharma logistics, CGT",High,"Target for sponsor-facing co-brand; verify contact via site form if needed"
+Tive,sales@tive.com,Sales Team,,https://www.tive.com,"Real-time trackers, visibility platform","Logistics, pharma",High,"Add pilot-slot angle; blog-driven personalization"
+Vaisala (viewLinc),helpdesk@vaisala.com,Support,,https://www.vaisala.com,"viewLinc monitoring, CAPA/validation assets","Pharma, labs, hospitals",High,"If generic inbox, still send partnership intro with pilot slot"
+CSafe Global,info@csafeglobal.com,Team,,https://www.csafeglobal.com,"Active containers, pharma cold chain","Pharma logistics",High,"Sponsor/3PL co-branded certificates from lane validation data"
+Softbox Systems,info@softboxsystems.com,Team,,https://www.softboxsystems.com,"Temperature control packaging","Pharma, biotech",High,"Passive packaging leader; attach certificates to packouts"
+Berlinger,info@berlinger.com,Team,,https://www.berlinger.com,"Q-tag/Fridge-tag, monitoring","Vaccines, pharma",High,"If not contacted before; dedupe will skip if seen"
+Vaisala US,sales@vaisala.com,Sales,,https://www.vaisala.com,"Sensors, viewLinc","GxP, healthcare",Medium,"Alt route if helpdesk filtered"
+Envirotainer Partnerships,partnerships@envirotainer.com,Partnerships,,https://www.envirotainer.com,"RelEye, stations network","Pharma logistics",High,"If already sent, dedupe will skip"

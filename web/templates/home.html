@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}ProofKit - Temperature Log Validation{% endblock %}
+{% block title %}Temperature Log Validation Software - ProofKit{% endblock %}
 {% block description %}Generate inspector-ready proof PDFs from CSV temperature logs. Professional compliance documentation for regulatory inspections.{% endblock %}
 
 {% block hero %}
@@ -17,7 +17,7 @@
           Professional compliance documentation that passes regulatory inspections.
         </p>
         <div class="hero-actions">
-          <a href="/signup" class="btn btn-primary btn-lg">
+          <a href="/auth/get-started" class="btn btn-primary btn-lg">
             <span>Start Free Trial</span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="m9 18 6-6-6-6"/>
@@ -29,7 +29,7 @@
         </div>
       </div>
       <div class="hero-visual">
-        <div class="hero-card">
+        <div class="hero-card" role="img" aria-label="Preview of a passing validation with temperature chart and PASS status">
           <div class="card-header">
             <div class="card-title">powder_coating_cure.csv</div>
             <div class="status-badge pass">PASS</div>
@@ -220,7 +220,7 @@
       <h2>Ready to validate your temperature logs?</h2>
       <p>Start generating inspector-ready proof documents in seconds</p>
       <div class="cta-actions">
-        <a href="/signup" class="btn btn-primary btn-lg">
+          <a href="/auth/get-started" class="btn btn-primary btn-lg">
           <span>Start Free Trial</span>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="m9 18 6-6-6-6"/>
@@ -251,7 +251,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: url('/static/hero/grid.svg') center/cover;
+  background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.15) 0, rgba(255,255,255,0) 40%),
+              radial-gradient(circle at 80% 30%, rgba(255,255,255,0.12) 0, rgba(255,255,255,0) 35%);
   opacity: 0.1;
 }
 

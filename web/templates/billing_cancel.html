@@ -1,18 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payment Cancelled - ProofKit</title>
-    <meta name="description" content="Your payment was cancelled. No charges were made to your account.">
-    
-    <!-- Modern CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', path='css/modern.css') }}">
-    
-    <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', path='brand/proofkit_favicon.svg') }}">
-    
-    <style nonce="{{ get_nonce(request) }}">
+{% extends "modern_base.html" %}
+
+{% block title %}Payment Cancelled - ProofKit{% endblock %}
+{% block description %}Your payment was cancelled. No charges were made to your account.{% endblock %}
+
+{% block head %}
+{{ super() }}
+<style{% if get_nonce(request) %} nonce="{{ get_nonce(request) }}"{% endif %}>
         .cancel-container {
             max-width: 600px;
             margin: 4rem auto;
@@ -163,11 +156,9 @@
             }
         }
     </style>
-</head>
-<body>
-    <!-- Navigation -->
-    {% include 'nav.html' %}
-    
+{% endblock %}
+
+{% block content %}
     <main class="container">
         <div class="cancel-container">
             <div class="cancel-icon">×</div>
@@ -198,8 +189,4 @@
             </div>
         </div>
     </main>
-    
-    <!-- Footer -->
-    {# Footer component not available yet #}
-</body>
-</html>
+{% endblock %}

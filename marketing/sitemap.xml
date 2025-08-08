@@ -21,42 +21,42 @@
 
   <!-- Industry Pages -->
   <url>
-    <loc>https://www.proofkit.net/powder-coat</loc>
+    <loc>https://www.proofkit.net/industries/powder-coating</loc>
     <lastmod>2025-08-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://www.proofkit.net/haccp</loc>
+    <loc>https://www.proofkit.net/industries/haccp</loc>
     <lastmod>2025-08-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://www.proofkit.net/autoclave</loc>
+    <loc>https://www.proofkit.net/industries/autoclave</loc>
     <lastmod>2025-08-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://www.proofkit.net/sterile</loc>
+    <loc>https://www.proofkit.net/industries/eto</loc>
     <lastmod>2025-08-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://www.proofkit.net/concrete</loc>
+    <loc>https://www.proofkit.net/industries/concrete</loc>
     <lastmod>2025-08-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://www.proofkit.net/cold-chain</loc>
+    <loc>https://www.proofkit.net/industries/cold-chain</loc>
     <lastmod>2025-08-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>

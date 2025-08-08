@@ -25,8 +25,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}ProofKit - Industrial Temperature Validation{% endblock %}</title>
     <meta name="description" content="{% block description %}Professional temperature validation and compliance documentation{% endblock %}">
-    <link rel="canonical" href="{{ request.url if request else '' }}" />
+    {% block canonical %}{% if should_index(request) %}<link rel="canonical" href="{{ request.url if request else '' }}" />{% endif %}{% endblock %}
+    {% block robots %}
+    {% if should_index(request) %}
     <meta name="robots" content="index, follow">
+    {% else %}
+    <meta name="robots" content="noindex, nofollow">
+    {% endif %}
+    {% endblock %}
 
     <!-- Open Graph -->
     <meta property="og:type" content="website">
@@ -34,13 +40,13 @@
     <meta property="og:title" content="{% block og_title %}{{ self.title() if self.title else 'ProofKit - Industrial Temperature Validation' }}{% endblock %}">
     <meta property="og:description" content="{% block og_description %}{{ self.description() if self.description else 'Professional temperature validation and compliance documentation' }}{% endblock %}">
     <meta property="og:url" content="{{ request.url if request else '' }}">
-    <meta property="og:image" content="https://www.proofkit.net/static/brand/proofkit_logo_icon.png">
+    <meta property="og:image" content="{% block og_image %}https://www.proofkit.net/static/brand/proofkit_logo_icon.png{% endblock %}">
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{% block twitter_title %}{{ self.title() if self.title else 'ProofKit - Industrial Temperature Validation' }}{% endblock %}">
     <meta name="twitter:description" content="{% block twitter_description %}{{ self.description() if self.description else 'Professional temperature validation and compliance documentation' }}{% endblock %}">
-    <meta name="twitter:image" content="https://www.proofkit.net/static/brand/proofkit_logo_icon.png">
+    <meta name="twitter:image" content="{% block twitter_image %}https://www.proofkit.net/static/brand/proofkit_logo_icon.png{% endblock %}">
     
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" sizes="any" href="/static/brand/proofkit_favicon.svg?v=2">
@@ -152,7 +158,7 @@
                 <a href="/industries/eto" class="mobile-menu-link">🧪 ETO Sterilization</a>
                 <a href="/industries/haccp" class="mobile-menu-link">🍖 HACCP</a>
             </div>
-            <a href="/examples" class="mobile-menu-link">Examples</a>
+             <a href="/examples" class="mobile-menu-link">Examples</a>
             <a href="/docs" class="mobile-menu-link">Docs</a>
             <a href="/pricing" class="mobile-menu-link">Pricing</a>
             <a href="/trust" class="mobile-menu-link">Trust</a>
@@ -160,8 +166,8 @@
             {% if user %}
             <a href="/dashboard" class="mobile-menu-link">Dashboard</a>
             <a href="/auth/logout" class="mobile-menu-link">Logout</a>
-            {% else %}
-            <a href="/auth/get-started" class="mobile-menu-link">Get Started</a>
+             {% else %}
+             <a href="/auth/get-started" class="mobile-menu-link">Get Started</a>
             {% endif %}
             <a href="/app" class="mobile-menu-link mobile-menu-cta">Start Validating</a>
         </div>
@@ -209,8 +215,7 @@
                         <li><a href="/my-jobs">My Jobs</a></li>
                         <li><a href="/auth/logout">Logout</a></li>
                         {% else %}
-                        <li><a href="/auth/login">Login</a></li>
-                        <li><a href="/auth/signup">Sign Up</a></li>
+                        <li><a href="/auth/get-started">Get Started</a></li>
                         {% endif %}
                         <li><a href="/pricing">Pricing</a></li>
                     </ul>

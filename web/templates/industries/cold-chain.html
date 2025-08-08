@@ -2,6 +2,8 @@
 
 {% block title %}Cold Chain Storage Validation - ProofKit{% endblock %}
 {% block description %}Professional cold chain temperature validation for pharmaceutical storage and transport. Generate GDP-compliant proof PDFs for vaccine and drug cold storage.{% endblock %}
+{% block og_image %}https://www.proofkit.net/static/hero/cold-chain-hero.webp{% endblock %}
+{% block twitter_image %}https://www.proofkit.net/static/hero/cold-chain-hero.webp{% endblock %}
 
 {% block content %}
 <!-- Hero Section -->
@@ -31,7 +33,8 @@
                 </div>
             </div>
             <div>
-                <img src="/static/hero/cold-chain-hero.webp" alt="Medical refrigerator with vaccine vials and data logger" class="hero-image" width="1280" height="720" loading="eager" decoding="async">
+                <link rel="preload" as="image" href="/static/hero/cold-chain-hero.webp" imagesrcset="/static/hero/cold-chain-hero.webp" />
+                <img src="/static/hero/cold-chain-hero.webp" alt="Medical refrigerator interior with vaccine vials and temperature data logger" class="hero-image" width="1280" height="720" loading="eager" decoding="async">
             </div>
         </div>
     </div>

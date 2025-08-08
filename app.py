@@ -36,6 +36,7 @@ from fastapi.responses import JSONResponse, HTMLResponse, FileResponse, Redirect
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
@@ -95,6 +96,28 @@ def get_nonce(request):
     return getattr(request.state, 'nonce', '')
 
 templates.env.globals["get_nonce"] = get_nonce
+
+# SEO helpers
+def should_index(request: Request) -> bool:
+    """Return False for paths that should not be indexed by search engines."""
+    try:
+        path = request.url.path if request else ""
+    except Exception:
+        path = ""
+    # Allow specific auth page but block other sensitive areas
+    disallow_prefixes = (
+        "/auth/",
+        "/api/",
+        "/approve/",
+        "/my-jobs",
+        "/storage/",
+        "/download/",
+    )
+    if path == "/auth/get-started":
+        return False  # noindex login/signup page
+    return not any(path.startswith(prefix) for prefix in disallow_prefixes)
+
+templates.env.globals["should_index"] = should_index
 
 # Storage configuration
 STORAGE_DIR = BASE_DIR / "storage"
@@ -300,6 +323,11 @@ def create_app() -> FastAPI:
         redoc_url="/redoc",
         openapi_tags=tags_metadata
     )
+    
+    # Optionally enforce HTTPS redirects (enabled by default outside development)
+    if os.environ.get("FORCE_HTTPS", "true").lower() in ["1", "true", "yes"] and \
+       os.environ.get("ENVIRONMENT", "production").lower() not in ["development", "dev", "local"]:
+        app.add_middleware(HTTPSRedirectMiddleware)
     
     # Add security headers middleware (should be first to apply to all responses)
     app.add_middleware(SecurityHeadersMiddleware)
@@ -706,6 +734,17 @@ def process_csv_and_spec(csv_content: bytes, spec_data: Dict[str, Any],
     """
     logger.info(f"Starting processing for job {job_id}")
     
+    # Ensure the specification carries the canonical, generated job_id so all
+    # downstream artifacts (saved spec, PDF QR/verify URL, evidence bundle) use
+    # the same identifier expected by the verification route.
+    try:
+        if not isinstance(spec_data.get('job'), dict):
+            spec_data['job'] = {}
+        spec_data['job']['job_id'] = job_id
+    except Exception:
+        # Hardening: never fail processing due to a malformed spec structure.
+        spec_data['job'] = {'job_id': job_id}
+
     # Save original CSV file
     raw_csv_path = save_file_to_storage(csv_content, job_dir, "raw_data.csv")
     
@@ -1802,6 +1841,7 @@ async def serve_example_file(path: str) -> FileResponse:
             BASE_DIR / "examples" / requested,
             BASE_DIR / "marketing" / "csv-examples" / requested.name,  # flat filename fallback
             BASE_DIR / "marketing" / "spec-examples" / requested.name,
+            BASE_DIR / "tests" / "data" / requested.name,  # allow using curated test datasets
         ]
 
         file_path = None
@@ -1821,6 +1861,7 @@ async def serve_example_file(path: str) -> FileResponse:
             (BASE_DIR / "examples").resolve(),
             (BASE_DIR / "marketing" / "csv-examples").resolve(),
             (BASE_DIR / "marketing" / "spec-examples").resolve(),
+            (BASE_DIR / "tests" / "data").resolve(),
         ]
         resolved = file_path.resolve()
         if not any(str(resolved).startswith(str(root)) for root in allowed_roots):

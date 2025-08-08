@@ -5,12 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}ProofKit - Industrial Temperature Validation{% endblock %}</title>
   <meta name="description" content="{% block description %}Automated temperature validation and compliance documentation for industrial processes{% endblock %}">
-  <link rel="canonical" href="{{ request.url if request else '' }}">
+  {% block robots %}{% endblock %}
+  {% block canonical %}<link rel="canonical" href="{{ request.url if request else '' }}">{% endblock %}
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="ProofKit">
   <meta property="og:title" content="{% block og_title %}{{ self.title() if self.title else 'ProofKit - Industrial Temperature Validation' }}{% endblock %}">
   <meta property="og:description" content="{% block og_description %}{{ self.description() if self.description else 'Automated temperature validation and compliance documentation for industrial processes' }}{% endblock %}">
   <meta property="og:url" content="{{ request.url if request else '' }}">
+  <meta property="og:site_name" content="ProofKit">
   <meta property="og:image" content="https://www.proofkit.net/static/brand/proofkit_logo_icon.png">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="{% block twitter_title %}{{ self.title() if self.title else 'ProofKit - Industrial Temperature Validation' }}{% endblock %}">
