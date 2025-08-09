@@ -448,6 +448,11 @@ def get_industry_presets() -> Dict[str, Dict[str, Any]]:
             if preset_path.exists():
                 with open(preset_path, 'r') as f:
                     preset_data = json.load(f)
+                
+                # Ensure powder/powder-coating presets have industry field for v2 compatibility
+                if industry in ["powder", "powder-coating"] and "industry" not in preset_data:
+                    preset_data["industry"] = "powder"
+                    
                 presets[industry] = preset_data
             else:
                 logger.warning(f"Preset file not found: {preset_path}")
