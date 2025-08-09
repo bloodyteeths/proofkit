@@ -122,12 +122,18 @@
                         <label for="target_temp" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
                             🌡️ Target Temperature (°C)
                         </label>
-                        <input type="number" id="target_temp" name="target_temp" value="180" min="100" max="300" step="1" aria-describedby="target_temp_help"
+                        <input type="number" id="target_temp" name="target_temp" 
+                               value="{% if selected_industry == 'concrete' %}21{% elif selected_industry == 'coldchain' or selected_industry == 'cold-chain' %}5{% elif selected_industry == 'autoclave' %}121{% elif selected_industry == 'haccp' %}135{% elif selected_industry == 'sterile' %}60{% else %}180{% endif %}"
+                               min="{% if selected_industry == 'coldchain' or selected_industry == 'cold-chain' %}-20{% elif selected_industry == 'concrete' %}0{% elif selected_industry == 'haccp' %}0{% elif selected_industry == 'sterile' %}20{% else %}20{% endif %}"
+                               max="{% if selected_industry == 'coldchain' or selected_industry == 'cold-chain' %}50{% elif selected_industry == 'concrete' %}60{% elif selected_industry == 'haccp' %}200{% elif selected_industry == 'sterile' %}80{% else %}300{% endif %}"
+                               step="0.1" aria-describedby="target_temp_help"
                                style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 0.5rem; font-size: 1rem;">
                         <small id="target_temp_help" style="color: #6b7280; font-size: 0.875rem;">
                             {% if selected_industry == 'autoclave' %}Typical: 121°C for sterilization
-                            {% elif selected_industry == 'cold-chain' %}Typical: 2-8°C for pharmaceuticals
+                            {% elif selected_industry == 'cold-chain' or selected_industry == 'coldchain' %}Typical: 2-8°C for pharmaceuticals
                             {% elif selected_industry == 'concrete' %}Typical: 16-27°C for curing
+                            {% elif selected_industry == 'haccp' %}Typical: 135°F (57°C) initial, 70°F (21°C) within 2 hrs
+                            {% elif selected_industry == 'sterile' %}Typical: 55-60°C for low-temp sterilization
                             {% else %}Typical: 160-220°C for powder coats{% endif %}
                         </small>
                     </div>
@@ -137,12 +143,18 @@
                         <label for="hold_time" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
                             ⏱️ Hold Time (seconds)
                         </label>
-                        <input type="number" id="hold_time" name="hold_time" value="600" min="60" max="3600" step="30" aria-describedby="hold_time_help"
+                        <input type="number" id="hold_time" name="hold_time" 
+                               value="{% if selected_industry == 'concrete' %}86400{% elif selected_industry == 'coldchain' or selected_industry == 'cold-chain' %}82800{% elif selected_industry == 'autoclave' %}900{% elif selected_industry == 'haccp' %}7200{% elif selected_industry == 'sterile' %}1800{% else %}600{% endif %}"
+                               min="{% if selected_industry == 'concrete' %}3600{% else %}60{% endif %}"
+                               max="{% if selected_industry == 'concrete' %}172800{% elif selected_industry == 'coldchain' or selected_industry == 'cold-chain' %}604800{% else %}7200{% endif %}"
+                               step="30" aria-describedby="hold_time_help"
                                style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 0.5rem; font-size: 1rem;">
                         <small id="hold_time_help" style="color: #6b7280; font-size: 0.875rem;">
                             {% if selected_industry == 'autoclave' %}900s = 15 min (typical sterilization)
-                            {% elif selected_industry == 'cold-chain' %}Continuous monitoring period
+                            {% elif selected_industry == 'cold-chain' or selected_industry == 'coldchain' %}Continuous monitoring period
                             {% elif selected_industry == 'concrete' %}86400s = 24 hours (critical period)
+                            {% elif selected_industry == 'haccp' %}7200s = 2 hours (cooling window)
+                            {% elif selected_industry == 'sterile' %}1800s = 30 min (exposure time)
                             {% else %}600s = 10 min (typical cure time){% endif %}
                         </small>
                     </div>
@@ -152,9 +164,15 @@
                         <label for="sensor_uncertainty" style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">
                             📊 Sensor Uncertainty (°C)
                         </label>
-                        <input type="number" id="sensor_uncertainty" name="sensor_uncertainty" value="2.0" min="0.5" max="10" step="0.5" aria-describedby="sensor_uncertainty_help"
+                        <input type="number" id="sensor_uncertainty" name="sensor_uncertainty" 
+                               value="{% if selected_industry == 'concrete' or selected_industry == 'coldchain' or selected_industry == 'cold-chain' %}0.5{% elif selected_industry == 'autoclave' %}1.0{% else %}2.0{% endif %}"
+                               min="0.1" max="10" step="0.1" aria-describedby="sensor_uncertainty_help"
                                style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 0.5rem; font-size: 1rem;">
-                        <small id="sensor_uncertainty_help" style="color: #6b7280; font-size: 0.875rem;">±2°C is typical for industrial sensors</small>
+                        <small id="sensor_uncertainty_help" style="color: #6b7280; font-size: 0.875rem;">
+                            {% if selected_industry == 'concrete' or selected_industry == 'coldchain' or selected_industry == 'cold-chain' %}±0.5°C for precision monitoring
+                            {% elif selected_industry == 'autoclave' %}±1°C for sterilization validation
+                            {% else %}±2°C is typical for industrial sensors{% endif %}
+                        </small>
                     </div>
                 </div>
                 
