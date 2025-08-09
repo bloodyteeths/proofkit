@@ -13,6 +13,7 @@ def select_engine(industry: str) -> Callable:
     """Select appropriate analysis engine for industry."""
     engines = {
         "powder": analyze_powder_coat,
+        "powder-coating": analyze_powder_coat,  # Alias for powder
         "autoclave": analyze_autoclave,
         "coldchain": analyze_coldchain,
         "cold-chain": analyze_coldchain,
@@ -58,7 +59,7 @@ def adapt_spec(industry: str, spec_dict: Dict[str, Any]) -> Dict[str, Any]:
         "data_requirements": data_requirements
     }
     
-    if industry_lower == "powder":
+    if industry_lower in ["powder", "powder-coating"]:
         adapted["parameters"] = {
             "target_temp": params.get("target_temp", params.get("target_temp_C", 180)),
             "hold_duration_minutes": params.get("hold_duration_minutes", params.get("hold_time_s", 600) / 60),
@@ -121,7 +122,7 @@ def route_to_engine(industry: str, df: Any, spec: Dict[str, Any]) -> Dict[str, A
     adapted_spec = adapt_spec(industry, spec)
     
     # Call the appropriate metrics function
-    if industry.lower() == "powder":
+    if industry.lower() in ["powder", "powder-coating"]:
         from core.metrics_powder import analyze_powder_coat
         return analyze_powder_coat(df, adapted_spec)
     else:

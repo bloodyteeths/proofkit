@@ -249,7 +249,7 @@ function updateSpecJSONFromForm() {
             industry,
             job: { job_id: jobId },
             spec: {
-                method: industry === 'powder' ? 'PMT' : 'OVEN_AIR',
+                method: (industry === 'powder' || industry === 'powder-coating') ? 'PMT' : 'OVEN_AIR',
                 target_temp_C: targetTemp,
                 hold_time_s: holdTime,
                 sensor_uncertainty_C: sensorUncertainty,
@@ -286,7 +286,7 @@ function updateSpecJSONFromForm() {
     spec.job.job_id = jobId;
     spec.spec = spec.spec || {};
     // Enforce correct method per industry
-    spec.spec.method = industry === 'powder' ? 'PMT' : 'OVEN_AIR';
+    spec.spec.method = (industry === 'powder' || industry === 'powder-coating') ? 'PMT' : 'OVEN_AIR';
     spec.spec.target_temp_C = targetTemp;
     spec.spec.hold_time_s = holdTime;
     spec.spec.sensor_uncertainty_C = sensorUncertainty;
