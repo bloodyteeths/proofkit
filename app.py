@@ -1338,6 +1338,10 @@ async def compile_csv_html(
         try:
             spec_data = json.loads(spec_json)
             logger.info(f"[{request_id}] Spec parsed successfully")
+            # Enhanced debug logging
+            logger.info(f"[{request_id}] Received spec structure: has_industry={('industry' in spec_data)}, has_parameters={('parameters' in spec_data)}, has_spec={('spec' in spec_data)}")
+            if 'parameters' in spec_data:
+                logger.info(f"[{request_id}] Parameter keys: {list(spec_data['parameters'].keys())}")
         except json.JSONDecodeError as e:
             logger.warning(f"[{request_id}] JSON parsing failed: {e}")
             return templates.TemplateResponse(

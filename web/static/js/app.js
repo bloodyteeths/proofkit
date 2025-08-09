@@ -169,9 +169,23 @@ function initializeFormValidation() {
             return false;
         }
         
-        // Log form submission for debugging
+        // Enhanced debugging for form submission
+        const specJson = document.getElementById('spec_json')?.value;
         console.log('Form submission started with file:', 
             document.getElementById('csv_file')?.files?.[0]?.name || 'No file');
+        console.log('Spec JSON being sent:', specJson);
+        try {
+            const parsed = JSON.parse(specJson);
+            console.log('Parsed spec structure:', {
+                hasIndustry: 'industry' in parsed,
+                hasParameters: 'parameters' in parsed,
+                hasSpec: 'spec' in parsed,
+                industryValue: parsed.industry,
+                parameterKeys: parsed.parameters ? Object.keys(parsed.parameters) : []
+            });
+        } catch (e) {
+            console.error('Failed to parse spec JSON:', e);
+        }
     });
 }
 
@@ -387,6 +401,14 @@ function initializeProgressIndicator() {
         if (fileState) {
             restoreFileState(fileState);
         }
+        
+        // Enhanced error logging for debugging
+        console.error('HTMX Error Details:', {
+            xhr: e.detail.xhr,
+            status: e.detail.xhr?.status,
+            responseText: e.detail.xhr?.responseText?.substring(0, 500),
+            responseHeaders: e.detail.xhr?.getAllResponseHeaders()
+        });
         
         let errorMessage = 'An error occurred while processing your request.';
         
