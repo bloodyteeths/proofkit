@@ -370,6 +370,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+// Pass server-provided default spec to JavaScript
+{% if default_spec %}
+window.defaultSpec = {{ default_spec | safe }};
+{% endif %}
 </script>
 {% endblock %}
 {% endblock %}
