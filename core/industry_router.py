@@ -31,88 +31,106 @@ def select_engine(industry: str) -> Callable:
 
 def adapt_spec(industry: str, spec_dict: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Adapt v1 legacy spec format to v2 unified format.
+    Adapt v2 format to v1 SpecV1-compatible structure.
     
-    Handles both:
-    - v1: {"spec": {...}, "data_requirements": {...}}
-    - v2: {"industry": "...", "parameters": {...}}
+    Converts v2 parameters to v1 spec structure that SpecV1 model expects.
     """
     industry_lower = industry.lower().strip()
     
-    # Extract parameters based on various possible formats
+    # Extract parameters based on format
     if "parameters" in spec_dict:
-        # v2 format - already in desired structure
+        # v2 format - extract parameters
         params = spec_dict["parameters"]
     elif "spec" in spec_dict:
-        # v1 format - extract from "spec" key
-        params = spec_dict["spec"]
+        # v1 format - already has spec structure
+        return spec_dict  # Return as-is for v1
     else:
-        # Fallback - treat entire dict as parameters
         params = spec_dict
     
-    # Extract data requirements if present (from v1)
-    data_requirements = spec_dict.get("data_requirements", {})
+    # Extract or create data requirements
+    data_requirements = spec_dict.get("data_requirements", {
+        "max_sample_period_s": 30,
+        "allowed_gaps_s": 60
+    })
     
-    # Create unified v2 format
+    # Create v1-compatible structure with proper spec field
     adapted = {
+        "version": "1.0",
         "industry": industry_lower,
+        "job": {
+            "id": spec_dict.get("job_id", "default_job"),
+            "batch": "",
+            "product": "",
+            "customer": ""
+        },
         "data_requirements": data_requirements
     }
     
+    # Map v2 parameters to v1 spec structure based on industry
     if industry_lower in ["powder", "powder-coating"]:
-        adapted["parameters"] = {
-            "target_temp": params.get("target_temp", params.get("target_temp_C", 180)),
-            "hold_duration_minutes": params.get("hold_duration_minutes", params.get("hold_time_s", 600) / 60),
-            "sensor_uncertainty": params.get("sensor_uncertainty", params.get("sensor_uncertainty_C", 2)),
-            "hysteresis": params.get("hysteresis", 2),
-            "max_ramp_rate": params.get("max_ramp_rate", params.get("max_ramp_rate_C_per_min", 50))
+        # Convert v2 parameters to v1 spec fields
+        adapted["spec"] = {
+            "target_temp_C": params.get("target_temp", 180),
+            "hold_time_s": int(params.get("hold_duration_minutes", 10) * 60),  # Convert minutes to seconds
+            "sensor_uncertainty_C": params.get("sensor_uncertainty", 2),
+            "hysteresis_C": params.get("hysteresis", 2),
+            "max_ramp_rate_C_per_min": params.get("max_ramp_rate", 50),
+            "max_time_to_threshold_s": params.get("max_time_to_threshold", 900),
+            "hold_logic": params.get("hold_logic", "continuous"),
+            "method": "PMT"
         }
     
     elif industry_lower in ["autoclave"]:
-        adapted["parameters"] = {
-            "sterilization_temp": params.get("sterilization_temp", 121),
-            "sterilization_time_minutes": params.get("sterilization_time_minutes", 15),
+        adapted["spec"] = {
+            "sterilization_temp_C": params.get("sterilization_temp", 121),
+            "sterilization_time_s": int(params.get("sterilization_time_minutes", 15) * 60),
             "min_pressure_bar": params.get("min_pressure_bar", 2.0),
             "z_value": params.get("z_value", 10),
-            "min_f0": params.get("min_f0", 12)
+            "min_f0": params.get("min_f0", 12),
+            "method": "AUTOCLAVE"
         }
     
     elif industry_lower in ["coldchain", "cold-chain"]:
-        adapted["parameters"] = {
-            "min_temp": params.get("min_temp", 2),
-            "max_temp": params.get("max_temp", 8),
+        adapted["spec"] = {
+            "min_temp_C": params.get("min_temp", 2),
+            "max_temp_C": params.get("max_temp", 8),
             "compliance_percentage": params.get("compliance_percentage", 95),
-            "max_excursion_minutes": params.get("max_excursion_minutes", 30)
+            "max_excursion_minutes": params.get("max_excursion_minutes", 30),
+            "method": "COLDCHAIN"
         }
     
     elif industry_lower == "haccp":
-        adapted["parameters"] = {
-            "temp_1": params.get("temp_1", 135),
-            "temp_2": params.get("temp_2", 70),
-            "temp_3": params.get("temp_3", 41),
+        adapted["spec"] = {
+            "temp_1_C": params.get("temp_1", 135),
+            "temp_2_C": params.get("temp_2", 70),
+            "temp_3_C": params.get("temp_3", 41),
             "time_1_to_2_hours": params.get("time_1_to_2_hours", 2),
-            "time_2_to_3_hours": params.get("time_2_to_3_hours", 4)
+            "time_2_to_3_hours": params.get("time_2_to_3_hours", 4),
+            "method": "HACCP"
         }
     
     elif industry_lower == "concrete":
-        adapted["parameters"] = {
-            "min_temp": params.get("min_temp", 10),
-            "max_temp": params.get("max_temp", 30),
+        adapted["spec"] = {
+            "min_temp_C": params.get("min_temp", 10),
+            "max_temp_C": params.get("max_temp", 30),
             "min_humidity": params.get("min_humidity", 80),
             "time_window_hours": params.get("time_window_hours", 24),
-            "compliance_percentage": params.get("compliance_percentage", 95)
+            "compliance_percentage": params.get("compliance_percentage", 95),
+            "method": "CONCRETE"
         }
     
     elif industry_lower in ["sterile", "eto"]:
-        adapted["parameters"] = {
-            "min_temp": params.get("min_temp", 55),
+        adapted["spec"] = {
+            "min_temp_C": params.get("min_temp", 55),
+            "max_temp_C": params.get("max_temp", 60),
             "exposure_hours": params.get("exposure_hours", 12),
             "min_humidity": params.get("min_humidity", 50),
-            "max_temp": params.get("max_temp", 60)
+            "method": "STERILE"
         }
     
     else:
-        adapted["parameters"] = params
+        # Fallback - generic spec mapping
+        adapted["spec"] = params
     
     return adapted
 
