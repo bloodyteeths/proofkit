@@ -2,7 +2,7 @@
 
 from typing import Dict, Any, Callable, Optional
 from core.decide import make_decision
-from core.metrics_powder import analyze_powder_coat
+from core.metrics_powder import validate_powder_coating_cure
 from core.metrics_autoclave import analyze_autoclave
 from core.metrics_coldchain import analyze_coldchain
 from core.metrics_haccp import analyze_haccp
@@ -12,8 +12,8 @@ from core.metrics_sterile import analyze_sterile
 def select_engine(industry: str) -> Callable:
     """Select appropriate analysis engine for industry."""
     engines = {
-        "powder": analyze_powder_coat,
-        "powder-coating": analyze_powder_coat,  # Alias for powder
+        "powder": validate_powder_coating_cure,
+        "powder-coating": validate_powder_coating_cure,  # Alias for powder
         "autoclave": analyze_autoclave,
         "coldchain": analyze_coldchain,
         "cold-chain": analyze_coldchain,
@@ -123,8 +123,8 @@ def route_to_engine(industry: str, df: Any, spec: Dict[str, Any]) -> Dict[str, A
     
     # Call the appropriate metrics function
     if industry.lower() in ["powder", "powder-coating"]:
-        from core.metrics_powder import analyze_powder_coat
-        return analyze_powder_coat(df, adapted_spec)
+        from core.metrics_powder import validate_powder_coating_cure
+        return validate_powder_coating_cure(df, adapted_spec)
     else:
         # Use generic decision engine for others
         return make_decision(df, adapted_spec)
