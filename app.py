@@ -431,6 +431,7 @@ def get_industry_presets() -> Dict[str, Dict[str, Any]]:
         "haccp": "haccp_v1.json",
         "autoclave": "autoclave_v1.json", 
         "sterile": "sterile_v1.json",
+        "eto": "sterile_v1.json",  # ETO uses same preset as sterile
         "concrete": "concrete_v1.json",
         "coldchain": "coldchain_v1.json"
     }

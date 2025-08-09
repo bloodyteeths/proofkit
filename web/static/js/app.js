@@ -494,19 +494,61 @@ function validateSpecForm() {
         return false;
     }
     
-    if (isNaN(targetTemp) || targetTemp < 100 || targetTemp > 300) {
-        showError('Target temperature must be between 100°C and 300°C.');
+    // Use HTML5 validation attributes instead of hardcoded ranges
+    const targetTempInput = document.getElementById('target_temp');
+    if (isNaN(targetTemp)) {
+        showError('Target temperature must be a valid number.');
         return false;
     }
-    
-    if (isNaN(holdTime) || holdTime < 60 || holdTime > 3600) {
-        showError('Hold time must be between 60 and 3600 seconds.');
-        return false;
+    if (targetTempInput) {
+        const min = parseFloat(targetTempInput.getAttribute('min'));
+        const max = parseFloat(targetTempInput.getAttribute('max'));
+        if (!isNaN(min) && targetTemp < min) {
+            showError(`Target temperature must be at least ${min}°C.`);
+            return false;
+        }
+        if (!isNaN(max) && targetTemp > max) {
+            showError(`Target temperature must be at most ${max}°C.`);
+            return false;
+        }
     }
     
-    if (isNaN(sensorUncertainty) || sensorUncertainty < 0.5 || sensorUncertainty > 10) {
-        showError('Sensor uncertainty must be between 0.5°C and 10°C.');
+    // Use HTML5 validation attributes for hold time
+    const holdTimeInput = document.getElementById('hold_time');
+    if (isNaN(holdTime)) {
+        showError('Hold time must be a valid number.');
         return false;
+    }
+    if (holdTimeInput) {
+        const min = parseInt(holdTimeInput.getAttribute('min'));
+        const max = parseInt(holdTimeInput.getAttribute('max'));
+        if (!isNaN(min) && holdTime < min) {
+            showError(`Hold time must be at least ${min} seconds.`);
+            return false;
+        }
+        if (!isNaN(max) && holdTime > max) {
+            showError(`Hold time must be at most ${max} seconds.`);
+            return false;
+        }
+    }
+    
+    // Use HTML5 validation attributes for sensor uncertainty
+    const sensorUncertaintyInput = document.getElementById('sensor_uncertainty');
+    if (isNaN(sensorUncertainty)) {
+        showError('Sensor uncertainty must be a valid number.');
+        return false;
+    }
+    if (sensorUncertaintyInput) {
+        const min = parseFloat(sensorUncertaintyInput.getAttribute('min'));
+        const max = parseFloat(sensorUncertaintyInput.getAttribute('max'));
+        if (!isNaN(min) && sensorUncertainty < min) {
+            showError(`Sensor uncertainty must be at least ${min}°C.`);
+            return false;
+        }
+        if (!isNaN(max) && sensorUncertainty > max) {
+            showError(`Sensor uncertainty must be at most ${max}°C.`);
+            return false;
+        }
     }
     
     clearErrors();
