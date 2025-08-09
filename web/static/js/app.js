@@ -303,6 +303,10 @@ function updateSpecJSONFromForm() {
     const specJsonField = document.getElementById('spec_json');
     if (specJsonField) {
         specJsonField.value = JSON.stringify(spec, null, 2);
+        // Debug logging (remove in production)
+        console.log('Sending spec to backend:', spec);
+        console.log('Industry:', spec.industry);
+        console.log('Parameters:', spec.parameters);
     }
 }
 
