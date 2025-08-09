@@ -1,0 +1,29 @@
+{
+  "pass_": false,
+  "status": "FAIL",
+  "industry": "concrete",
+  "job_id": "audit_concrete_fail",
+  "target_temp_C": 21.5,
+  "conservative_threshold_C": 16.0,
+  "actual_hold_time_s": 60.0,
+  "required_hold_time_s": 172800,
+  "max_temp_C": 18.400000000000002,
+  "min_temp_C": -13.9,
+  "reasons": [
+    "24h window compliance: 5.9% < 95% required for temp \u2208 [16,27]\u00b0C",
+    "Curing monitoring period 0.4h < 24h minimum requirement",
+    "Temperature in acceptable range (16-27\u00b0C) only 7.8% of time",
+    "Temperature in range only 7.8% of critical first 24h",
+    "Temperature below 16.0\u00b0C detected in 47 samples",
+    "Excessive temperature change rate: 948.0\u00b0C/h > 5.0\u00b0C/h limit"
+  ],
+  "warnings": [
+    "No humidity sensors detected - validation will proceed without humidity monitoring",
+    "Monitoring period (0.0 days) shorter than recommended 24h minimum",
+    "Large temperature variation (32.3\u00b0C) may affect curing quality",
+    "Average temperature (1.0\u00b0C) on lower end - may slow curing process"
+  ],
+  "flags": {
+    "fallback_used": true
+  }
+}

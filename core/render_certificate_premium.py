@@ -186,9 +186,17 @@ def create_header_section(certificate_no: str) -> list:
 
 
 def create_status_badge(decision: DecisionResult) -> Table:
-    """Create centered PASS/FAIL badge with shadow."""
-    status = "PASS" if decision.pass_ else "FAIL"
-    status_color = COLOR_EMERALD if decision.pass_ else COLOR_CRIMSON
+    """Create centered PASS/FAIL/INDETERMINATE badge with shadow."""
+    # Use decision.status as the primary source of truth
+    status = getattr(decision, 'status', 'PASS' if decision.pass_ else 'FAIL')
+    
+    # Set color based on status
+    if status == 'INDETERMINATE':
+        status_color = colors.orange
+    elif status == 'PASS':
+        status_color = COLOR_EMERALD
+    else:  # FAIL
+        status_color = COLOR_CRIMSON
     
     # Try to use Cormorant for badge
     try:
@@ -271,8 +279,16 @@ def create_two_column_tables(spec: SpecV1, decision: DecisionResult) -> Table:
     ]))
     
     # Results Summary (right column)
-    status_text = 'PASS' if decision.pass_ else 'FAIL'
-    status_color = COLOR_EMERALD if decision.pass_ else COLOR_CRIMSON
+    # Use decision.status as source of truth for display
+    status_text = getattr(decision, 'status', 'PASS' if decision.pass_ else 'FAIL')
+    
+    # Set color based on status
+    if status_text == 'INDETERMINATE':
+        status_color = colors.orange
+    elif status_text == 'PASS':
+        status_color = COLOR_EMERALD
+    else:  # FAIL
+        status_color = COLOR_CRIMSON
     
     results_data = [
         ['Results Summary', ''],
@@ -283,6 +299,23 @@ def create_two_column_tables(spec: SpecV1, decision: DecisionResult) -> Table:
         ['Min Temperature', f"{decision.min_temp_C:.1f}°C"],
         ['Conservative Threshold', f"{decision.conservative_threshold_C:.1f}°C"],
     ]
+    
+    # Add fallback note if used
+    try:
+        if getattr(decision, 'flags', {}).get('fallback_used'):
+            results_data.append(['Note', 'Auto-detected sensors'])
+    except Exception:
+        pass
+    
+    # Show required vs present sensors for safety-critical processes
+    try:
+        flags = getattr(decision, 'flags', {})
+        if flags.get('required_sensors') and flags.get('present_sensors'):
+            required_sensors = flags['required_sensors']
+            present_sensors = flags['present_sensors']
+            results_data.append(['Required Sensors', f"{len(present_sensors)}/{len(required_sensors)}"])
+    except Exception:
+        pass
     
     results_table = Table(results_data, colWidths=[52.5*mm, 27.5*mm])
     results_table.setStyle(TableStyle([

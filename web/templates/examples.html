@@ -21,6 +21,11 @@
                     Download CSV data, specifications, and expected results across multiple industries. 
                     Test ProofKit with real temperature validation scenarios.
                 </p>
+                {% if examples_manifest %}
+                <div class="verification-status">
+                    <span class="verified-badge">🔒 Live Verified on {{ examples_manifest.generated_at|strftime('%B %d, %Y at %H:%M UTC') }}</span>
+                </div>
+                {% endif %}
                 <div class="hero-actions">
                     <a href="#examples" class="btn btn-primary">
                         Browse Examples →
@@ -39,7 +44,9 @@
                     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1rem;">
                         <div style="text-align: center; padding: 0.75rem; background: #f0f9ff; border-radius: 0.5rem;">
                             <div style="font-size: 0.75rem; color: #0369a1; text-transform: uppercase; letter-spacing: 0.05em;">Datasets</div>
-                            <div style="font-size: 1.25rem; font-weight: bold; color: #1a1a1a;">12+</div>
+                            <div style="font-size: 1.25rem; font-weight: bold; color: #1a1a1a;">
+                                {% if examples_manifest %}{{ examples_manifest.examples|length }}{% else %}15+{% endif %}
+                            </div>
                         </div>
                         <div style="text-align: center; padding: 0.75rem; background: #f0f9ff; border-radius: 0.5rem;">
                             <div style="font-size: 0.75rem; color: #0369a1; text-transform: uppercase; letter-spacing: 0.05em;">Industries</div>
@@ -61,14 +68,20 @@
     <div class="filter-tabs">
       <button class="filter-btn active" data-filter="all">All Examples</button>
       <button class="filter-btn" data-filter="pass">✅ PASS Cases</button>
+      <button class="filter-btn" data-filter="indeterminate">⚠️ INDETERMINATE Cases</button>
       <button class="filter-btn" data-filter="fail">❌ FAIL Cases</button>
       <button class="filter-btn" data-filter="powder">Powder Coating</button>
       <button class="filter-btn" data-filter="autoclave">Sterilization</button>
       <button class="filter-btn" data-filter="concrete">Concrete</button>
+      <button class="filter-btn" data-filter="coldchain">Cold Chain</button>
+      <button class="filter-btn" data-filter="haccp">HACCP</button>
+      <button class="filter-btn" data-filter="sterile">Sterile Processing</button>
     </div>
   </div>
 </section>
 
+<!-- Live Examples -->
+{% if examples_manifest and examples_manifest.examples %}
 <!-- Pass Examples -->
 <section id="examples" class="section" data-category="pass">
   <div class="section-container">
@@ -78,119 +91,118 @@
     </div>
     
     <div class="examples-grid">
-      <div class="example-tile" data-filter="pass powder">
+      {% for example in examples_manifest.examples %}
+      {% if example.category == 'pass' %}
+      <div class="example-tile" data-filter="{{ example.category }} {{ example.industry }}">
         <div class="example-header">
-          <div class="example-icon">🎨</div>
+          <div class="example-icon">{{ example.icon }}</div>
           <div class="example-meta">
-            <h3>Standard 180°C Powder Cure</h3>
+            <h3>{{ example.name }}</h3>
             <div class="example-tags">
-              <span class="tag pass">PASS</span>
-              <span class="tag industry">Powder Coating</span>
+              <span class="tag {{ example.status.lower() }}">{{ example.status }}</span>
+              <span class="tag industry">{{ example.industry|title }}</span>
             </div>
           </div>
         </div>
-        <p>Premium automotive wheel coating with clean temperature ramp and adequate hold time. Demonstrates ideal cure profile with dual PMT sensors.</p>
+        <p>{{ example.description }}</p>
         
         <div class="example-details">
+          {% for label, value in example.details.items() %}
           <div class="detail-row">
-            <span class="detail-label">Target:</span>
-            <span class="detail-value">180°C for 10 minutes</span>
+            <span class="detail-label">{{ label }}:</span>
+            <span class="detail-value">{{ value }}</span>
           </div>
-          <div class="detail-row">
-            <span class="detail-label">Sensors:</span>
-            <span class="detail-value">Dual PMT (min_of_set)</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Logic:</span>
-            <span class="detail-value">Continuous hold required</span>
+          {% endfor %}
+        </div>
+        
+        <div class="verification-info">
+          <div class="verification-row">
+            <span class="verification-label">Verified:</span>
+            <span class="verification-time">{{ example.verified_at|strftime('%H:%M UTC') }}</span>
           </div>
         </div>
         
         <div class="example-actions">
-          <a href="/examples/powder_coat_cure_successful_180c_10min_pass.csv" class="btn btn-sm" download>
+          <a href="/examples/{{ example.csv_file }}" class="btn btn-sm" download>
             📄 CSV Data
           </a>
-          <a href="/examples/powder_coat_cure_spec_standard_180c_10min.json" class="btn btn-sm btn-outline" download>
+          <a href="/examples/{{ example.spec_file }}" class="btn btn-sm btn-outline" download>
             ⚙️ JSON Spec
           </a>
+          {% if example.pdf_url %}
+          <a href="{{ example.pdf_url }}" class="btn btn-sm btn-primary" target="_blank">
+            📋 Live Proof PDF
+          </a>
+          {% endif %}
+          {% if example.zip_url %}
+          <a href="{{ example.zip_url }}" class="btn btn-sm btn-secondary" download>
+            📦 Evidence ZIP
+          </a>
+          {% endif %}
         </div>
       </div>
-      
-      <div class="example-tile" data-filter="pass autoclave">
+      {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Indeterminate Examples -->
+<section class="section" style="background: #fefbf3;" data-category="indeterminate">
+  <div class="section-container">
+    <div class="section-header">
+      <h2>⚠️ Indeterminate Validation Examples</h2>
+      <p>These examples show cases where validation cannot be completed due to missing required sensor data</p>
+    </div>
+    
+    <div class="examples-grid">
+      {% for example in examples_manifest.examples %}
+      {% if example.category == 'indeterminate' %}
+      <div class="example-tile" data-filter="{{ example.category }} {{ example.industry }}">
         <div class="example-header">
-          <div class="example-icon">🏥</div>
+          <div class="example-icon">{{ example.icon }}</div>
           <div class="example-meta">
-            <h3>Steam Sterilization Cycle</h3>
+            <h3>{{ example.name }}</h3>
             <div class="example-tags">
-              <span class="tag pass">PASS</span>
-              <span class="tag industry">Autoclave</span>
+              <span class="tag {{ example.status.lower() }}">{{ example.status }}</span>
+              <span class="tag industry">{{ example.industry|title }}</span>
             </div>
           </div>
         </div>
-        <p>Medical device sterilization at 121°C with proper come-up time and steam penetration. F0 value calculation demonstrates sterility assurance.</p>
+        <p>{{ example.description }}</p>
         
         <div class="example-details">
+          {% for label, value in example.details.items() %}
           <div class="detail-row">
-            <span class="detail-label">Target:</span>
-            <span class="detail-value">121°C for 15 minutes</span>
+            <span class="detail-label">{{ label }}:</span>
+            <span class="detail-value">{{ value }}</span>
           </div>
-          <div class="detail-row">
-            <span class="detail-label">F0 Value:</span>
-            <span class="detail-value">18.2 minutes</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Application:</span>
-            <span class="detail-value">Medical devices</span>
+          {% endfor %}
+        </div>
+        
+        <div class="verification-info">
+          <div class="verification-row">
+            <span class="verification-label">Verified:</span>
+            <span class="verification-time">{{ example.verified_at|strftime('%H:%M UTC') }}</span>
           </div>
         </div>
         
         <div class="example-actions">
-          <a href="/examples/autoclave_sterilization_pass.csv" class="btn btn-sm" download>
+          <a href="/examples/{{ example.csv_file }}" class="btn btn-sm" download>
             📄 CSV Data
           </a>
-          <a href="/examples/autoclave-medical-device-validation.json" class="btn btn-sm btn-outline" download>
+          <a href="/examples/{{ example.spec_file }}" class="btn btn-sm btn-outline" download>
             ⚙️ JSON Spec
           </a>
+          {% if example.pdf_url %}
+          <a href="{{ example.pdf_url }}" class="btn btn-sm btn-primary" target="_blank">
+            📋 Live Proof PDF
+          </a>
+          {% endif %}
         </div>
       </div>
-      
-      <div class="example-tile" data-filter="pass concrete">
-        <div class="example-header">
-          <div class="example-icon">🏗️</div>
-          <div class="example-meta">
-            <h3>Concrete Curing Monitoring</h3>
-            <div class="example-tags">
-              <span class="tag pass">PASS</span>
-              <span class="tag industry">Construction</span>
-            </div>
-          </div>
-        </div>
-        <p>Structural concrete curing with proper temperature management per ASTM C31. Demonstrates controlled heat of hydration for strength development.</p>
-        
-        <div class="example-details">
-          <div class="detail-row">
-            <span class="detail-label">Standard:</span>
-            <span class="detail-value">ASTM C31</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Duration:</span>
-            <span class="detail-value">72 hours</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Max Temp:</span>
-            <span class="detail-value">65°C</span>
-          </div>
-        </div>
-        
-        <div class="example-actions">
-          <a href="/examples/concrete_curing_pass.csv" class="btn btn-sm" download>
-            📄 CSV Data
-          </a>
-          <a href="/examples/concrete-curing-astm-c31.json" class="btn btn-sm btn-outline" download>
-            ⚙️ JSON Spec
-          </a>
-        </div>
-      </div>
+      {% endif %}
+      {% endfor %}
     </div>
   </div>
 </section>
@@ -204,122 +216,73 @@
     </div>
     
     <div class="examples-grid">
-      <div class="example-tile" data-filter="fail powder">
+      {% for example in examples_manifest.examples %}
+      {% if example.category == 'fail' %}
+      <div class="example-tile" data-filter="{{ example.category }} {{ example.industry }}">
         <div class="example-header">
-          <div class="example-icon">🎨</div>
+          <div class="example-icon">{{ example.icon }}</div>
           <div class="example-meta">
-            <h3>Insufficient Hold Time</h3>
+            <h3>{{ example.name }}</h3>
             <div class="example-tags">
-              <span class="tag fail">FAIL</span>
-              <span class="tag industry">Powder Coating</span>
+              <span class="tag {{ example.status.lower() }}">{{ example.status }}</span>
+              <span class="tag industry">{{ example.industry|title }}</span>
             </div>
           </div>
         </div>
-        <p>Industrial bracket coating where temperature reaches target but cools down too quickly. Demonstrates failure due to inadequate time at cure temperature.</p>
+        <p>{{ example.description }}</p>
         
         <div class="example-details">
+          {% for label, value in example.details.items() %}
           <div class="detail-row">
-            <span class="detail-label">Issue:</span>
-            <span class="detail-value">Only ~4 minutes at temperature</span>
+            <span class="detail-label">{{ label }}:</span>
+            <span class="detail-value">{{ value }}</span>
           </div>
-          <div class="detail-row">
-            <span class="detail-label">Cause:</span>
-            <span class="detail-value">Rapid cooling after reaching target</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Required:</span>
-            <span class="detail-value">10 minutes minimum</span>
+          {% endfor %}
+        </div>
+        
+        <div class="verification-info">
+          <div class="verification-row">
+            <span class="verification-label">Verified:</span>
+            <span class="verification-time">{{ example.verified_at|strftime('%H:%M UTC') }}</span>
           </div>
         </div>
         
         <div class="example-actions">
-          <a href="/examples/powder_coat_cure_insufficient_hold_time_fail.csv" class="btn btn-sm" download>
+          <a href="/examples/{{ example.csv_file }}" class="btn btn-sm" download>
             📄 CSV Data
           </a>
-          <a href="/examples/powder_coat_cure_spec_standard_180c_10min.json" class="btn btn-sm btn-outline" download>
+          <a href="/examples/{{ example.spec_file }}" class="btn btn-sm btn-outline" download>
             ⚙️ JSON Spec
           </a>
+          {% if example.pdf_url %}
+          <a href="{{ example.pdf_url }}" class="btn btn-sm btn-primary" target="_blank">
+            📋 Live Proof PDF
+          </a>
+          {% endif %}
+          {% if example.zip_url %}
+          <a href="{{ example.zip_url }}" class="btn btn-sm btn-secondary" download>
+            📦 Evidence ZIP
+          </a>
+          {% endif %}
         </div>
       </div>
-      
-      <div class="example-tile" data-filter="fail autoclave">
-        <div class="example-header">
-          <div class="example-icon">🏥</div>
-          <div class="example-meta">
-            <h3>Incomplete Steam Penetration</h3>
-            <div class="example-tags">
-              <span class="tag fail">FAIL</span>
-              <span class="tag industry">Autoclave</span>
-            </div>
-          </div>
-        </div>
-        <p>Sterilization cycle fails due to inadequate steam penetration. Temperature sensors show uneven heating, compromising sterility assurance.</p>
-        
-        <div class="example-details">
-          <div class="detail-row">
-            <span class="detail-label">Issue:</span>
-            <span class="detail-value">Uneven temperature distribution</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">F0 Value:</span>
-            <span class="detail-value">6.2 minutes (insufficient)</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Minimum:</span>
-            <span class="detail-value">8.0 minutes required</span>
-          </div>
-        </div>
-        
-        <div class="example-actions">
-          <a href="/examples/autoclave_sterilization_fail.csv" class="btn btn-sm" download>
-            📄 CSV Data
-          </a>
-          <a href="/examples/autoclave-medical-device-validation.json" class="btn btn-sm btn-outline" download>
-            ⚙️ JSON Spec
-          </a>
-        </div>
-      </div>
-      
-      <div class="example-tile" data-filter="fail concrete">
-        <div class="example-header">
-          <div class="example-icon">🏗️</div>
-          <div class="example-meta">
-            <h3>Temperature Runaway</h3>
-            <div class="example-tags">
-              <span class="tag fail">FAIL</span>
-              <span class="tag industry">Construction</span>
-            </div>
-          </div>
-        </div>
-        <p>Concrete pour with excessive heat of hydration due to high cement content. Temperature exceeds safe limits, risking thermal cracking.</p>
-        
-        <div class="example-details">
-          <div class="detail-row">
-            <span class="detail-label">Peak Temp:</span>
-            <span class="detail-value">78°C (exceeded limit)</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Limit:</span>
-            <span class="detail-value">65°C maximum</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Risk:</span>
-            <span class="detail-value">Thermal cracking</span>
-          </div>
-        </div>
-        
-        <div class="example-actions">
-          <a href="/examples/concrete_curing_fail.csv" class="btn btn-sm" download>
-            📄 CSV Data
-          </a>
-          <a href="/examples/concrete-curing-astm-c31.json" class="btn btn-sm btn-outline" download>
-            ⚙️ JSON Spec
-          </a>
-        </div>
-      </div>
+      {% endif %}
+      {% endfor %}
     </div>
   </div>
 </section>
+
+{% else %}
+<!-- Fallback to static examples if manifest not available -->
+<div class="section">
+  <div class="section-container">
+    <div class="error-message">
+      <h3>⚠️ Live Examples Not Available</h3>
+      <p>Unable to load live verification results. Please check back later or contact support.</p>
+    </div>
+  </div>
+</div>
+{% endif %}
 
 <!-- How to Use -->
 <section class="section">
@@ -481,9 +444,80 @@
   color: #dc2626;
 }
 
+.tag.indeterminate {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
 .tag.industry {
   background: #e0e7ff;
   color: #4338ca;
+}
+
+/* Live verification styles */
+.verification-status {
+  margin-top: 1rem;
+}
+
+.verified-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #10b981;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.verification-info {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.verification-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.verification-label {
+  font-weight: 600;
+  color: #065f46;
+  font-size: 0.85rem;
+}
+
+.verification-time {
+  font-family: 'SF Mono', Monaco, monospace;
+  font-size: 0.8rem;
+  color: #10b981;
+  font-weight: 600;
+}
+
+.btn-primary {
+  background: #10b981;
+  color: white;
+  border: 1px solid #10b981;
+}
+
+.btn-primary:hover {
+  background: #059669;
+  border-color: #059669;
+}
+
+.btn-secondary {
+  background: #6b7280;
+  color: white;
+  border: 1px solid #6b7280;
+}
+
+.btn-secondary:hover {
+  background: #4b5563;
+  border-color: #4b5563;
 }
 
 .example-tile p {
@@ -526,6 +560,24 @@
   display: flex;
   gap: 0.75rem;
   flex-wrap: wrap;
+}
+
+.error-message {
+  text-align: center;
+  padding: 2rem;
+  background: #fef3cd;
+  border: 1px solid #fbbf24;
+  border-radius: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+.error-message h3 {
+  color: #92400e;
+  margin-bottom: 1rem;
+}
+
+.error-message p {
+  color: #d97706;
 }
 
 /* Process Steps */

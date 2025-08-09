@@ -1,0 +1,38 @@
+{
+  "version": "1.0",
+  "industry": "coldchain",
+  "job": {
+    "job_id": "audit_coldchain_pass"
+  },
+  "spec": {
+    "method": "REFRIGERATION",
+    "target_temp_C": 2.0,
+    "hold_time_s": 300,
+    "temp_band_C": {
+      "min": -1.0,
+      "max": 8.0
+    },
+    "sensor_uncertainty_C": 0.5
+  },
+  "data_requirements": {
+    "max_sample_period_s": 60.0,
+    "allowed_gaps_s": 300.0
+  },
+  "sensor_selection": {
+    "mode": "mean",
+    "require_at_least": 2
+  },
+  "logic": {
+    "continuous": true,
+    "max_total_dips_s": 0
+  },
+  "preconditions": {
+    "max_ramp_rate_C_per_min": 2.0,
+    "max_time_to_threshold_s": 600
+  },
+  "reporting": {
+    "units": "C",
+    "language": "en",
+    "timezone": "UTC"
+  }
+}

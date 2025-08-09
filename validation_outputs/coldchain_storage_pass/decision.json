@@ -1,0 +1,21 @@
+{
+  "pass_": false,
+  "status": "FAIL",
+  "industry": "coldchain",
+  "job_id": "audit_coldchain_pass",
+  "target_temp_C": 5.0,
+  "conservative_threshold_C": 2.0,
+  "actual_hold_time_s": 420.0,
+  "required_hold_time_s": 300,
+  "max_temp_C": 2.4,
+  "min_temp_C": 1.8,
+  "reasons": [
+    "Temperature compliance 75.0% below 95% requirement",
+    "Cold chain storage requirements not met"
+  ],
+  "warnings": [
+    "Monitoring period (0.0 days) shorter than recommended daily validation",
+    "5 temperature excursion events detected (max duration: 0.0min)"
+  ],
+  "flags": {}
+}

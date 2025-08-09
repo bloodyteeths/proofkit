@@ -1,0 +1,25 @@
+{
+  "id": "e386178fa2",
+  "pass": false,
+  "status": "FAIL",
+  "metrics": {
+    "target_temp_C": 180.0,
+    "conservative_threshold_C": 182.0,
+    "actual_hold_time_s": 450.0,
+    "required_hold_time_s": 600,
+    "max_temp_C": 182.8,
+    "min_temp_C": 25.1
+  },
+  "reasons": [
+    "Ramp rate too high: 34.4\u00b0C/min > 15.0\u00b0C/min",
+    "Insufficient continuous hold time: 450s < 600s"
+  ],
+  "warnings": [],
+  "flags": {},
+  "urls": {
+    "pdf": "/download/e386178fa2/pdf",
+    "zip": "/download/e386178fa2/zip",
+    "verify": "/verify/e386178fa2"
+  },
+  "verification_hash": "c7aa3e11d0c0be7096eb70260734a26eb8703f49686a383b69596284cac7e020"
+}

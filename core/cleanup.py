@@ -140,6 +140,9 @@ def find_expired_artifacts(
     current_time = now_provider() if now_provider else datetime.now(timezone.utc)
     cutoff_time = current_time - timedelta(days=retention_days)
     
+    # Special retention for LIVE-QA jobs (7 days minimum)
+    live_qa_cutoff = current_time - timedelta(days=7)
+    
     if not storage_dir.exists():
         logger.info(f"Storage directory does not exist: {storage_dir}")
         return expired_artifacts
@@ -162,12 +165,34 @@ def find_expired_artifacts(
                         continue
                     
                     try:
+                        # Check for LIVE-QA tag in metadata
+                        metadata_path = job_dir / "metadata.json"
+                        is_live_qa = False
+                        if metadata_path.exists():
+                            try:
+                                import json
+                                with open(metadata_path) as f:
+                                    metadata = json.load(f)
+                                    job_tag = metadata.get("job_tag", "")
+                                    if job_tag == "LIVE-QA":
+                                        is_live_qa = True
+                            except Exception:
+                                pass
+                        
                         # Get directory creation time
                         stat_info = job_dir.stat()
                         created_time = datetime.fromtimestamp(stat_info.st_ctime, tz=timezone.utc)
                         
-                        if created_time < cutoff_time:
-                            expired_artifacts.append((job_dir, created_time))
+                        # Apply appropriate retention policy
+                        if is_live_qa:
+                            # LIVE-QA jobs get minimum 7 days retention
+                            if created_time < live_qa_cutoff:
+                                logger.info(f"LIVE-QA job expired: {job_dir}")
+                                expired_artifacts.append((job_dir, created_time))
+                        else:
+                            # Regular jobs use standard retention
+                            if created_time < cutoff_time:
+                                expired_artifacts.append((job_dir, created_time))
                     
                     except (OSError, PermissionError) as e:
                         logger.warning(f"Cannot access job directory {job_dir}: {e}")

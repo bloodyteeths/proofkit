@@ -1,0 +1,34 @@
+timestamp,temperature_celsius,target_temperature,ramp_rate_c_per_hour,kiln_zone,cone_equivalent,firing_phase,notes
+2024-01-15 08:00:00,22.5,22.5,0,bottom,022,loading,Initial loading temperature
+2024-01-15 08:30:00,22.8,100,150,bottom,022,ramp1,Begin slow ramp to 100°C
+2024-01-15 09:00:00,45.2,100,150,bottom,022,ramp1,Moisture evaporation phase
+2024-01-15 09:30:00,67.8,100,150,bottom,022,ramp1,
+2024-01-15 10:00:00,89.6,100,150,bottom,022,ramp1,
+2024-01-15 10:30:00,99.8,100,0,bottom,022,hold1,Hold at 100°C for moisture removal
+2024-01-15 11:00:00,100.2,200,200,bottom,022,ramp2,Ramp to 200°C
+2024-01-15 11:15:00,150.4,200,200,bottom,021,ramp2,
+2024-01-15 11:30:00,199.6,200,0,bottom,021,hold2,Hold at 200°C
+2024-01-15 12:00:00,200.1,500,300,bottom,021,ramp3,Ramp to bisque temperature
+2024-01-15 12:30:00,349.2,500,300,bottom,020,ramp3,
+2024-01-15 13:00:00,498.8,500,0,bottom,019,hold3,Bisque hold
+2024-01-15 13:30:00,500.2,900,250,bottom,019,ramp4,Ramp to glaze temperature
+2024-01-15 14:30:00,749.1,900,250,bottom,016,ramp4,
+2024-01-15 15:30:00,899.5,900,0,bottom,09,hold4,Glaze maturation hold - cone 9 equivalent
+2024-01-15 16:00:00,900.1,900,0,bottom,09,soak,30-minute soak at peak temperature
+2024-01-15 16:30:00,899.8,25,-200,bottom,09,cooling,Natural cooling begins
+2024-01-15 17:00:00,825.4,25,-200,bottom,08,cooling,
+2024-01-15 17:30:00,751.2,25,-200,bottom,07,cooling,
+2024-01-15 18:00:00,677.8,25,-200,bottom,06,cooling,
+2024-01-15 18:30:00,604.5,25,-200,bottom,05,cooling,
+2024-01-15 19:00:00,531.2,25,-200,bottom,04,cooling,
+2024-01-15 19:30:00,457.9,25,-200,bottom,03,cooling,
+2024-01-15 20:00:00,384.6,25,-200,bottom,02,cooling,
+2024-01-15 20:30:00,311.3,25,-200,bottom,01,cooling,
+2024-01-15 21:00:00,238.0,25,-200,bottom,1,cooling,
+2024-01-15 21:30:00,164.7,25,-200,bottom,2,cooling,
+2024-01-15 22:00:00,91.4,25,-200,bottom,3,cooling,
+2024-01-15 22:30:00,68.2,25,-50,bottom,4,cooling,Slower cooling below 100°C
+2024-01-15 23:00:00,55.8,25,-50,bottom,4,cooling,
+2024-01-15 23:30:00,43.4,25,-50,bottom,5,cooling,
+2024-01-16 00:00:00,31.0,25,-50,bottom,6,cooling,
+2024-01-16 01:00:00,25.2,25,0,bottom,8,complete,Kiln cool - safe to open

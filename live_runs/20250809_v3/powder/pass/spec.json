@@ -1,0 +1,9 @@
+{
+  "industry": "powder",
+  "parameters": {
+    "target_temp": 180,
+    "hold_duration_minutes": 10,
+    "sensor_uncertainty": 2,
+    "max_ramp_rate": 15
+  }
+}

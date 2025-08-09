@@ -1,0 +1,158 @@
+{
+  "powder": {
+    "pass": {
+      "success": false,
+      "error": "HTTP 400",
+      "error_detail": {
+        "error": "Processing failed",
+        "message": "Invalid specification: 3 validation errors for SpecV1\nspec\n  Field required [type=missing, input_value={'industry': 'powder', 'p...'job_id': 'c734f9e926'}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/missing\ndata_requirements\n  Field required [type=missing, input_value={'industry': 'powder', 'p...'job_id': 'c734f9e926'}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/missing\nparameters\n  Extra inputs are not permitted [type=extra_forbidden, input_value={'target_temp': 180, 'hol... 2, 'max_ramp_rate': 15}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/extra_forbidden",
+        "details": {
+          "type": "processing_error",
+          "status_code": 400
+        }
+      }
+    },
+    "fail": {
+      "success": false,
+      "error": "HTTP 400",
+      "error_detail": {
+        "error": "Processing failed",
+        "message": "Invalid specification: 3 validation errors for SpecV1\nspec\n  Field required [type=missing, input_value={'industry': 'powder', 'p...'job_id': '52f10fc7df'}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/missing\ndata_requirements\n  Field required [type=missing, input_value={'industry': 'powder', 'p...'job_id': '52f10fc7df'}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/missing\nparameters\n  Extra inputs are not permitted [type=extra_forbidden, input_value={'target_temp': 180, 'hol... 2, 'max_ramp_rate': 50}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/extra_forbidden",
+        "details": {
+          "type": "processing_error",
+          "status_code": 400
+        }
+      }
+    }
+  },
+  "autoclave": {
+    "pass": {
+      "success": false,
+      "error": "HTTP 400",
+      "error_detail": {
+        "error": "Processing failed",
+        "message": "Invalid specification: 3 validation errors for SpecV1\nspec\n  Field required [type=missing, input_value={'industry': 'autoclave',...'job_id': '3f86576d3e'}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/missing\ndata_requirements\n  Field required [type=missing, input_value={'industry': 'autoclave',...'job_id': '3f86576d3e'}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/missing\nparameters\n  Extra inputs are not permitted [type=extra_forbidden, input_value={'sterilization_temp': 12...'min_pressure_bar': 2.0}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/extra_forbidden",
+        "details": {
+          "type": "processing_error",
+          "status_code": 400
+        }
+      }
+    },
+    "fail": {
+      "success": false,
+      "error": "HTTP 400",
+      "error_detail": {
+        "error": "Processing failed",
+        "message": "Invalid specification: 3 validation errors for SpecV1\nspec\n  Field required [type=missing, input_value={'industry': 'autoclave',...'job_id': 'ecdaa7de65'}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/missing\ndata_requirements\n  Field required [type=missing, input_value={'industry': 'autoclave',...'job_id': 'ecdaa7de65'}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/missing\nparameters\n  Extra inputs are not permitted [type=extra_forbidden, input_value={'sterilization_temp': 12...'min_pressure_bar': 2.0}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/extra_forbidden",
+        "details": {
+          "type": "processing_error",
+          "status_code": 400
+        }
+      }
+    }
+  },
+  "coldchain": {
+    "pass": {
+      "success": false,
+      "error": "HTTP 400",
+      "error_detail": {
+        "error": "Processing failed",
+        "message": "Invalid specification: 3 validation errors for SpecV1\nspec\n  Field required [type=missing, input_value={'industry': 'coldchain',...'job_id': '0a181737a1'}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/missing\ndata_requirements\n  Field required [type=missing, input_value={'industry': 'coldchain',...'job_id': '0a181737a1'}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/missing\nparameters\n  Extra inputs are not permitted [type=extra_forbidden, input_value={'min_temp': 2, 'max_temp...pliance_percentage': 95}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/extra_forbidden",
+        "details": {
+          "type": "processing_error",
+          "status_code": 400
+        }
+      }
+    },
+    "fail": {
+      "success": false,
+      "error": "HTTP 400",
+      "error_detail": {
+        "error": "Processing failed",
+        "message": "Invalid specification: 3 validation errors for SpecV1\nspec\n  Field required [type=missing, input_value={'industry': 'coldchain',...'job_id': 'f60d4bf4d0'}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/missing\ndata_requirements\n  Field required [type=missing, input_value={'industry': 'coldchain',...'job_id': 'f60d4bf4d0'}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/missing\nparameters\n  Extra inputs are not permitted [type=extra_forbidden, input_value={'min_temp': 2, 'max_temp...pliance_percentage': 95}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/extra_forbidden",
+        "details": {
+          "type": "processing_error",
+          "status_code": 400
+        }
+      }
+    }
+  },
+  "haccp": {
+    "pass": {
+      "success": false,
+      "error": "HTTP 400",
+      "error_detail": {
+        "error": "Processing failed",
+        "message": "Invalid specification: 3 validation errors for SpecV1\nspec\n  Field required [type=missing, input_value={'industry': 'haccp', 'pa...'job_id': 'c463cb2b51'}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/missing\ndata_requirements\n  Field required [type=missing, input_value={'industry': 'haccp', 'pa...'job_id': 'c463cb2b51'}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/missing\nparameters\n  Extra inputs are not permitted [type=extra_forbidden, input_value={'temp_1': 135, 'temp_2':... 'time_2_to_3_hours': 4}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/extra_forbidden",
+        "details": {
+          "type": "processing_error",
+          "status_code": 400
+        }
+      }
+    },
+    "fail": {
+      "success": false,
+      "error": "HTTP 400",
+      "error_detail": {
+        "error": "Processing failed",
+        "message": "Invalid specification: 3 validation errors for SpecV1\nspec\n  Field required [type=missing, input_value={'industry': 'haccp', 'pa...'job_id': '8b57c6e2a4'}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/missing\ndata_requirements\n  Field required [type=missing, input_value={'industry': 'haccp', 'pa...'job_id': '8b57c6e2a4'}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/missing\nparameters\n  Extra inputs are not permitted [type=extra_forbidden, input_value={'temp_1': 135, 'temp_2':... 'time_2_to_3_hours': 4}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/extra_forbidden",
+        "details": {
+          "type": "processing_error",
+          "status_code": 400
+        }
+      }
+    }
+  },
+  "concrete": {
+    "pass": {
+      "success": false,
+      "error": "HTTP 400",
+      "error_detail": {
+        "error": "Processing failed",
+        "message": "Invalid specification: 3 validation errors for SpecV1\nspec\n  Field required [type=missing, input_value={'industry': 'concrete', ...'job_id': 'df2e422de8'}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/missing\ndata_requirements\n  Field required [type=missing, input_value={'industry': 'concrete', ...'job_id': 'df2e422de8'}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/missing\nparameters\n  Extra inputs are not permitted [type=extra_forbidden, input_value={'min_temp': 10, 'max_tem...'time_window_hours': 24}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/extra_forbidden",
+        "details": {
+          "type": "processing_error",
+          "status_code": 400
+        }
+      }
+    },
+    "fail": {
+      "success": false,
+      "error": "HTTP 400",
+      "error_detail": {
+        "error": "Processing failed",
+        "message": "Invalid specification: 3 validation errors for SpecV1\nspec\n  Field required [type=missing, input_value={'industry': 'concrete', ...'job_id': 'f9251d7418'}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/missing\ndata_requirements\n  Field required [type=missing, input_value={'industry': 'concrete', ...'job_id': 'f9251d7418'}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/missing\nparameters\n  Extra inputs are not permitted [type=extra_forbidden, input_value={'min_temp': 10, 'max_tem...'time_window_hours': 24}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/extra_forbidden",
+        "details": {
+          "type": "processing_error",
+          "status_code": 400
+        }
+      }
+    }
+  },
+  "sterile": {
+    "pass": {
+      "success": false,
+      "error": "HTTP 400",
+      "error_detail": {
+        "error": "Processing failed",
+        "message": "Invalid specification: 3 validation errors for SpecV1\nspec\n  Field required [type=missing, input_value={'industry': 'sterile', '...'job_id': 'd3b23f1ce5'}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/missing\ndata_requirements\n  Field required [type=missing, input_value={'industry': 'sterile', '...'job_id': 'd3b23f1ce5'}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/missing\nparameters\n  Extra inputs are not permitted [type=extra_forbidden, input_value={'min_temp': 55, 'exposur... 12, 'min_humidity': 50}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/extra_forbidden",
+        "details": {
+          "type": "processing_error",
+          "status_code": 400
+        }
+      }
+    },
+    "fail": {
+      "success": false,
+      "error": "HTTP 400",
+      "error_detail": {
+        "error": "Processing failed",
+        "message": "Invalid specification: 3 validation errors for SpecV1\nspec\n  Field required [type=missing, input_value={'industry': 'sterile', '...'job_id': '6d9cf1754c'}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/missing\ndata_requirements\n  Field required [type=missing, input_value={'industry': 'sterile', '...'job_id': '6d9cf1754c'}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/missing\nparameters\n  Extra inputs are not permitted [type=extra_forbidden, input_value={'min_temp': 55, 'exposur... 12, 'min_humidity': 50}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.5/v/extra_forbidden",
+        "details": {
+          "type": "processing_error",
+          "status_code": 400
+        }
+      }
+    }
+  }
+}

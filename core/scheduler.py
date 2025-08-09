@@ -14,6 +14,7 @@ from typing import Optional
 
 from core.cleanup import cleanup_old_artifacts
 from core.upsell import process_queue_once
+from core.timestamp import process_retry_queue
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -124,11 +125,19 @@ class BackgroundScheduler:
                         
                 else:
                     # Sleep for 30 seconds and check again
-                    # Also run upsell queue processor every 30s
+                    # Also run upsell queue processor and TSA retry queue every 30s
                     try:
                         process_queue_once(current_time)
                     except Exception as e:
                         logger.error(f"Upsell queue processing error: {e}")
+                    
+                    try:
+                        tsa_stats = process_retry_queue(lambda: current_time)
+                        if tsa_stats['jobs_processed'] > 0:
+                            logger.info(f"TSA retry queue: {tsa_stats}")
+                    except Exception as e:
+                        logger.error(f"TSA retry queue processing error: {e}")
+                    
                     time.sleep(30)
                     
             except Exception as e:

@@ -113,12 +113,15 @@ def create_manifest(file_info: List[Tuple[str, Path, str]],
             "source_name": source_path.name
         }
     
-    # Calculate root hash from sorted file hashes
-    file_hashes = [info[2] for info in sorted(file_info, key=lambda x: x[0])]
-    combined_hashes = "".join(file_hashes)
-    root_hash = hashlib.sha256(combined_hashes.encode('utf-8')).hexdigest()
+    # Calculate root hash using deterministic algorithm
+    sorted_files = sorted(file_info, key=lambda x: x[0])
+    concat_str = ""
+    for archive_path, source_path, file_hash in sorted_files:
+        size = source_path.stat().st_size
+        concat_str += f"sha256 {size} {archive_path}\n"
     
-    manifest["root_hash"] = root_hash
+    root_hash = hashlib.sha256(concat_str.encode('utf-8')).hexdigest()
+    manifest["root_sha256"] = root_hash
     
     return manifest, root_hash
 
@@ -304,13 +307,13 @@ def create_evidence_bundle(raw_csv_path: str,
 
 def verify_evidence_bundle(bundle_path: str) -> Dict[str, Any]:
     """
-    Verify evidence bundle integrity by checking all file hashes.
+    Verify evidence bundle integrity by checking all file hashes and root hash.
     
     Args:
         bundle_path: Path to evidence.zip bundle
         
     Returns:
-        Dictionary with verification results
+        Dictionary with verification results including root hash verification
         
     Raises:
         PackingError: If bundle cannot be verified
@@ -329,7 +332,9 @@ def verify_evidence_bundle(bundle_path: str) -> Dict[str, Any]:
             "hash_mismatches": [],
             "missing_files": [],
             "root_hash": None,
-            "root_hash_valid": False
+            "root_hash_valid": False,
+            "root_hash_calculated": None,
+            "verification_timestamp": datetime.now(timezone.utc).isoformat()
         }
         
         with zipfile.ZipFile(bundle, 'r') as zipf:
@@ -343,12 +348,17 @@ def verify_evidence_bundle(bundle_path: str) -> Dict[str, Any]:
             manifest_content = zipf.read("manifest.json")
             manifest = json.loads(manifest_content.decode('utf-8'))
             
-            verification_result["root_hash"] = manifest.get("root_hash")
+            # Get root hash from manifest (check both field names for compatibility)
+            verification_result["root_hash"] = manifest.get("root_sha256") or manifest.get("root_hash")
             verification_result["files_total"] = len(manifest.get("files", {}))
+            
+            # Collect file information for root hash calculation
+            file_info_for_root = []
             
             # Verify each file hash
             for archive_path, file_info in manifest["files"].items():
                 expected_hash = file_info["sha256"]
+                size_bytes = file_info.get("size_bytes", 0)
                 
                 if archive_path not in zipf.namelist():
                     verification_result["missing_files"].append(archive_path)
@@ -366,26 +376,40 @@ def verify_evidence_bundle(bundle_path: str) -> Dict[str, Any]:
                         "expected": expected_hash,
                         "actual": actual_hash
                     })
+                
+                # Add to file info for root hash calculation
+                file_info_for_root.append((archive_path, size_bytes, expected_hash))
             
-            # Verify root hash
-            file_hashes = []
-            for archive_path in sorted(manifest["files"].keys()):
-                file_hashes.append(manifest["files"][archive_path]["sha256"])
+            # Calculate root hash using the same deterministic algorithm as pack.py
+            if file_info_for_root:
+                sorted_files = sorted(file_info_for_root, key=lambda x: x[0])
+                concat_str = ""
+                for archive_path, size_bytes, file_hash in sorted_files:
+                    concat_str += f"sha256 {size_bytes} {archive_path}\n"
+                
+                calculated_root_hash = hashlib.sha256(concat_str.encode('utf-8')).hexdigest()
+                verification_result["root_hash_calculated"] = calculated_root_hash
+                
+                # Verify root hash matches
+                if verification_result["root_hash"]:
+                    verification_result["root_hash_valid"] = (
+                        calculated_root_hash == verification_result["root_hash"]
+                    )
+                else:
+                    logger.warning("No root hash found in manifest for verification")
+                    verification_result["root_hash_valid"] = False
             
-            combined_hashes = "".join(file_hashes)
-            calculated_root_hash = hashlib.sha256(combined_hashes.encode('utf-8')).hexdigest()
-            
-            verification_result["root_hash_valid"] = (
-                calculated_root_hash == verification_result["root_hash"]
-            )
-            
-            # Overall validity check
+            # Overall validity check - all conditions must be met
             verification_result["valid"] = (
                 verification_result["files_verified"] == verification_result["files_total"] and
                 len(verification_result["hash_mismatches"]) == 0 and
                 len(verification_result["missing_files"]) == 0 and
                 verification_result["root_hash_valid"]
             )
+        
+        logger.info(f"Bundle verification complete: {verification_result['valid']}")
+        if not verification_result["valid"]:
+            logger.warning(f"Bundle verification failed: {verification_result}")
         
         return verification_result
     

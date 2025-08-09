@@ -1,0 +1,44 @@
+{
+  "version": "1.0",
+  "industry": "sterile",
+  "job": {
+    "job_id": "audit_sterile_pass"
+  },
+  "spec": {
+    "method": "ETO_STERILIZATION",
+    "target_temp_C": 55.0,
+    "hold_time_s": 120,
+    "temp_band_C": {
+      "min": 50.0,
+      "max": 60.0
+    },
+    "sensor_uncertainty_C": 1.0
+  },
+  "parameter_requirements": {
+    "require_eto_ppm": true,
+    "require_humidity": true,
+    "min_eto_ppm": 400,
+    "min_humidity_rh": 45.0
+  },
+  "data_requirements": {
+    "max_sample_period_s": 30.0,
+    "allowed_gaps_s": 60.0
+  },
+  "sensor_selection": {
+    "mode": "min_of_set",
+    "require_at_least": 2
+  },
+  "logic": {
+    "continuous": true,
+    "max_total_dips_s": 0
+  },
+  "preconditions": {
+    "max_ramp_rate_C_per_min": 8.0,
+    "max_time_to_threshold_s": 300
+  },
+  "reporting": {
+    "units": "C",
+    "language": "en",
+    "timezone": "UTC"
+  }
+}

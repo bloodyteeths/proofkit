@@ -1,0 +1,83 @@
+{
+  "dataset_collection": "kiln_oven_thermal_processing",
+  "created": "2024-08-08T00:00:00Z",
+  "description": "High-temperature kiln and oven thermal process monitoring",
+  "standards": [
+    "Orton Pyrometric Cone Standards",
+    "ASTM C24",
+    "Industrial Oven Standards"
+  ],
+  "files": [
+    {
+      "filename": "raw/ceramic_kiln_firing_log.csv",
+      "description": "Complete ceramic firing cycle from ambient to cone 9 (900°C) with controlled cooling",
+      "format": "CSV",
+      "size_bytes": 2052,
+      "sha256": "9dcaf8461e8ef95931f6453103149cdb18b0be5969b8d84e2aab79f34f23bf74",
+      "rows": 33,
+      "columns": 8,
+      "temperature_range": "22.5-900.1°C",
+      "duration_hours": 17,
+      "validated": true,
+      "source_type": "representative_data",
+      "compliance_standards": ["Ceramic Firing Standards"]
+    }
+  ],
+  "metadata": {
+    "industry": "ceramics_manufacturing",
+    "process_type": "high_temperature_firing",
+    "critical_parameters": [
+      "temperature",
+      "ramp_rate",
+      "cone_equivalent",
+      "firing_phase"
+    ],
+    "validation_requirements": {
+      "temperature_accuracy": "±5°C at operating temperature",
+      "ramp_rate_control": "±10% of programmed rate",
+      "logging_interval": "1-5 minutes",
+      "thermocouple_type": "Type K or Type S"
+    }
+  },
+  "firing_requirements": {
+    "moisture_removal": {
+      "temperature_range": "0-100°C",
+      "ramp_rate": "50°C/hour maximum",
+      "hold_time": "30 minutes at 100°C"
+    },
+    "bisque_firing": {
+      "temperature_range": "500-900°C",
+      "ramp_rate": "100-200°C/hour",
+      "cone_equivalent": "022 to 04"
+    },
+    "glaze_firing": {
+      "temperature_range": "900-1300°C",
+      "ramp_rate": "100-150°C/hour",
+      "cone_equivalent": "04 to 14"
+    },
+    "cooling_requirements": {
+      "natural_cooling": "no forced cooling above 500°C",
+      "opening_temperature": "<60°C"
+    }
+  },
+  "pyrometric_cones": {
+    "cone_022": "586°C",
+    "cone_04": "1060°C", 
+    "cone_6": "1222°C",
+    "cone_9": "1280°C",
+    "cone_14": "1400°C"
+  },
+  "applications": [
+    "ceramic_pottery",
+    "porcelain_firing",
+    "glass_annealing",
+    "metal_heat_treatment",
+    "composite_curing"
+  ],
+  "quality_assurance": {
+    "data_integrity": "SHA256 verified",
+    "format_validation": "CSV structure confirmed",
+    "content_validation": "Firing curve within ceramic processing standards",
+    "completeness": "Full firing and cooling cycle captured"
+  }
+}

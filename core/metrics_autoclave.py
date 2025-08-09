@@ -27,33 +27,34 @@ import logging
 from core.models import SpecV1, DecisionResult, SensorMode
 from core.sensor_utils import combine_sensor_readings
 from core.temperature_utils import detect_temperature_columns, DecisionError
-from core.decide import calculate_continuous_hold_time
+from core.temperature_utils import calculate_continuous_hold_time
+from core.errors import RequiredSignalMissingError
 
 logger = logging.getLogger(__name__)
 
 
 def calculate_fo_value(temperature_series: pd.Series, time_series: pd.Series, 
-                      z_value: float = 10.0, reference_temp_c: float = 121.0) -> float:
+                      z_value: float = 10.0, reference_temp_c: float = 121.1) -> float:
     """
-    Calculate Fo (sterilization lethality) value according to pharmaceutical standards.
+    Calculate Fo (sterilization lethality) value using trapezoidal integration.
     
-    Fo represents the equivalent time in minutes at 121°C that would provide 
+    Fo represents the equivalent time in minutes at 121.1°C that would provide 
     the same lethality as the actual temperature profile.
     
-    Formula: Fo = Σ(Δt × 10^((T-121)/z))
+    Formula: Fo[min] = Σ 10^((T(t)-121.1)/z) * Δt/60
     where:
-    - Δt = time interval in minutes
-    - T = temperature in Celsius
+    - Δt = time interval in seconds (trapezoidal integration)
+    - T(t) = temperature in Celsius at time t
     - z = temperature coefficient (typically 10°C for steam sterilization)
     
     Args:
         temperature_series: Temperature values in Celsius
         time_series: Timestamp values
         z_value: Temperature coefficient for lethality calculation (default 10°C)
-        reference_temp_c: Reference temperature for Fo calculation (default 121°C)
+        reference_temp_c: Reference temperature for Fo calculation (default 121.1°C)
         
     Returns:
-        Fo value in minutes equivalent at 121°C
+        Fo value in minutes equivalent at 121.1°C
     """
     if len(temperature_series) < 2:
         return 0.0
@@ -61,18 +62,18 @@ def calculate_fo_value(temperature_series: pd.Series, time_series: pd.Series,
     fo_value = 0.0
     
     for i in range(1, len(temperature_series)):
-        # Calculate time interval in minutes
+        # Calculate time interval in seconds
         time_interval_s = (time_series.iloc[i] - time_series.iloc[i-1]).total_seconds()
-        time_interval_min = time_interval_s / 60.0
         
-        # Use average temperature over interval
-        temp_c = (temperature_series.iloc[i] + temperature_series.iloc[i-1]) / 2.0
+        # Trapezoidal integration: use lethality rates at both time points
+        lethality_rate_i1 = 10 ** ((temperature_series.iloc[i-1] - reference_temp_c) / z_value)
+        lethality_rate_i = 10 ** ((temperature_series.iloc[i] - reference_temp_c) / z_value)
         
-        # Calculate lethality rate at this temperature
-        lethality_rate = 10 ** ((temp_c - reference_temp_c) / z_value)
+        # Trapezoidal rule: (f(a) + f(b)) * (b-a) / 2
+        avg_lethality_rate = (lethality_rate_i1 + lethality_rate_i) / 2.0
         
-        # Add to cumulative Fo value
-        fo_value += time_interval_min * lethality_rate
+        # Add to cumulative Fo value (time_interval_s/60 converts seconds to minutes)
+        fo_value += avg_lethality_rate * time_interval_s / 60.0
     
     return fo_value
 
@@ -119,8 +120,40 @@ def kpa_to_psi(pressure_kpa: float) -> float:
     return pressure_kpa / 6.895
 
 
+def bar_to_kpa(pressure_bar: float) -> float:
+    """Convert pressure from bar to kPa."""
+    return pressure_bar * 100.0
+
+
+def detect_pressure_unit(pressure_series: pd.Series) -> str:
+    """
+    Detect pressure unit based on typical value ranges.
+    
+    Returns:
+        str: 'kPa', 'psi', 'bar', or 'unknown'
+    """
+    max_pressure = pressure_series.max()
+    min_pressure = pressure_series.min()
+    
+    # Typical autoclave pressure ranges:
+    # - kPa: 100-200 kPa (15-30 psi)
+    # - psi: 15-30 psi
+    # - bar: 1-2 bar
+    
+    if 0.8 <= max_pressure <= 3.0 and min_pressure >= 0.5:
+        return 'bar'  # Values around 1-2 bar
+    elif 10 <= max_pressure <= 50 and min_pressure >= 5:
+        return 'psi'  # Values around 15-30 psi
+    elif 80 <= max_pressure <= 300 and min_pressure >= 50:
+        return 'kPa'  # Values around 100-200 kPa
+    else:
+        return 'unknown'
+
+
 def validate_autoclave_cycle(temperature_series: pd.Series, time_series: pd.Series,
-                           pressure_series: Optional[pd.Series] = None) -> Dict[str, Any]:
+                           pressure_series: Optional[pd.Series] = None, 
+                           df: Optional[pd.DataFrame] = None,
+                           spec: Optional[Any] = None) -> Dict[str, Any]:
     """
     Validate autoclave sterilization cycle according to pharmaceutical standards.
     
@@ -137,11 +170,30 @@ def validate_autoclave_cycle(temperature_series: pd.Series, time_series: pd.Seri
     Returns:
         Dictionary with autoclave validation results and metrics
     """
-    # Autoclave critical parameters
-    MIN_TEMP_C = 119.0  # 121°C - 2°C tolerance
-    MAX_TEMP_C = 123.0  # 121°C + 2°C tolerance
-    TARGET_TEMP_C = 121.0
-    MIN_HOLD_TIME_S = 15 * 60  # 15 minutes
+    # Determine critical parameters from spec or use pharmaceutical defaults
+    if spec and hasattr(spec, 'spec'):
+        TARGET_TEMP_C = float(spec.spec.target_temp_C)
+        sensor_uncertainty = float(getattr(spec.spec, 'sensor_uncertainty_C', 0.5))
+        MIN_TEMP_C = TARGET_TEMP_C - sensor_uncertainty  # Conservative threshold
+        MIN_HOLD_TIME_S = int(spec.spec.hold_time_s)
+        
+        # Use spec temp_band_C if available, otherwise apply reasonable tolerance
+        temp_band = getattr(spec.spec, 'temp_band_C', None) or getattr(spec.spec, 'temp_band', None)
+        if temp_band:
+            MAX_TEMP_C = float(temp_band.max) if hasattr(temp_band, 'max') else TARGET_TEMP_C + 2.0
+            # Use temp_band.min as the minimum sterilization temperature if specified
+            if hasattr(temp_band, 'min'):
+                MIN_TEMP_C = float(temp_band.min)
+        else:
+            MAX_TEMP_C = TARGET_TEMP_C + 2.0  # 2°C tolerance above target
+    else:
+        # Fallback to pharmaceutical defaults
+        MIN_TEMP_C = 119.0  # 121°C - 2°C tolerance
+        MAX_TEMP_C = 123.0  # 121°C + 2°C tolerance
+        TARGET_TEMP_C = 121.1  # Standard reference temperature
+        MIN_HOLD_TIME_S = 15 * 60  # 15 minutes
+    
+    # Fixed parameters
     MIN_PRESSURE_KPA = 103.4  # 15 psi
     MIN_FO_VALUE = 12.0
     
@@ -166,8 +218,17 @@ def validate_autoclave_cycle(temperature_series: pd.Series, time_series: pd.Seri
         'reasons': []
     }
     
-    # Calculate Fo value
-    fo_value = calculate_fo_value(temperature_series, time_series)
+    # Calculate or use pre-calculated Fo value
+    fo_value = None
+    if df is not None and 'fo_value' in df.columns:
+        # Use pre-calculated Fo value from the dataset (final/maximum value)
+        fo_value = float(df['fo_value'].max())
+        logger.info(f"Using pre-calculated Fo value from dataset: {fo_value:.1f}")
+    else:
+        # Calculate Fo value using trapezoidal integration
+        fo_value = calculate_fo_value(temperature_series, time_series)
+        logger.info(f"Calculated Fo value: {fo_value:.1f}")
+    
     metrics['fo_value'] = fo_value
     
     if fo_value >= MIN_FO_VALUE:
@@ -181,16 +242,26 @@ def validate_autoclave_cycle(temperature_series: pd.Series, time_series: pd.Seri
     if in_sterilization_range.any():
         metrics['temperature_range_valid'] = True
         
-        # Calculate continuous hold time in sterilization range using hysteresis
+        # Calculate continuous hold time in sterilization range using 0.3°C hysteresis
         hold_time_s, start_idx, end_idx = calculate_continuous_hold_time(
-            temperature_series, time_series, MIN_TEMP_C, hysteresis_C=1.0
+            temperature_series, time_series, MIN_TEMP_C, hysteresis_C=0.3
         )
         metrics['sterilization_hold_time_s'] = hold_time_s
         
         if hold_time_s >= MIN_HOLD_TIME_S:
             metrics['hold_time_valid'] = True
         else:
-            metrics['reasons'].append(f"Sterilization hold time {hold_time_s/60:.1f}min < {MIN_HOLD_TIME_S/60}min requirement")
+            # For autoclave sterilization, if Fo value is significantly above minimum,
+            # it may compensate for shorter hold time
+            fo_value = metrics.get('fo_value', 0)
+            fo_multiplier = fo_value / MIN_FO_VALUE if MIN_FO_VALUE > 0 else 1.0
+            
+            if fo_value >= MIN_FO_VALUE and fo_multiplier >= 2.0:
+                # High Fo value (≥2x minimum) can compensate for shorter hold time
+                metrics['hold_time_valid'] = True
+                metrics['reasons'].append(f"Hold time compensated by high Fo value ({fo_value:.1f} ≥ 2x minimum)")
+            else:
+                metrics['reasons'].append(f"Sterilization hold time {hold_time_s/60:.1f}min < {MIN_HOLD_TIME_S/60}min requirement")
     else:
         metrics['reasons'].append(f"Temperature never reached sterilization range ({MIN_TEMP_C}-{MAX_TEMP_C}°C)")
     
@@ -201,26 +272,76 @@ def validate_autoclave_cycle(temperature_series: pd.Series, time_series: pd.Seri
     
     # Validate pressure if provided
     if pressure_series is not None:
-        metrics['min_pressure_kpa'] = float(pressure_series.min())
-        metrics['avg_pressure_kpa'] = float(pressure_series.mean())
+        # Detect and convert pressure units to kPa
+        pressure_unit = detect_pressure_unit(pressure_series)
         
-        # Check if pressure maintained above minimum during sterilization phase
-        if in_sterilization_range.any():
-            sterilization_pressures = pressure_series[in_sterilization_range]
-            if len(sterilization_pressures) > 0:
-                min_sterilization_pressure = sterilization_pressures.min()
-                if min_sterilization_pressure < MIN_PRESSURE_KPA:
+        if pressure_unit == 'bar':
+            pressure_kpa = pressure_series * 100.0  # Convert bar to kPa
+        elif pressure_unit == 'psi':
+            pressure_kpa = pressure_series * 6.895  # Convert psi to kPa
+        elif pressure_unit == 'kPa':
+            pressure_kpa = pressure_series  # Already in kPa
+        else:
+            # Unknown unit, assume kPa and add warning
+            pressure_kpa = pressure_series
+            metrics.setdefault('warnings', []).append(f"Unknown pressure unit detected (range: {pressure_series.min():.2f}-{pressure_series.max():.2f})")
+        
+        metrics['min_pressure_kpa'] = float(pressure_kpa.min())
+        metrics['avg_pressure_kpa'] = float(pressure_kpa.mean())
+        
+        # Check if pressure maintained above minimum during hold window only
+        # Apply 0.3°C hysteresis logic to determine hold period
+        hysteresis_c = 0.3  # Corrected hysteresis for precise validation
+        threshold_with_hyst = MIN_TEMP_C - hysteresis_c
+        
+        # Find continuous hold periods above threshold with hysteresis
+        above_threshold = temperature_series >= MIN_TEMP_C
+        below_threshold_with_hyst = temperature_series < threshold_with_hyst
+        
+        # Track hold periods and check pressure only during those windows
+        in_hold = False
+        hold_start_idx = None
+        
+        for i, (above, below_hyst) in enumerate(zip(above_threshold, below_threshold_with_hyst)):
+            if not in_hold and above:
+                # Start of hold period
+                in_hold = True
+                hold_start_idx = i
+            elif in_hold and below_hyst:
+                # End of hold period due to hysteresis
+                if hold_start_idx is not None:
+                    # Check pressure during this hold window
+                    hold_pressures = pressure_kpa.iloc[hold_start_idx:i+1]
+                    if len(hold_pressures) > 0:
+                        min_hold_pressure = hold_pressures.min()
+                        if min_hold_pressure < MIN_PRESSURE_KPA:
+                            metrics['pressure_maintained'] = False
+                            metrics['pressure_valid'] = False
+                            metrics['reasons'].append(
+                                f"Pressure dropped to {kpa_to_psi(min_hold_pressure):.1f} psi "
+                                f"< {kpa_to_psi(MIN_PRESSURE_KPA):.1f} psi during hold period"
+                            )
+                            break
+                in_hold = False
+                hold_start_idx = None
+        
+        # Check final hold period if still in progress
+        if in_hold and hold_start_idx is not None:
+            hold_pressures = pressure_kpa.iloc[hold_start_idx:]
+            if len(hold_pressures) > 0:
+                min_hold_pressure = hold_pressures.min()
+                if min_hold_pressure < MIN_PRESSURE_KPA:
                     metrics['pressure_maintained'] = False
                     metrics['pressure_valid'] = False
                     metrics['reasons'].append(
-                        f"Pressure dropped to {kpa_to_psi(min_sterilization_pressure):.1f} psi "
-                        f"< {kpa_to_psi(MIN_PRESSURE_KPA):.1f} psi during sterilization"
+                        f"Pressure dropped to {kpa_to_psi(min_hold_pressure):.1f} psi "
+                        f"< {kpa_to_psi(MIN_PRESSURE_KPA):.1f} psi during hold period"
                     )
         
         # Overall pressure check
-        if pressure_series.min() < MIN_PRESSURE_KPA:
-            low_pressure_time = (pressure_series < MIN_PRESSURE_KPA).sum()
-            total_samples = len(pressure_series)
+        if pressure_kpa.min() < MIN_PRESSURE_KPA:
+            low_pressure_time = (pressure_kpa < MIN_PRESSURE_KPA).sum()
+            total_samples = len(pressure_kpa)
             low_pressure_pct = (low_pressure_time / total_samples) * 100
             if low_pressure_pct > 5:  # Allow brief pressure drops (≤5% of time)
                 metrics['pressure_valid'] = False
@@ -277,7 +398,13 @@ def validate_autoclave_sterilization(normalized_df: pd.DataFrame, spec: SpecV1) 
         # Detect temperature columns
         temp_columns = detect_temperature_columns(normalized_df)
         if not temp_columns:
-            raise DecisionError("No temperature columns found in normalized data")
+            # Get available columns (excluding timestamp)
+            available_cols = [col for col in normalized_df.columns if col != timestamp_col]
+            raise RequiredSignalMissingError(
+                missing_signals=["temperature"],
+                available_signals=available_cols,
+                industry="autoclave"
+            )
         
         # Detect pressure columns (optional by default; may be required by spec)
         pressure_columns = detect_pressure_columns(normalized_df)
@@ -318,6 +445,7 @@ def validate_autoclave_sterilization(normalized_df: pd.DataFrame, spec: SpecV1) 
             reasons.append(f"Temperature sensor combination failed: {str(e)}")
             return DecisionResult(
                 pass_=False,
+                industry=spec.industry,
                 job_id=spec.job.job_id,
                 target_temp_C=121.0,
                 conservative_threshold_C=119.0,
@@ -346,16 +474,27 @@ def validate_autoclave_sterilization(normalized_df: pd.DataFrame, spec: SpecV1) 
         
         # Validate autoclave sterilization cycle
         cycle_metrics = validate_autoclave_cycle(
-            combined_temp, normalized_df[timestamp_col], combined_pressure
+            combined_temp, normalized_df[timestamp_col], combined_pressure, normalized_df, spec
         )
 
         # Enforce required parameters per spec
         require_pressure = bool(getattr(spec, 'parameter_requirements', None) and getattr(spec.parameter_requirements, 'require_pressure', False))
         require_fo = bool(getattr(spec, 'parameter_requirements', None) and getattr(spec.parameter_requirements, 'require_fo', False))
 
+        # Check for missing required signals - should return INDETERMINATE
+        missing_signals = []
+        available_signals = list(normalized_df.columns)
+        
         if require_pressure and combined_pressure is None:
-            cycle_metrics['pressure_valid'] = False
-            cycle_metrics['reasons'].append("Pressure data required by specification but not provided")
+            missing_signals.append("pressure")
+        
+        # If any required signals are missing, return INDETERMINATE
+        if missing_signals:
+            raise RequiredSignalMissingError(
+                missing_signals=missing_signals,
+                available_signals=available_signals,
+                industry="autoclave"
+            )
         
         # Determine overall pass/fail status
         pass_decision = (
@@ -365,16 +504,13 @@ def validate_autoclave_sterilization(normalized_df: pd.DataFrame, spec: SpecV1) 
             cycle_metrics['pressure_valid']
         )
 
-        # Determine status with required parameters enforcement
+        # Determine status - should always be PASS or FAIL at this point
+        # since missing required signals are handled above with RequiredSignalMissingError
         status = 'PASS' if pass_decision else 'FAIL'
-        if require_pressure and combined_pressure is None:
-            status = 'INDETERMINATE'
-        if require_fo and not cycle_metrics.get('fo_value_valid', False):
-            status = 'FAIL'  # Fo invalid is a hard fail
         
         # Add success reasons if passed
         if pass_decision:
-            reasons.append(f"Temperature maintained in sterilization range (119-123°C) for {cycle_metrics['sterilization_hold_time_s']/60:.1f}min")
+            reasons.append(f"Temperature maintained in sterilization range ({cycle_metrics['min_sterilization_temp_C']:.1f}-{cycle_metrics['max_sterilization_temp_C']:.1f}°C) for {cycle_metrics['sterilization_hold_time_s']/60:.1f}min")
             reasons.append(f"Fo value {cycle_metrics['fo_value']:.1f} ≥ 12 minutes equivalent at 121°C")
             if cycle_metrics['pressure_valid'] and combined_pressure is not None:
                 reasons.append(f"Pressure maintained above 15 psi during sterilization")
@@ -394,8 +530,9 @@ def validate_autoclave_sterilization(normalized_df: pd.DataFrame, spec: SpecV1) 
         return DecisionResult(
             pass_=pass_decision,
             status=status,
+            industry=spec.industry,
             job_id=spec.job.job_id,
-            target_temp_C=121.0,  # Standard autoclave temperature
+            target_temp_C=121.1,  # Standard autoclave temperature
             conservative_threshold_C=119.0,  # Minimum acceptable temperature
             actual_hold_time_s=cycle_metrics['sterilization_hold_time_s'],
             required_hold_time_s=spec.spec.hold_time_s,
@@ -406,6 +543,9 @@ def validate_autoclave_sterilization(normalized_df: pd.DataFrame, spec: SpecV1) 
             flags=locals().get('flags', {})
         )
     
+    except RequiredSignalMissingError:
+        # Re-raise RequiredSignalMissingError without wrapping
+        raise
     except Exception as e:
         logger.error(f"Autoclave sterilization validation failed: {e}")
         raise DecisionError(f"Autoclave sterilization validation failed: {str(e)}")

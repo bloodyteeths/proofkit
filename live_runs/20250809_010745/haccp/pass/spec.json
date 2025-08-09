@@ -1,0 +1,10 @@
+{
+  "industry": "haccp",
+  "parameters": {
+    "temp_1": 135,
+    "temp_2": 70,
+    "temp_3": 41,
+    "time_1_to_2_hours": 2,
+    "time_2_to_3_hours": 4
+  }
+}

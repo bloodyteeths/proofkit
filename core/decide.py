@@ -26,13 +26,17 @@ from datetime import datetime, timezone
 import logging
 
 from core.models import SpecV1, DecisionResult, SensorMode
-from core.temperature_utils import detect_temperature_columns, DecisionError
+from core.temperature_utils import detect_temperature_columns, DecisionError, calculate_continuous_hold_time
+from core.normalize import DataQualityError
+from core.sensor_utils import combine_sensor_readings
+from core.errors import RequiredSignalMissingError
 
 logger = logging.getLogger(__name__)
 
 
 # Industry-specific metric engine imports
 try:
+    from core.metrics_powder import validate_powder_coating_cure
     from core.metrics_haccp import validate_haccp_cooling
     from core.metrics_autoclave import validate_autoclave_sterilization
     from core.metrics_sterile import validate_eto_sterilization
@@ -41,6 +45,7 @@ try:
 except ImportError as e:
     logger.warning(f"Failed to import industry-specific metrics engines: {e}")
     # Set to None so we can check for availability
+    validate_powder_coating_cure = None
     validate_haccp_cooling = None
     validate_autoclave_sterilization = None
     validate_eto_sterilization = None
@@ -50,7 +55,8 @@ except ImportError as e:
 
 # Industry-specific metrics engine dispatch table
 INDUSTRY_METRICS: Dict[str, Optional[Callable[[pd.DataFrame, SpecV1], DecisionResult]]] = {
-    "powder": None,  # Uses default powder coat logic in make_decision
+    "powder": validate_powder_coating_cure,
+    "powder-coating": validate_powder_coating_cure,  # Alternative form - same engine
     "haccp": validate_haccp_cooling,
     "autoclave": validate_autoclave_sterilization,
     "sterile": validate_eto_sterilization,
@@ -129,66 +135,7 @@ def calculate_conservative_threshold(target_temp_C: float, sensor_uncertainty_C:
     return target_temp_C + sensor_uncertainty_C
 
 
-def combine_sensor_readings(df: pd.DataFrame, temp_columns: List[str], 
-                          mode: SensorMode, require_at_least: Optional[int] = None,
-                          threshold_C: Optional[float] = None) -> pd.Series:
-    """
-    Combine multiple sensor readings according to the specified mode.
-    
-    Args:
-        df: DataFrame with temperature data
-        temp_columns: List of temperature column names
-        mode: Sensor combination mode
-        require_at_least: Minimum number of valid sensors required
-        threshold_C: Threshold for majority_over_threshold mode
-        
-    Returns:
-        Series of combined temperature readings (PMT)
-        
-    Raises:
-        DecisionError: If insufficient valid sensors or invalid mode
-    """
-    if not temp_columns:
-        raise DecisionError("No temperature columns provided for sensor combination")
-    
-    # Extract temperature data
-    temp_data = df[temp_columns].copy()
-    
-    # Check minimum sensor requirement
-    if require_at_least is not None:
-        valid_sensors_per_sample = temp_data.notna().sum(axis=1)
-        insufficient_samples = valid_sensors_per_sample < require_at_least
-        if insufficient_samples.any():
-            count = insufficient_samples.sum()
-            raise DecisionError(f"Insufficient valid sensors: {count} samples have < {require_at_least} sensors")
-    
-    if mode == SensorMode.MIN_OF_SET:
-        # Take minimum reading across all sensors
-        return temp_data.min(axis=1, skipna=True)
-    
-    elif mode == SensorMode.MEAN_OF_SET:
-        # Take mean reading across all sensors
-        return temp_data.mean(axis=1, skipna=True)
-    
-    elif mode == SensorMode.MAJORITY_OVER_THRESHOLD:
-        if threshold_C is None:
-            raise DecisionError("threshold_C required for majority_over_threshold mode")
-        
-        # Count sensors above threshold for each sample
-        above_threshold = temp_data >= threshold_C
-        sensors_above = above_threshold.sum(axis=1)
-        total_sensors = temp_data.notna().sum(axis=1)
-        
-        # Check if at least 'require_at_least' sensors are above threshold
-        if require_at_least is not None:
-            # Return boolean series: True if enough sensors are above threshold
-            return sensors_above >= require_at_least
-        else:
-            # Majority decision: True if >50% of sensors are above threshold
-            return sensors_above > (total_sensors / 2)
-    
-    else:
-        raise DecisionError(f"Unknown sensor combination mode: {mode}")
+# combine_sensor_readings function moved to core.sensor_utils to avoid circular imports
 
 
 # detect_temperature_columns moved to core.temperature_utils to avoid circular imports
@@ -245,80 +192,6 @@ def find_threshold_crossing_time(temperature_series: pd.Series, time_series: pd.
     
     return time_to_threshold
 
-
-def calculate_continuous_hold_time(temperature_series: pd.Series, time_series: pd.Series,
-                                 threshold_C: float, hysteresis_C: float = 2.0) -> Tuple[float, int, int]:
-    """
-    Calculate the longest continuous hold time above threshold with hysteresis.
-    
-    Args:
-        temperature_series: Temperature values
-        time_series: Timestamp values  
-        threshold_C: Threshold temperature
-        hysteresis_C: Hysteresis amount for threshold crossings
-        
-    Returns:
-        Tuple of (longest_hold_time_s, start_idx, end_idx)
-    """
-    if len(temperature_series) < 2:
-        return 0.0, -1, -1
-    
-    # Apply hysteresis: once above threshold, stay "above" until below (threshold - hysteresis)
-    above_threshold = np.zeros(len(temperature_series), dtype=bool)
-    currently_above = False
-    
-    for i, temp in enumerate(temperature_series):
-        if not currently_above:
-            # Not currently above - check if we cross threshold
-            if temp >= threshold_C:
-                currently_above = True
-                above_threshold[i] = True
-            else:
-                above_threshold[i] = False
-        else:
-            # Currently above - check if we fall below hysteresis point
-            if temp < (threshold_C - hysteresis_C):
-                currently_above = False
-                above_threshold[i] = False
-            else:
-                above_threshold[i] = True
-    
-    # Find continuous intervals above threshold
-    intervals = []
-    start_idx = None
-    
-    for i, is_above in enumerate(above_threshold):
-        if is_above and start_idx is None:
-            # Start of interval
-            start_idx = i
-        elif not is_above and start_idx is not None:
-            # End of interval
-            intervals.append((start_idx, i - 1))
-            start_idx = None
-    
-    # Handle case where we end while still above threshold
-    if start_idx is not None:
-        intervals.append((start_idx, len(above_threshold) - 1))
-    
-    # Find longest interval
-    if not intervals:
-        return 0.0, -1, -1
-    
-    longest_duration = 0.0
-    longest_start = -1
-    longest_end = -1
-    
-    for start_idx, end_idx in intervals:
-        start_time = time_series.iloc[start_idx]
-        end_time = time_series.iloc[end_idx]
-        duration = (end_time - start_time).total_seconds()
-        
-        if duration > longest_duration:
-            longest_duration = duration
-            longest_start = start_idx
-            longest_end = end_idx
-    
-    return longest_duration, longest_start, longest_end
 
 
 def calculate_boolean_hold_time(boolean_series: pd.Series, time_series: pd.Series,
@@ -535,6 +408,26 @@ def make_decision(normalized_df: pd.DataFrame, spec: SpecV1) -> DecisionResult:
         logger.info(f"Using {industry} industry validation engine")
         try:
             return INDUSTRY_METRICS[industry](normalized_df, spec)
+        except RequiredSignalMissingError as e:
+            # Convert RequiredSignalMissingError to INDETERMINATE result
+            logger.warning(f"Required signals missing for {industry}: {e}")
+            return DecisionResult(
+                pass_=False,
+                status="INDETERMINATE",
+                industry=spec.industry,
+                job_id=spec.job.job_id,
+                target_temp_C=spec.spec.target_temp_C,
+                conservative_threshold_C=spec.spec.target_temp_C + spec.spec.sensor_uncertainty_C,
+                actual_hold_time_s=0.0,
+                required_hold_time_s=spec.spec.hold_time_s,
+                max_temp_C=0.0,
+                min_temp_C=0.0,
+                reasons=[f"Required signals missing: {', '.join(e.missing_signals)}"],
+                warnings=[f"Available signals: {', '.join(e.available_signals)}"]
+            )
+        except DataQualityError as e:
+            # These should still bubble up
+            raise
         except Exception as e:
             logger.error(f"Industry-specific validation failed for {industry}: {e}")
             # Fall back to default validation if industry-specific fails
@@ -566,6 +459,8 @@ def make_decision(normalized_df: pd.DataFrame, spec: SpecV1) -> DecisionResult:
             reasons.append(f"Insufficient data points for reliable analysis: {len(normalized_df)} points, need at least {min_points_needed}")
             return DecisionResult(
                 pass_=False,
+                status="INDETERMINATE",
+                industry=spec.industry,
                 job_id=spec.job.job_id,
                 target_temp_C=spec.spec.target_temp_C,
                 conservative_threshold_C=calculate_conservative_threshold(
@@ -640,6 +535,8 @@ def make_decision(normalized_df: pd.DataFrame, spec: SpecV1) -> DecisionResult:
             reasons.append(f"Sensor combination failed: {str(e)}")
             return DecisionResult(
                 pass_=False,
+                status="INDETERMINATE",
+                industry=spec.industry,
                 job_id=spec.job.job_id,
                 target_temp_C=spec.spec.target_temp_C,
                 conservative_threshold_C=conservative_threshold_C,
@@ -668,6 +565,8 @@ def make_decision(normalized_df: pd.DataFrame, spec: SpecV1) -> DecisionResult:
             
             return DecisionResult(
                 pass_=False,
+                status="FAIL",
+                industry=spec.industry,
                 job_id=spec.job.job_id,
                 target_temp_C=spec.spec.target_temp_C,
                 conservative_threshold_C=conservative_threshold_C,
@@ -763,6 +662,8 @@ def make_decision(normalized_df: pd.DataFrame, spec: SpecV1) -> DecisionResult:
         
         return DecisionResult(
             pass_=pass_decision,
+            status="PASS" if pass_decision else "FAIL",
+            industry=spec.industry,
             job_id=spec.job.job_id,
             target_temp_C=spec.spec.target_temp_C,
             conservative_threshold_C=conservative_threshold_C,

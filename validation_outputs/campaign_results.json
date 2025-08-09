@@ -1,0 +1,297 @@
+[
+  {
+    "dataset_id": "powder_coat_pass_basic",
+    "expected_outcome": "PASS",
+    "industry": "powder",
+    "status": "ERROR",
+    "actual_outcome": "ERROR",
+    "error": "name 'logger' is not defined",
+    "outputs": {
+      "normalized_csv": "validation_outputs/powder_coat_pass_basic/normalized.csv",
+      "decision_json": "validation_outputs/powder_coat_pass_basic/decision.json",
+      "metrics_json": "validation_outputs/powder_coat_pass_basic/metrics.json",
+      "plot_png": "validation_outputs/powder_coat_pass_basic/plot.png"
+    }
+  },
+  {
+    "dataset_id": "powder_coat_fail_short_hold",
+    "expected_outcome": "FAIL",
+    "industry": "powder",
+    "status": "ERROR",
+    "actual_outcome": "ERROR",
+    "error": "name 'logger' is not defined",
+    "outputs": {
+      "normalized_csv": "validation_outputs/powder_coat_fail_short_hold/normalized.csv",
+      "decision_json": "validation_outputs/powder_coat_fail_short_hold/decision.json",
+      "metrics_json": "validation_outputs/powder_coat_fail_short_hold/metrics.json",
+      "plot_png": "validation_outputs/powder_coat_fail_short_hold/plot.png"
+    }
+  },
+  {
+    "dataset_id": "powder_coat_borderline",
+    "expected_outcome": "PASS",
+    "industry": "powder",
+    "status": "ERROR",
+    "actual_outcome": "ERROR",
+    "error": "name 'logger' is not defined",
+    "outputs": {
+      "normalized_csv": "validation_outputs/powder_coat_borderline/normalized.csv",
+      "decision_json": "validation_outputs/powder_coat_borderline/decision.json",
+      "metrics_json": "validation_outputs/powder_coat_borderline/metrics.json",
+      "plot_png": "validation_outputs/powder_coat_borderline/plot.png"
+    }
+  },
+  {
+    "dataset_id": "powder_coat_data_gaps",
+    "expected_outcome": "ERROR",
+    "industry": "powder",
+    "status": "ERROR",
+    "actual_outcome": "ERROR",
+    "error": "Data quality checks failed:\n- Data gaps too large: 1 gaps > 60.0s (max: 130.0s)",
+    "outputs": {}
+  },
+  {
+    "dataset_id": "powder_coat_duplicate_timestamps",
+    "expected_outcome": "ERROR",
+    "industry": "powder",
+    "status": "ERROR",
+    "actual_outcome": "ERROR",
+    "error": "DataQualityError() takes no keyword arguments",
+    "outputs": {}
+  },
+  {
+    "dataset_id": "powder_coat_timezone_shift",
+    "expected_outcome": "INDETERMINATE",
+    "industry": "powder",
+    "status": "ERROR",
+    "actual_outcome": "ERROR",
+    "error": "Data quality checks failed:\n- Sampling period too large: 3610.0s > 300.0s\n- Data gaps too large: 1 gaps > 60.0s (max: 3610.0s)",
+    "outputs": {}
+  },
+  {
+    "dataset_id": "powder_coat_missing_required",
+    "expected_outcome": "ERROR",
+    "industry": "powder",
+    "status": "ERROR",
+    "actual_outcome": "ERROR",
+    "error": "Failed to generate proof plot: Failed to combine sensor readings: Insufficient valid sensors: 61 samples have < 2 sensors",
+    "outputs": {
+      "normalized_csv": "validation_outputs/powder_coat_missing_required/normalized.csv",
+      "decision_json": "validation_outputs/powder_coat_missing_required/decision.json",
+      "metrics_json": "validation_outputs/powder_coat_missing_required/metrics.json"
+    }
+  },
+  {
+    "dataset_id": "haccp_cooling_pass",
+    "expected_outcome": "PASS",
+    "industry": "haccp",
+    "status": "ERROR",
+    "actual_outcome": "ERROR",
+    "error": "name 'logger' is not defined",
+    "outputs": {
+      "normalized_csv": "validation_outputs/haccp_cooling_pass/normalized.csv",
+      "decision_json": "validation_outputs/haccp_cooling_pass/decision.json",
+      "metrics_json": "validation_outputs/haccp_cooling_pass/metrics.json",
+      "plot_png": "validation_outputs/haccp_cooling_pass/plot.png"
+    }
+  },
+  {
+    "dataset_id": "haccp_cooling_fail",
+    "expected_outcome": "FAIL",
+    "industry": "haccp",
+    "status": "ERROR",
+    "actual_outcome": "ERROR",
+    "error": "name 'logger' is not defined",
+    "outputs": {
+      "normalized_csv": "validation_outputs/haccp_cooling_fail/normalized.csv",
+      "decision_json": "validation_outputs/haccp_cooling_fail/decision.json",
+      "metrics_json": "validation_outputs/haccp_cooling_fail/metrics.json",
+      "plot_png": "validation_outputs/haccp_cooling_fail/plot.png"
+    }
+  },
+  {
+    "dataset_id": "haccp_cooling_borderline",
+    "expected_outcome": "PASS",
+    "industry": "haccp",
+    "status": "ERROR",
+    "actual_outcome": "ERROR",
+    "error": "name 'logger' is not defined",
+    "outputs": {
+      "normalized_csv": "validation_outputs/haccp_cooling_borderline/normalized.csv",
+      "decision_json": "validation_outputs/haccp_cooling_borderline/decision.json",
+      "metrics_json": "validation_outputs/haccp_cooling_borderline/metrics.json",
+      "plot_png": "validation_outputs/haccp_cooling_borderline/plot.png"
+    }
+  },
+  {
+    "dataset_id": "haccp_cooling_missing_required",
+    "expected_outcome": "ERROR",
+    "industry": "haccp",
+    "status": "ERROR",
+    "actual_outcome": "ERROR",
+    "error": "name 'logger' is not defined",
+    "outputs": {
+      "normalized_csv": "validation_outputs/haccp_cooling_missing_required/normalized.csv",
+      "decision_json": "validation_outputs/haccp_cooling_missing_required/decision.json",
+      "metrics_json": "validation_outputs/haccp_cooling_missing_required/metrics.json",
+      "plot_png": "validation_outputs/haccp_cooling_missing_required/plot.png"
+    }
+  },
+  {
+    "dataset_id": "autoclave_sterilization_pass",
+    "expected_outcome": "PASS",
+    "industry": "autoclave",
+    "status": "ERROR",
+    "actual_outcome": "ERROR",
+    "error": "name 'logger' is not defined",
+    "outputs": {
+      "normalized_csv": "validation_outputs/autoclave_sterilization_pass/normalized.csv",
+      "decision_json": "validation_outputs/autoclave_sterilization_pass/decision.json",
+      "metrics_json": "validation_outputs/autoclave_sterilization_pass/metrics.json",
+      "plot_png": "validation_outputs/autoclave_sterilization_pass/plot.png"
+    }
+  },
+  {
+    "dataset_id": "autoclave_sterilization_fail",
+    "expected_outcome": "FAIL",
+    "industry": "autoclave",
+    "status": "ERROR",
+    "actual_outcome": "ERROR",
+    "error": "name 'logger' is not defined",
+    "outputs": {
+      "normalized_csv": "validation_outputs/autoclave_sterilization_fail/normalized.csv",
+      "decision_json": "validation_outputs/autoclave_sterilization_fail/decision.json",
+      "metrics_json": "validation_outputs/autoclave_sterilization_fail/metrics.json",
+      "plot_png": "validation_outputs/autoclave_sterilization_fail/plot.png"
+    }
+  },
+  {
+    "dataset_id": "coldchain_storage_pass",
+    "expected_outcome": "PASS",
+    "industry": "coldchain",
+    "status": "ERROR",
+    "actual_outcome": "ERROR",
+    "error": "name 'logger' is not defined",
+    "outputs": {
+      "normalized_csv": "validation_outputs/coldchain_storage_pass/normalized.csv",
+      "decision_json": "validation_outputs/coldchain_storage_pass/decision.json",
+      "metrics_json": "validation_outputs/coldchain_storage_pass/metrics.json",
+      "plot_png": "validation_outputs/coldchain_storage_pass/plot.png"
+    }
+  },
+  {
+    "dataset_id": "coldchain_storage_fail",
+    "expected_outcome": "FAIL",
+    "industry": "coldchain",
+    "status": "ERROR",
+    "actual_outcome": "ERROR",
+    "error": "name 'logger' is not defined",
+    "outputs": {
+      "normalized_csv": "validation_outputs/coldchain_storage_fail/normalized.csv",
+      "decision_json": "validation_outputs/coldchain_storage_fail/decision.json",
+      "metrics_json": "validation_outputs/coldchain_storage_fail/metrics.json",
+      "plot_png": "validation_outputs/coldchain_storage_fail/plot.png"
+    }
+  },
+  {
+    "dataset_id": "concrete_curing_pass",
+    "expected_outcome": "PASS",
+    "industry": "concrete",
+    "status": "ERROR",
+    "actual_outcome": "ERROR",
+    "error": "name 'logger' is not defined",
+    "outputs": {
+      "normalized_csv": "validation_outputs/concrete_curing_pass/normalized.csv",
+      "decision_json": "validation_outputs/concrete_curing_pass/decision.json",
+      "metrics_json": "validation_outputs/concrete_curing_pass/metrics.json",
+      "plot_png": "validation_outputs/concrete_curing_pass/plot.png"
+    }
+  },
+  {
+    "dataset_id": "concrete_curing_fail",
+    "expected_outcome": "FAIL",
+    "industry": "concrete",
+    "status": "ERROR",
+    "actual_outcome": "ERROR",
+    "error": "name 'logger' is not defined",
+    "outputs": {
+      "normalized_csv": "validation_outputs/concrete_curing_fail/normalized.csv",
+      "decision_json": "validation_outputs/concrete_curing_fail/decision.json",
+      "metrics_json": "validation_outputs/concrete_curing_fail/metrics.json",
+      "plot_png": "validation_outputs/concrete_curing_fail/plot.png"
+    }
+  },
+  {
+    "dataset_id": "sterile_processing_pass",
+    "expected_outcome": "PASS",
+    "industry": "sterile",
+    "status": "ERROR",
+    "actual_outcome": "ERROR",
+    "error": "name 'logger' is not defined",
+    "outputs": {
+      "normalized_csv": "validation_outputs/sterile_processing_pass/normalized.csv",
+      "decision_json": "validation_outputs/sterile_processing_pass/decision.json",
+      "metrics_json": "validation_outputs/sterile_processing_pass/metrics.json",
+      "plot_png": "validation_outputs/sterile_processing_pass/plot.png"
+    }
+  },
+  {
+    "dataset_id": "sterile_processing_fail",
+    "expected_outcome": "FAIL",
+    "industry": "sterile",
+    "status": "ERROR",
+    "actual_outcome": "ERROR",
+    "error": "name 'logger' is not defined",
+    "outputs": {
+      "normalized_csv": "validation_outputs/sterile_processing_fail/normalized.csv",
+      "decision_json": "validation_outputs/sterile_processing_fail/decision.json",
+      "metrics_json": "validation_outputs/sterile_processing_fail/metrics.json",
+      "plot_png": "validation_outputs/sterile_processing_fail/plot.png"
+    }
+  },
+  {
+    "dataset_id": "realworld_autoclave_medical",
+    "expected_outcome": "PASS",
+    "industry": "autoclave",
+    "status": "ERROR",
+    "actual_outcome": "ERROR",
+    "error": "9 validation errors for SpecV1\njob\n  Field required [type=missing, input_value={'version': '1.0', 'creat...dard': 'ISO 17665:2024'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing\nspec\n  Field required [type=missing, input_value={'version': '1.0', 'creat...dard': 'ISO 17665:2024'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing\ncreated\n  Extra inputs are not permitted [type=extra_forbidden, input_value='2025-08-08T00:00:00Z', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden\nname\n  Extra inputs are not permitted [type=extra_forbidden, input_value='Medical Device Steam Sterilization Validation', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden\ndescription\n  Extra inputs are not permitted [type=extra_forbidden, input_value='Steam sterilization vali...l devices per ISO 17665', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden\ntarget_conditions\n  Extra inputs are not permitted [type=extra_forbidden, input_value={'temperature': {'value':...00, 'hysteresis_c': 2.0}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden\npass_criteria\n  Extra inputs are not permitted [type=extra_forbidden, input_value={'hold_calculation': 'con..._quality_minimum': 85.0}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden\nsensor_uncertainty\n  Extra inputs are not permitted [type=extra_forbidden, input_value={'temperature_c': 0.5, 'pressure_psi': 0.5}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden\nvalidation_standard\n  Extra inputs are not permitted [type=extra_forbidden, input_value='ISO 17665:2024', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden",
+    "outputs": {}
+  },
+  {
+    "dataset_id": "realworld_coldchain_pharma",
+    "expected_outcome": "FAIL",
+    "industry": "coldchain",
+    "status": "ERROR",
+    "actual_outcome": "ERROR",
+    "error": "9 validation errors for SpecV1\njob\n  Field required [type=missing, input_value={'version': '1.0', 'creat..._standard': 'USP <659>'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing\nspec\n  Field required [type=missing, input_value={'version': '1.0', 'creat..._standard': 'USP <659>'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing\ncreated\n  Extra inputs are not permitted [type=extra_forbidden, input_value='2025-08-08T00:00:00Z', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden\nname\n  Extra inputs are not permitted [type=extra_forbidden, input_value='Pharmaceutical Cold Storage Monitoring', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden\ndescription\n  Extra inputs are not permitted [type=extra_forbidden, input_value='Cold chain temperature m... products per USP <659>', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden\ntarget_conditions\n  Extra inputs are not permitted [type=extra_forbidden, input_value={'temperature_range': {'m...recovery_time_s': 7200}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden\npass_criteria\n  Extra inputs are not permitted [type=extra_forbidden, input_value={'continuous_monitoring':...ecovery_required': True}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden\nsensor_uncertainty\n  Extra inputs are not permitted [type=extra_forbidden, input_value={'temperature_c': 0.5, 'humidity_percent': 3.0}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden\nvalidation_standard\n  Extra inputs are not permitted [type=extra_forbidden, input_value='USP <659>', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden",
+    "outputs": {}
+  },
+  {
+    "dataset_id": "realworld_concrete_astm",
+    "expected_outcome": "PASS",
+    "industry": "concrete",
+    "status": "ERROR",
+    "actual_outcome": "ERROR",
+    "error": "9 validation errors for SpecV1\njob\n  Field required [type=missing, input_value={'version': '1.0', 'creat...n_standard': 'ASTM C31'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing\nspec\n  Field required [type=missing, input_value={'version': '1.0', 'creat...n_standard': 'ASTM C31'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing\ncreated\n  Extra inputs are not permitted [type=extra_forbidden, input_value='2025-08-08T00:00:00Z', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden\nname\n  Extra inputs are not permitted [type=extra_forbidden, input_value='Concrete Curing Temperature Monitoring', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden\ndescription\n  Extra inputs are not permitted [type=extra_forbidden, input_value='48-hour concrete curing ...monitoring per ASTM C31', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden\ntarget_conditions\n  Extra inputs are not permitted [type=extra_forbidden, input_value={'temperature_range': {'m...48, 'target_hours': 48}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden\npass_criteria\n  Extra inputs are not permitted [type=extra_forbidden, input_value={'temperature_compliance'...ature_uniformity': True}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden\nsensor_uncertainty\n  Extra inputs are not permitted [type=extra_forbidden, input_value={'temperature_c': 1.0}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden\nvalidation_standard\n  Extra inputs are not permitted [type=extra_forbidden, input_value='ASTM C31', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden",
+    "outputs": {}
+  },
+  {
+    "dataset_id": "realworld_sterile_iso",
+    "expected_outcome": "PASS",
+    "industry": "sterile",
+    "status": "ERROR",
+    "actual_outcome": "ERROR",
+    "error": "9 validation errors for SpecV1\njob\n  Field required [type=missing, input_value={'version': '1.0', 'creat...dard': 'ISO 17665:2024'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing\nspec\n  Field required [type=missing, input_value={'version': '1.0', 'creat...dard': 'ISO 17665:2024'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing\ncreated\n  Extra inputs are not permitted [type=extra_forbidden, input_value='2025-08-08T00:00:00Z', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden\nname\n  Extra inputs are not permitted [type=extra_forbidden, input_value='Dry Heat Sterilization Validation', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden\ndescription\n  Extra inputs are not permitted [type=extra_forbidden, input_value='Dry heat sterilization validation per ISO 17665', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden\ntarget_conditions\n  Extra inputs are not permitted [type=extra_forbidden, input_value={'temperature': {'value':...00, 'hysteresis_c': 2.0}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden\npass_criteria\n  Extra inputs are not permitted [type=extra_forbidden, input_value={'hold_calculation': 'con...den_reduction': '6_log'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden\nsensor_uncertainty\n  Extra inputs are not permitted [type=extra_forbidden, input_value={'temperature_c': 1.0}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden\nvalidation_standard\n  Extra inputs are not permitted [type=extra_forbidden, input_value='ISO 17665:2024', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden",
+    "outputs": {}
+  },
+  {
+    "dataset_id": "realworld_oven_ceramic",
+    "expected_outcome": "INDETERMINATE",
+    "industry": "powder",
+    "status": "ERROR",
+    "actual_outcome": "ERROR",
+    "error": "9 validation errors for SpecV1\njob\n  Field required [type=missing, input_value={'version': '1.0', 'creat...'custom_ceramic_firing'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing\nspec\n  Field required [type=missing, input_value={'version': '1.0', 'creat...'custom_ceramic_firing'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing\ncreated\n  Extra inputs are not permitted [type=extra_forbidden, input_value='2025-08-08T00:00:00Z', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden\nname\n  Extra inputs are not permitted [type=extra_forbidden, input_value='Ceramic Kiln Firing Profile', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden\ndescription\n  Extra inputs are not permitted [type=extra_forbidden, input_value='Complex ceramic kiln fir...tiple temperature holds', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden\ntarget_conditions\n  Extra inputs are not permitted [type=extra_forbidden, input_value={'temperature_profiles': ...'complex_profile': True}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden\npass_criteria\n  Extra inputs are not permitted [type=extra_forbidden, input_value={'profile_adherence': 'ma...ation': 'indeterminate'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden\nsensor_uncertainty\n  Extra inputs are not permitted [type=extra_forbidden, input_value={'temperature_c': 5.0}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden\nvalidation_standard\n  Extra inputs are not permitted [type=extra_forbidden, input_value='custom_ceramic_firing', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden",
+    "outputs": {}
+  }
+]

@@ -1,0 +1,917 @@
+{
+  "timestamp": "2025-08-08T18:57:38.298952Z",
+  "registry_path": "validation_campaign/registry.yaml",
+  "summary": {
+    "total_datasets": 19,
+    "passed_validation": 16,
+    "failed_validation": 1,
+    "errors": 2
+  },
+  "results": {
+    "powder_coat_pass_basic": {
+      "dataset_id": "powder_coat_pass_basic",
+      "status": "passed",
+      "metrics": {
+        "spec_valid": true,
+        "csv_loadable": true,
+        "sample_count": 73,
+        "metadata": {
+          "_parsing_info": {
+            "detected_encoding": "utf-8",
+            "detected_delimiter": ",",
+            "decimal_normalized": true,
+            "original_columns": [
+              "timestamp",
+              "sensor_1",
+              "sensor_2",
+              "sensor_3"
+            ],
+            "original_shape": [
+              73,
+              4
+            ]
+          }
+        },
+        "mean_step_s": 10.0,
+        "median_step_s": 10.0,
+        "min_step_s": 10.0,
+        "max_step_s": 10.0,
+        "duplicate_timestamps": 0,
+        "temperature_columns": [
+          "sensor_2",
+          "sensor_3"
+        ],
+        "temperature_column_count": 2,
+        "duration_seconds": 720.0,
+        "duration_minutes": 12.0,
+        "duration_hours": 0.2,
+        "normalization_successful": true,
+        "normalized_sample_count": 73,
+        "expected_outcome": "PASS",
+        "expected_outcome_reasonable": true
+      },
+      "errors": [],
+      "warnings": []
+    },
+    "powder_coat_fail_short_hold": {
+      "dataset_id": "powder_coat_fail_short_hold",
+      "status": "passed",
+      "metrics": {
+        "spec_valid": true,
+        "csv_loadable": true,
+        "sample_count": 40,
+        "metadata": {
+          "_parsing_info": {
+            "detected_encoding": "utf-8",
+            "detected_delimiter": ",",
+            "decimal_normalized": true,
+            "original_columns": [
+              "timestamp",
+              "sensor_1",
+              "sensor_2",
+              "sensor_3"
+            ],
+            "original_shape": [
+              40,
+              4
+            ]
+          }
+        },
+        "mean_step_s": 10.0,
+        "median_step_s": 10.0,
+        "min_step_s": 10.0,
+        "max_step_s": 10.0,
+        "duplicate_timestamps": 0,
+        "temperature_columns": [
+          "sensor_2",
+          "sensor_3"
+        ],
+        "temperature_column_count": 2,
+        "duration_seconds": 390.0,
+        "duration_minutes": 6.5,
+        "duration_hours": 0.10833333333333334,
+        "normalization_successful": true,
+        "normalized_sample_count": 40,
+        "expected_outcome": "FAIL",
+        "expected_outcome_reasonable": true
+      },
+      "errors": [],
+      "warnings": []
+    },
+    "powder_coat_borderline": {
+      "dataset_id": "powder_coat_borderline",
+      "status": "passed",
+      "metrics": {
+        "spec_valid": true,
+        "csv_loadable": true,
+        "sample_count": 61,
+        "metadata": {
+          "_parsing_info": {
+            "detected_encoding": "utf-8",
+            "detected_delimiter": ",",
+            "decimal_normalized": true,
+            "original_columns": [
+              "timestamp",
+              "sensor_1",
+              "sensor_2",
+              "sensor_3"
+            ],
+            "original_shape": [
+              61,
+              4
+            ]
+          }
+        },
+        "mean_step_s": 10.0,
+        "median_step_s": 10.0,
+        "min_step_s": 10.0,
+        "max_step_s": 10.0,
+        "duplicate_timestamps": 0,
+        "temperature_columns": [
+          "sensor_2",
+          "sensor_3"
+        ],
+        "temperature_column_count": 2,
+        "duration_seconds": 600.0,
+        "duration_minutes": 10.0,
+        "duration_hours": 0.16666666666666666,
+        "normalization_successful": true,
+        "normalized_sample_count": 61,
+        "expected_outcome": "PASS",
+        "expected_outcome_reasonable": true
+      },
+      "errors": [],
+      "warnings": []
+    },
+    "powder_coat_data_gaps": {
+      "dataset_id": "powder_coat_data_gaps",
+      "status": "error",
+      "metrics": {
+        "spec_valid": true,
+        "csv_loadable": true,
+        "sample_count": 49,
+        "metadata": {
+          "_parsing_info": {
+            "detected_encoding": "utf-8",
+            "detected_delimiter": ",",
+            "decimal_normalized": true,
+            "original_columns": [
+              "timestamp",
+              "sensor_1",
+              "sensor_2",
+              "sensor_3"
+            ],
+            "original_shape": [
+              49,
+              4
+            ]
+          }
+        },
+        "mean_step_s": 12.5,
+        "median_step_s": 10.0,
+        "min_step_s": 10.0,
+        "max_step_s": 130.0,
+        "duplicate_timestamps": 0,
+        "temperature_columns": [
+          "sensor_2",
+          "sensor_3"
+        ],
+        "temperature_column_count": 2,
+        "duration_seconds": 600.0,
+        "duration_minutes": 10.0,
+        "duration_hours": 0.16666666666666666,
+        "expected_outcome": "ERROR",
+        "expected_outcome_reasonable": false
+      },
+      "errors": [
+        "Normalization test failed: Data quality checks failed:\n- Data gaps too large: 1 gaps > 60.0s (max: 130.0s)"
+      ],
+      "warnings": [
+        "Expected ERROR but data appears clean"
+      ]
+    },
+    "powder_coat_duplicate_timestamps": {
+      "dataset_id": "powder_coat_duplicate_timestamps",
+      "status": "passed",
+      "metrics": {
+        "spec_valid": true,
+        "csv_loadable": true,
+        "sample_count": 50,
+        "metadata": {
+          "_parsing_info": {
+            "detected_encoding": "utf-8",
+            "detected_delimiter": ",",
+            "decimal_normalized": true,
+            "original_columns": [
+              "timestamp",
+              "sensor_1",
+              "sensor_2",
+              "sensor_3"
+            ],
+            "original_shape": [
+              50,
+              4
+            ]
+          }
+        },
+        "mean_step_s": 9.795918367346939,
+        "median_step_s": 10.0,
+        "min_step_s": 0.0,
+        "max_step_s": 10.0,
+        "duplicate_timestamps": 1,
+        "temperature_columns": [
+          "sensor_2",
+          "sensor_3"
+        ],
+        "temperature_column_count": 2,
+        "duration_seconds": 480.0,
+        "duration_minutes": 8.0,
+        "duration_hours": 0.13333333333333333,
+        "normalization_successful": true,
+        "normalized_sample_count": 49,
+        "expected_outcome": "ERROR",
+        "expected_outcome_reasonable": true
+      },
+      "errors": [],
+      "warnings": [
+        "Found 1 duplicate timestamps"
+      ]
+    },
+    "powder_coat_timezone_shift": {
+      "dataset_id": "powder_coat_timezone_shift",
+      "status": "error",
+      "metrics": {
+        "spec_valid": true,
+        "csv_loadable": true,
+        "sample_count": 49,
+        "metadata": {
+          "_parsing_info": {
+            "detected_encoding": "utf-8",
+            "detected_delimiter": ",",
+            "decimal_normalized": true,
+            "original_columns": [
+              "timestamp",
+              "sensor_1",
+              "sensor_2",
+              "sensor_3"
+            ],
+            "original_shape": [
+              49,
+              4
+            ]
+          }
+        }
+      },
+      "errors": [
+        "Metrics computation failed: Unknown datetime string format, unable to parse: 2024-01-01T10:00:00+01:00.25.2.25.1.25.3, at position 0"
+      ],
+      "warnings": []
+    },
+    "powder_coat_missing_required": {
+      "dataset_id": "powder_coat_missing_required",
+      "status": "warning",
+      "metrics": {
+        "spec_valid": true,
+        "csv_loadable": true,
+        "sample_count": 61,
+        "metadata": {
+          "_parsing_info": {
+            "detected_encoding": "utf-8",
+            "detected_delimiter": ",",
+            "decimal_normalized": true,
+            "original_columns": [
+              "timestamp",
+              "sensor_1"
+            ],
+            "original_shape": [
+              61,
+              2
+            ]
+          }
+        },
+        "mean_step_s": 10.0,
+        "median_step_s": 10.0,
+        "min_step_s": 10.0,
+        "max_step_s": 10.0,
+        "duplicate_timestamps": 0,
+        "temperature_columns": [
+          "sensor_1"
+        ],
+        "temperature_column_count": 1,
+        "temp_min": 25.2,
+        "temp_max": 184.3,
+        "temp_mean": 164.77704918032788,
+        "temp_std": 41.25916218830521,
+        "temp_missing_count": 0,
+        "likely_units": "celsius",
+        "duration_seconds": 600.0,
+        "duration_minutes": 10.0,
+        "duration_hours": 0.16666666666666666,
+        "normalization_successful": true,
+        "normalized_sample_count": 61,
+        "expected_outcome": "ERROR",
+        "expected_outcome_reasonable": false
+      },
+      "errors": [],
+      "warnings": [
+        "Expected ERROR but data appears clean"
+      ]
+    },
+    "haccp_cooling_pass": {
+      "dataset_id": "haccp_cooling_pass",
+      "status": "passed",
+      "metrics": {
+        "spec_valid": true,
+        "csv_loadable": true,
+        "sample_count": 120,
+        "metadata": {
+          "_parsing_info": {
+            "detected_encoding": "utf-8",
+            "detected_delimiter": ",",
+            "decimal_normalized": true,
+            "original_columns": [
+              "timestamp",
+              "sensor_1",
+              "sensor_2",
+              "sensor_3"
+            ],
+            "original_shape": [
+              120,
+              4
+            ]
+          }
+        },
+        "mean_step_s": 10.0,
+        "median_step_s": 10.0,
+        "min_step_s": 10.0,
+        "max_step_s": 10.0,
+        "duplicate_timestamps": 0,
+        "temperature_columns": [
+          "sensor_2",
+          "sensor_3"
+        ],
+        "temperature_column_count": 2,
+        "temp_min": 25.2529537143144,
+        "temp_max": 62.209565302631205,
+        "temp_mean": 54.677733292250196,
+        "temp_std": 10.142186260433077,
+        "temp_missing_count": 0,
+        "likely_units": "celsius",
+        "duration_seconds": 1190.0,
+        "duration_minutes": 19.833333333333332,
+        "duration_hours": 0.33055555555555555,
+        "normalization_successful": true,
+        "normalized_sample_count": 120,
+        "expected_outcome": "PASS",
+        "expected_outcome_reasonable": true
+      },
+      "errors": [],
+      "warnings": []
+    },
+    "haccp_cooling_fail": {
+      "dataset_id": "haccp_cooling_fail",
+      "status": "passed",
+      "metrics": {
+        "spec_valid": true,
+        "csv_loadable": true,
+        "sample_count": 120,
+        "metadata": {
+          "_parsing_info": {
+            "detected_encoding": "utf-8",
+            "detected_delimiter": ",",
+            "decimal_normalized": true,
+            "original_columns": [
+              "timestamp",
+              "sensor_1",
+              "sensor_2",
+              "sensor_3"
+            ],
+            "original_shape": [
+              120,
+              4
+            ]
+          }
+        },
+        "mean_step_s": 10.0,
+        "median_step_s": 10.0,
+        "min_step_s": 10.0,
+        "max_step_s": 10.0,
+        "duplicate_timestamps": 0,
+        "temperature_columns": [
+          "sensor_2",
+          "sensor_3"
+        ],
+        "temperature_column_count": 2,
+        "temp_min": 24.731949096279184,
+        "temp_max": 55.245636033337455,
+        "temp_mean": 47.15648098812776,
+        "temp_std": 9.51369082510027,
+        "temp_missing_count": 0,
+        "likely_units": "uncertain",
+        "duration_seconds": 1190.0,
+        "duration_minutes": 19.833333333333332,
+        "duration_hours": 0.33055555555555555,
+        "normalization_successful": true,
+        "normalized_sample_count": 120,
+        "expected_outcome": "FAIL",
+        "expected_outcome_reasonable": true
+      },
+      "errors": [],
+      "warnings": []
+    },
+    "haccp_cooling_borderline": {
+      "dataset_id": "haccp_cooling_borderline",
+      "status": "passed",
+      "metrics": {
+        "spec_valid": true,
+        "csv_loadable": true,
+        "sample_count": 120,
+        "metadata": {
+          "_parsing_info": {
+            "detected_encoding": "utf-8",
+            "detected_delimiter": ",",
+            "decimal_normalized": true,
+            "original_columns": [
+              "timestamp",
+              "sensor_1",
+              "sensor_2",
+              "sensor_3"
+            ],
+            "original_shape": [
+              120,
+              4
+            ]
+          }
+        },
+        "mean_step_s": 10.0,
+        "median_step_s": 10.0,
+        "min_step_s": 10.0,
+        "max_step_s": 10.0,
+        "duplicate_timestamps": 0,
+        "temperature_columns": [
+          "sensor_2",
+          "sensor_3"
+        ],
+        "temperature_column_count": 2,
+        "temp_min": 24.846419834141848,
+        "temp_max": 58.36182932246601,
+        "temp_mean": 49.67529329631019,
+        "temp_std": 10.642388941857686,
+        "temp_missing_count": 0,
+        "likely_units": "uncertain",
+        "duration_seconds": 1190.0,
+        "duration_minutes": 19.833333333333332,
+        "duration_hours": 0.33055555555555555,
+        "normalization_successful": true,
+        "normalized_sample_count": 120,
+        "expected_outcome": "PASS",
+        "expected_outcome_reasonable": true
+      },
+      "errors": [],
+      "warnings": []
+    },
+    "haccp_cooling_missing_required": {
+      "dataset_id": "haccp_cooling_missing_required",
+      "status": "passed",
+      "metrics": {
+        "spec_valid": true,
+        "csv_loadable": true,
+        "sample_count": 120,
+        "metadata": {
+          "_parsing_info": {
+            "detected_encoding": "utf-8",
+            "detected_delimiter": ",",
+            "decimal_normalized": true,
+            "original_columns": [
+              "timestamp",
+              "sensor_1",
+              "sensor_2"
+            ],
+            "original_shape": [
+              120,
+              3
+            ]
+          }
+        },
+        "mean_step_s": 10.0,
+        "median_step_s": 10.0,
+        "min_step_s": 10.0,
+        "max_step_s": 10.0,
+        "duplicate_timestamps": 0,
+        "temperature_columns": [
+          "sensor_2"
+        ],
+        "temperature_column_count": 1,
+        "temp_min": 25.57498307095918,
+        "temp_max": 59.150355899569064,
+        "temp_mean": 42.56440706710108,
+        "temp_std": 10.081521170065484,
+        "temp_missing_count": 62,
+        "likely_units": "uncertain",
+        "duration_seconds": 1190.0,
+        "duration_minutes": 19.833333333333332,
+        "duration_hours": 0.33055555555555555,
+        "normalization_successful": true,
+        "normalized_sample_count": 120,
+        "expected_outcome": "ERROR",
+        "expected_outcome_reasonable": true
+      },
+      "errors": [],
+      "warnings": []
+    },
+    "autoclave_sterilization_pass": {
+      "dataset_id": "autoclave_sterilization_pass",
+      "status": "passed",
+      "metrics": {
+        "spec_valid": true,
+        "csv_loadable": true,
+        "sample_count": 72,
+        "metadata": {
+          "_parsing_info": {
+            "detected_encoding": "utf-8",
+            "detected_delimiter": ",",
+            "decimal_normalized": true,
+            "original_columns": [
+              "timestamp",
+              "sensor_1",
+              "sensor_2",
+              "sensor_3",
+              "pressure",
+              "fo_value"
+            ],
+            "original_shape": [
+              72,
+              6
+            ]
+          }
+        },
+        "mean_step_s": 10.0,
+        "median_step_s": 10.0,
+        "min_step_s": 10.0,
+        "max_step_s": 10.0,
+        "duplicate_timestamps": 0,
+        "temperature_columns": [
+          "sensor_2",
+          "sensor_3",
+          "pressure",
+          "fo_value"
+        ],
+        "temperature_column_count": 4,
+        "duration_seconds": 710.0,
+        "duration_minutes": 11.833333333333334,
+        "duration_hours": 0.19722222222222222,
+        "normalization_successful": true,
+        "normalized_sample_count": 72,
+        "expected_outcome": "PASS",
+        "expected_outcome_reasonable": true
+      },
+      "errors": [],
+      "warnings": []
+    },
+    "autoclave_sterilization_fail": {
+      "dataset_id": "autoclave_sterilization_fail",
+      "status": "passed",
+      "metrics": {
+        "spec_valid": true,
+        "csv_loadable": true,
+        "sample_count": 37,
+        "metadata": {
+          "_parsing_info": {
+            "detected_encoding": "utf-8",
+            "detected_delimiter": ",",
+            "decimal_normalized": true,
+            "original_columns": [
+              "timestamp",
+              "sensor_1",
+              "sensor_2",
+              "sensor_3",
+              "pressure",
+              "fo_value"
+            ],
+            "original_shape": [
+              37,
+              6
+            ]
+          }
+        },
+        "mean_step_s": 10.0,
+        "median_step_s": 10.0,
+        "min_step_s": 10.0,
+        "max_step_s": 10.0,
+        "duplicate_timestamps": 0,
+        "temperature_columns": [
+          "sensor_2",
+          "sensor_3",
+          "pressure",
+          "fo_value"
+        ],
+        "temperature_column_count": 4,
+        "duration_seconds": 360.0,
+        "duration_minutes": 6.0,
+        "duration_hours": 0.1,
+        "normalization_successful": true,
+        "normalized_sample_count": 37,
+        "expected_outcome": "FAIL",
+        "expected_outcome_reasonable": true
+      },
+      "errors": [],
+      "warnings": []
+    },
+    "coldchain_storage_pass": {
+      "dataset_id": "coldchain_storage_pass",
+      "status": "passed",
+      "metrics": {
+        "spec_valid": true,
+        "csv_loadable": true,
+        "sample_count": 20,
+        "metadata": {
+          "_parsing_info": {
+            "detected_encoding": "utf-8",
+            "detected_delimiter": ",",
+            "decimal_normalized": true,
+            "original_columns": [
+              "timestamp",
+              "sensor_1",
+              "sensor_2",
+              "sensor_3"
+            ],
+            "original_shape": [
+              20,
+              4
+            ]
+          }
+        },
+        "mean_step_s": 30.0,
+        "median_step_s": 30.0,
+        "min_step_s": 30.0,
+        "max_step_s": 30.0,
+        "duplicate_timestamps": 0,
+        "temperature_columns": [
+          "sensor_2",
+          "sensor_3"
+        ],
+        "temperature_column_count": 2,
+        "duration_seconds": 570.0,
+        "duration_minutes": 9.5,
+        "duration_hours": 0.15833333333333333,
+        "normalization_successful": true,
+        "normalized_sample_count": 20,
+        "expected_outcome": "PASS",
+        "expected_outcome_reasonable": true
+      },
+      "errors": [],
+      "warnings": []
+    },
+    "coldchain_storage_fail": {
+      "dataset_id": "coldchain_storage_fail",
+      "status": "passed",
+      "metrics": {
+        "spec_valid": true,
+        "csv_loadable": true,
+        "sample_count": 20,
+        "metadata": {
+          "_parsing_info": {
+            "detected_encoding": "utf-8",
+            "detected_delimiter": ",",
+            "decimal_normalized": true,
+            "original_columns": [
+              "timestamp",
+              "sensor_1",
+              "sensor_2",
+              "sensor_3"
+            ],
+            "original_shape": [
+              20,
+              4
+            ]
+          }
+        },
+        "mean_step_s": 30.0,
+        "median_step_s": 30.0,
+        "min_step_s": 30.0,
+        "max_step_s": 30.0,
+        "duplicate_timestamps": 0,
+        "temperature_columns": [
+          "sensor_2",
+          "sensor_3"
+        ],
+        "temperature_column_count": 2,
+        "duration_seconds": 570.0,
+        "duration_minutes": 9.5,
+        "duration_hours": 0.15833333333333333,
+        "normalization_successful": true,
+        "normalized_sample_count": 20,
+        "expected_outcome": "FAIL",
+        "expected_outcome_reasonable": true
+      },
+      "errors": [],
+      "warnings": []
+    },
+    "concrete_curing_pass": {
+      "dataset_id": "concrete_curing_pass",
+      "status": "passed",
+      "metrics": {
+        "spec_valid": true,
+        "csv_loadable": true,
+        "sample_count": 51,
+        "metadata": {
+          "_parsing_info": {
+            "detected_encoding": "utf-8",
+            "detected_delimiter": ",",
+            "decimal_normalized": true,
+            "original_columns": [
+              "timestamp",
+              "sensor_1",
+              "sensor_2",
+              "sensor_3"
+            ],
+            "original_shape": [
+              51,
+              4
+            ]
+          }
+        },
+        "mean_step_s": 30.0,
+        "median_step_s": 30.0,
+        "min_step_s": 30.0,
+        "max_step_s": 30.0,
+        "duplicate_timestamps": 0,
+        "temperature_columns": [
+          "sensor_2",
+          "sensor_3"
+        ],
+        "temperature_column_count": 2,
+        "duration_seconds": 1500.0,
+        "duration_minutes": 25.0,
+        "duration_hours": 0.4166666666666667,
+        "normalization_successful": true,
+        "normalized_sample_count": 51,
+        "expected_outcome": "PASS",
+        "expected_outcome_reasonable": true
+      },
+      "errors": [],
+      "warnings": []
+    },
+    "concrete_curing_fail": {
+      "dataset_id": "concrete_curing_fail",
+      "status": "passed",
+      "metrics": {
+        "spec_valid": true,
+        "csv_loadable": true,
+        "sample_count": 51,
+        "metadata": {
+          "_parsing_info": {
+            "detected_encoding": "utf-8",
+            "detected_delimiter": ",",
+            "decimal_normalized": true,
+            "original_columns": [
+              "timestamp",
+              "sensor_1",
+              "sensor_2",
+              "sensor_3"
+            ],
+            "original_shape": [
+              51,
+              4
+            ]
+          }
+        },
+        "mean_step_s": 30.0,
+        "median_step_s": 30.0,
+        "min_step_s": 30.0,
+        "max_step_s": 30.0,
+        "duplicate_timestamps": 0,
+        "temperature_columns": [
+          "sensor_3"
+        ],
+        "temperature_column_count": 1,
+        "temp_min": -13.6,
+        "temp_max": -0.6,
+        "temp_mean": -7.2799999999999985,
+        "temp_std": 3.757215280851853,
+        "temp_missing_count": 26,
+        "likely_units": "celsius_or_other",
+        "duration_seconds": 1500.0,
+        "duration_minutes": 25.0,
+        "duration_hours": 0.4166666666666667,
+        "normalization_successful": true,
+        "normalized_sample_count": 51,
+        "expected_outcome": "FAIL",
+        "expected_outcome_reasonable": true
+      },
+      "errors": [],
+      "warnings": []
+    },
+    "sterile_processing_pass": {
+      "dataset_id": "sterile_processing_pass",
+      "status": "passed",
+      "metrics": {
+        "spec_valid": true,
+        "csv_loadable": true,
+        "sample_count": 20,
+        "metadata": {
+          "_parsing_info": {
+            "detected_encoding": "utf-8",
+            "detected_delimiter": ",",
+            "decimal_normalized": true,
+            "original_columns": [
+              "timestamp",
+              "sensor_1",
+              "sensor_2",
+              "sensor_3",
+              "eto_ppm",
+              "humidity_rh"
+            ],
+            "original_shape": [
+              20,
+              6
+            ]
+          }
+        },
+        "mean_step_s": 10.0,
+        "median_step_s": 10.0,
+        "min_step_s": 10.0,
+        "max_step_s": 10.0,
+        "duplicate_timestamps": 0,
+        "temperature_columns": [
+          "sensor_2",
+          "sensor_3",
+          "eto_ppm",
+          "humidity_rh"
+        ],
+        "temperature_column_count": 4,
+        "temp_min": 45.2,
+        "temp_max": 63.5,
+        "temp_mean": 59.714999999999996,
+        "temp_std": 4.607462482355746,
+        "temp_missing_count": 0,
+        "likely_units": "celsius",
+        "duration_seconds": 190.0,
+        "duration_minutes": 3.1666666666666665,
+        "duration_hours": 0.05277777777777778,
+        "normalization_successful": true,
+        "normalized_sample_count": 20,
+        "expected_outcome": "PASS",
+        "expected_outcome_reasonable": true
+      },
+      "errors": [],
+      "warnings": []
+    },
+    "sterile_processing_fail": {
+      "dataset_id": "sterile_processing_fail",
+      "status": "passed",
+      "metrics": {
+        "spec_valid": true,
+        "csv_loadable": true,
+        "sample_count": 20,
+        "metadata": {
+          "_parsing_info": {
+            "detected_encoding": "utf-8",
+            "detected_delimiter": ",",
+            "decimal_normalized": true,
+            "original_columns": [
+              "timestamp",
+              "sensor_1",
+              "sensor_2",
+              "sensor_3",
+              "eto_ppm",
+              "humidity_rh"
+            ],
+            "original_shape": [
+              20,
+              6
+            ]
+          }
+        },
+        "mean_step_s": 10.0,
+        "median_step_s": 10.0,
+        "min_step_s": 10.0,
+        "max_step_s": 10.0,
+        "duplicate_timestamps": 0,
+        "temperature_columns": [
+          "sensor_2",
+          "sensor_3",
+          "eto_ppm",
+          "humidity_rh"
+        ],
+        "temperature_column_count": 4,
+        "temp_min": 0.1,
+        "temp_max": 45.2,
+        "temp_mean": 15.745,
+        "temp_std": 12.55604174135011,
+        "temp_missing_count": 0,
+        "likely_units": "celsius_or_other",
+        "duration_seconds": 190.0,
+        "duration_minutes": 3.1666666666666665,
+        "duration_hours": 0.05277777777777778,
+        "normalization_successful": true,
+        "normalized_sample_count": 20,
+        "expected_outcome": "FAIL",
+        "expected_outcome_reasonable": true
+      },
+      "errors": [],
+      "warnings": []
+    }
+  },
+  "errors": []
+}

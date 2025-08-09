@@ -26,6 +26,7 @@ import logging
 from core.models import SpecV1, DecisionResult, SensorMode
 from core.sensor_utils import combine_sensor_readings
 from core.temperature_utils import detect_temperature_columns, DecisionError
+from core.errors import RequiredSignalMissingError
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +44,7 @@ def celsius_to_fahrenheit(temp_c: float) -> float:
 def find_temperature_time(temperature_series: pd.Series, time_series: pd.Series, 
                          target_temp_C: float, direction: str = 'cooling') -> Optional[float]:
     """
-    Find the time when temperature reaches a target during cooling or heating.
+    Find the time when temperature reaches a target during cooling or heating using linear interpolation.
     
     Args:
         temperature_series: Temperature values in Celsius
@@ -54,28 +55,39 @@ def find_temperature_time(temperature_series: pd.Series, time_series: pd.Series,
     Returns:
         Time in seconds from start when target is reached, or None if never reached
     """
-    if direction == 'cooling':
-        # Find first time temperature drops to or below target
-        below_target = temperature_series <= target_temp_C
-        first_below_idx = below_target.idxmax() if below_target.any() else None
-        
-        if first_below_idx is None or not below_target.iloc[first_below_idx]:
-            return None
-    else:  # heating
-        # Find first time temperature rises to or above target
-        above_target = temperature_series >= target_temp_C
-        first_above_idx = above_target.idxmax() if above_target.any() else None
-        
-        if first_above_idx is None or not above_target.iloc[first_above_idx]:
-            return None
-        first_below_idx = first_above_idx
-    
-    # Calculate time from start
     start_time = time_series.iloc[0]
-    target_time = time_series.iloc[first_below_idx]
-    time_to_target = (target_time - start_time).total_seconds()
     
-    return time_to_target
+    for i in range(len(temperature_series) - 1):
+        temp_current = temperature_series.iloc[i]
+        temp_next = temperature_series.iloc[i + 1]
+        time_current = time_series.iloc[i]
+        time_next = time_series.iloc[i + 1]
+        
+        if direction == 'cooling':
+            # Check if we cross the target going downward - use proper linear interpolation
+            if temp_current >= target_temp_C >= temp_next:
+                # Linear interpolation to find exact crossing time
+                if abs(temp_current - temp_next) < 1e-10:  # Avoid division by zero
+                    crossing_time = time_current
+                else:
+                    # Linear interpolation: time = t1 + (target - temp1) * (t2 - t1) / (temp2 - temp1)
+                    time_fraction = (target_temp_C - temp_current) / (temp_next - temp_current)
+                    crossing_time = time_current + pd.Timedelta(seconds=(time_next - time_current).total_seconds() * time_fraction)
+                
+                return (crossing_time - start_time).total_seconds()
+        else:  # heating
+            # Check if we cross the target going upward - use proper linear interpolation
+            if temp_current <= target_temp_C <= temp_next:
+                # Linear interpolation to find exact crossing time
+                if abs(temp_current - temp_next) < 1e-10:  # Avoid division by zero
+                    crossing_time = time_current
+                else:
+                    time_fraction = (target_temp_C - temp_current) / (temp_next - temp_current)
+                    crossing_time = time_current + pd.Timedelta(seconds=(time_next - time_current).total_seconds() * time_fraction)
+                
+                return (crossing_time - start_time).total_seconds()
+    
+    return None
 
 
 def validate_haccp_cooling_phases(temperature_series: pd.Series, time_series: pd.Series) -> Dict[str, Any]:
@@ -119,7 +131,8 @@ def validate_haccp_cooling_phases(temperature_series: pd.Series, time_series: pd
     }
     
     # Validate starting temperature (must be at or above 135°F)
-    if temperature_series.iloc[0] < temp_135f_c:
+    # Use small tolerance for floating point comparison
+    if temperature_series.iloc[0] < (temp_135f_c - 0.1):
         metrics['reasons'].append(f"Starting temperature {celsius_to_fahrenheit(temperature_series.iloc[0]):.1f}°F < 135°F requirement")
         metrics['start_temp_valid'] = False
     else:
@@ -138,7 +151,7 @@ def validate_haccp_cooling_phases(temperature_series: pd.Series, time_series: pd
         if time_to_70f <= PHASE_1_LIMIT_S:
             metrics['phase_1_pass'] = True
         else:
-            metrics['reasons'].append(f"Phase 1 cooling took {time_to_70f/3600:.1f}h > 2h limit (135°F to 70°F)")
+            metrics['reasons'].append(f"exceeded 2h to 70°F (Phase 1 cooling took {time_to_70f/3600:.1f}h)")
     else:
         metrics['reasons'].append("Temperature never reached 70°F (Phase 1 target not achieved)")
     
@@ -149,7 +162,7 @@ def validate_haccp_cooling_phases(temperature_series: pd.Series, time_series: pd
         if time_to_41f <= PHASE_2_LIMIT_S:
             metrics['phase_2_pass'] = True
         else:
-            metrics['reasons'].append(f"Phase 2 cooling took {time_to_41f/3600:.1f}h > 6h limit (135°F to 41°F)")
+            metrics['reasons'].append(f"exceeded 6h to 41°F (Phase 2 cooling took {time_to_41f/3600:.1f}h)")
     else:
         metrics['reasons'].append("Temperature never reached 41°F (Phase 2 target not achieved)")
     
@@ -199,10 +212,17 @@ def validate_haccp_cooling(normalized_df: pd.DataFrame, spec: SpecV1) -> Decisio
         if not pd.api.types.is_datetime64_any_dtype(normalized_df[timestamp_col]):
             normalized_df[timestamp_col] = pd.to_datetime(normalized_df[timestamp_col])
         
-        # Detect temperature columns
+        # Detect temperature columns - this must be done first before any other processing
+        # For HACCP, we require columns with explicit temperature naming (temp|temperature|°f|°c)
         temp_columns = detect_temperature_columns(normalized_df)
         if not temp_columns:
-            raise DecisionError("No temperature columns found in normalized data")
+            # Get available columns (excluding timestamp)
+            available_cols = [col for col in normalized_df.columns if col != timestamp_col]
+            raise RequiredSignalMissingError(
+                missing_signals=["temperature"],
+                available_signals=available_cols,
+                industry="haccp"
+            )
         
         # Get sensor selection configuration
         sensor_selection = spec.sensor_selection
@@ -238,19 +258,31 @@ def validate_haccp_cooling(normalized_df: pd.DataFrame, spec: SpecV1) -> Decisio
                 max_temp_C=0.0,
                 min_temp_C=0.0,
                 reasons=reasons,
-                warnings=warnings
+                warnings=warnings,
+                industry=spec.industry
             )
         
         # Validate HACCP cooling phases
         cooling_metrics = validate_haccp_cooling_phases(combined_temp, normalized_df[timestamp_col])
         
-        # Determine overall pass/fail status
+        # Determine overall pass/fail status - must pass ALL criteria
+        # If ANY criteria fails, the overall result is FAIL
         pass_decision = (
             cooling_metrics['start_temp_valid'] and
             cooling_metrics['cooling_rate_valid'] and 
             cooling_metrics['phase_1_pass'] and
-            cooling_metrics['phase_2_pass']
+            cooling_metrics['phase_2_pass'] and
+            len(cooling_metrics['reasons']) == 0  # No failure reasons
         )
+        
+        # Explicitly ensure that if any failure condition exists, we return FAIL
+        # This prevents any accidental PASS when cooling violations occur
+        if (not cooling_metrics['start_temp_valid'] or 
+            not cooling_metrics['cooling_rate_valid'] or
+            not cooling_metrics['phase_1_pass'] or 
+            not cooling_metrics['phase_2_pass'] or
+            cooling_metrics['reasons']):  # Any reasons in cooling_metrics indicates failure
+            pass_decision = False
         
         # Add success reasons if passed
         if pass_decision:
@@ -285,6 +317,7 @@ def validate_haccp_cooling(normalized_df: pd.DataFrame, spec: SpecV1) -> Decisio
         
         return DecisionResult(
             pass_=pass_decision,
+            status="PASS" if pass_decision else "FAIL",
             job_id=spec.job.job_id,
             target_temp_C=target_temp_c,  # 41°F target
             conservative_threshold_C=target_temp_c,  # No uncertainty adjustment for HACCP
@@ -293,9 +326,13 @@ def validate_haccp_cooling(normalized_df: pd.DataFrame, spec: SpecV1) -> Decisio
             max_temp_C=cooling_metrics['max_temp_C'],
             min_temp_C=cooling_metrics['min_temp_C'],
             reasons=reasons,
-            warnings=warnings
+            warnings=warnings,
+            industry=spec.industry
         )
     
+    except RequiredSignalMissingError:
+        # Re-raise RequiredSignalMissingError as-is for proper handling
+        raise
     except Exception as e:
         logger.error(f"HACCP cooling validation failed: {e}")
         raise DecisionError(f"HACCP cooling validation failed: {str(e)}")

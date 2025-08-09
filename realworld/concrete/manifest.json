@@ -1,0 +1,61 @@
+{
+  "dataset_collection": "concrete_curing_monitoring",
+  "created": "2024-08-08T00:00:00Z",
+  "description": "Concrete curing temperature monitoring per ASTM standards",
+  "standards": [
+    "ASTM C31/C31M",
+    "ASTM C511",
+    "ASTM C1074"
+  ],
+  "files": [
+    {
+      "filename": "raw/astm_c31_sample_curing.csv",
+      "description": "Concrete test specimen curing at controlled temperature with maturity tracking",
+      "format": "CSV",
+      "size_bytes": 3008,
+      "sha256": "95576fe00bdddf104cab103737990c747cf7362079f7fbd1f9173b940d3a322f",
+      "rows": 49,
+      "columns": 4,
+      "temperature_range": "23.4-24.2°C",
+      "duration_hours": 24,
+      "validated": true,
+      "source_type": "representative_data",
+      "compliance_standards": ["ASTM C31", "ASTM C511"]
+    }
+  ],
+  "metadata": {
+    "industry": "construction",
+    "process_type": "concrete_curing",
+    "critical_parameters": [
+      "temperature",
+      "humidity",
+      "maturity_index",
+      "curing_duration"
+    ],
+    "validation_requirements": {
+      "temperature_accuracy": "±1°C",
+      "humidity_minimum": "50% RH",
+      "logging_interval": "15 minutes",
+      "calibration_frequency": "quarterly"
+    }
+  },
+  "curing_requirements": {
+    "temperature_range": "23°C ± 2°C (73.5°F ± 3.5°F)",
+    "humidity_minimum": "50% RH",
+    "high_strength_range": "20-25.5°C for ≥6000 psi designs",
+    "initial_curing_period": "24-48 hours critical",
+    "surface_moisture": "continuous water contact required"
+  },
+  "maturity_calculation": {
+    "formula": "Maturity = Σ(T - T₀) × Δt",
+    "datum_temperature": "-10°C for OPC",
+    "temperature_time_factor": "cumulative degree-hours",
+    "strength_correlation": "per ASTM C1074"
+  },
+  "quality_assurance": {
+    "data_integrity": "SHA256 verified",
+    "format_validation": "CSV structure confirmed",
+    "content_validation": "Temperature within ASTM C31 specifications",
+    "completeness": "24-hour initial curing period captured"
+  }
+}

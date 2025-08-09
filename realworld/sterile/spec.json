@@ -1,0 +1,32 @@
+{
+  "version": "1.0",
+  "created": "2025-08-08T00:00:00Z",
+  "industry": "sterile",
+  "name": "Dry Heat Sterilization Validation",
+  "description": "Dry heat sterilization validation per ISO 17665",
+  "data_requirements": {
+    "required_columns": ["timestamp", "temperature_celsius"],
+    "optional_columns": ["chamber_pressure", "air_flow", "load_probe", "notes"],
+    "max_sample_period_s": 60,
+    "allowed_gaps_s": 180,
+    "min_samples": 20
+  },
+  "target_conditions": {
+    "temperature": {
+      "value": 170.0,
+      "unit": "celsius",
+      "tolerance": 2.0
+    },
+    "minimum_hold_time_s": 3600,
+    "hysteresis_c": 2.0
+  },
+  "pass_criteria": {
+    "hold_calculation": "continuous",
+    "temperature_uniformity": true,
+    "bioburden_reduction": "6_log"
+  },
+  "sensor_uncertainty": {
+    "temperature_c": 1.0
+  },
+  "validation_standard": "ISO 17665:2024"
+}

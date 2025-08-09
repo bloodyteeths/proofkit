@@ -1,6 +1,7 @@
 {% extends "modern_base.html" %}
 
 {% block title %}EtO Sterilization Validation - Document gas sterilization cycles without spreadsheet pain{% endblock %}
+{% block description %}Professional EtO sterilization validation for medical devices. Document gas sterilization cycles with time-in-chamber, humidity, and gas-flow monitoring.{% endblock %}
 
 {% block content %}
 <!-- Hero Section -->
@@ -36,10 +37,14 @@
 
 <!-- Badge Strip -->
 <section class="badge-section" style="margin: -2rem 0 4rem 0;">
-    {% include 'components/badge_strip.html' with badges=[
-        {src: '/static/badges/iso-13485.svg', alt: 'ISO 13485 Medical Devices', href: 'https://www.iso.org/standard/59752.html'},
-        {src: '/static/badges/fda-21cfr-part11.svg', alt: 'FDA 21 CFR Part 11 Electronic Records', href: 'https://www.fda.gov/regulatory-information/search-fda-guidance-documents/part-11-electronic-records-electronic-signatures-scope-and-application'}
-    ] %}
+    <div class="container" style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
+        <a href="https://www.iso.org/standard/59752.html" target="_blank" rel="noopener">
+            <img src="/static/badges/iso-13485.svg" alt="ISO 13485 Medical Devices" style="height: 40px;">
+        </a>
+        <a href="https://www.fda.gov/regulatory-information/search-fda-guidance-documents/part-11-electronic-records-electronic-signatures-scope-and-application" target="_blank" rel="noopener">
+            <img src="/static/badges/fda-21cfr-part11.svg" alt="FDA 21 CFR Part 11 Electronic Records" style="height: 40px;">
+        </a>
+    </div>
 </section>
 
 <!-- Quick Spec Card -->

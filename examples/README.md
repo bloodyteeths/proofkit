@@ -1,25 +1,79 @@
 # ProofKit Examples Directory
 
-This directory contains comprehensive example datasets for testing and demonstrating ProofKit's powder coat cure validation capabilities.
+This directory contains comprehensive example datasets for testing and demonstrating ProofKit's temperature validation capabilities across 5 key industries.
 
-## 📁 File Structure
+## 📁 File Structure by Industry
 
-### ✅ Successful Examples (PASS)
+### 🎨 Powder Coating Industry
+**✅ PASS Examples:**
 - `powder_coat_cure_successful_180c_10min_pass.csv` - Standard automotive cure with clean temperature profile
 - `powder_coat_cure_cumulative_hold_pass_170c_20min.csv` - Large part cure allowing temperature dips
 - `powder_coat_cure_fahrenheit_input_356f_10min_pass.csv` - US automotive data in Fahrenheit units
+- `powder_pass_fixed.csv` - Optimized example with proper ramp rate
 
-### ❌ Failed Examples (FAIL)
+**❌ FAIL Examples:**
 - `powder_coat_cure_insufficient_hold_time_fail.csv` - Temperature reached but inadequate hold time
 - `powder_coat_cure_data_gaps_sensor_disconnect_fail.csv` - Sensor disconnection creating data gaps
 - `powder_coat_cure_slow_ramp_rate_fail.csv` - Excessive time to reach target temperature
 - `powder_coat_cure_sensor_failure_mid_run_fail.csv` - Complete sensor failure during cure
 
-### 📋 Specification Templates
+**📋 Specifications:**
 - `powder_coat_cure_spec_standard_180c_10min.json` - General-purpose cure specification
 - `powder_coat_cure_spec_strict_tolerances_190c_15min.json` - High-precision cure requirements
 - `powder_coat_cure_spec_cumulative_hold_170c_20min.json` - Flexible cure with dip tolerance
 - `powder_coat_cure_spec_fahrenheit_input_356f_10min.json` - Fahrenheit input specification
+- `powder_pass_spec_fixed.json` - Optimized specification
+
+### 🏥 Autoclave Sterilization
+**✅ PASS Examples:**
+- `autoclave_sterilization_pass.csv` - Medical device sterilization at 121°C
+
+**❌ FAIL Examples:**
+- `autoclave_sterilization_fail.csv` - Incomplete steam penetration
+- `autoclave_missing_pressure_indeterminate.csv` - Missing pressure data (INDETERMINATE)
+
+**📋 Specifications:**
+- `autoclave-medical-device-validation.json` - Medical device validation spec
+
+### 🏗️ Concrete Curing
+**✅ PASS Examples:**
+- `concrete_curing_pass.csv` - ASTM C31 compliant curing process
+
+**❌ FAIL Examples:**
+- `concrete_curing_fail.csv` - Temperature runaway exceeding safe limits
+
+**📋 Specifications:**
+- `concrete-curing-astm-c31.json` - ASTM C31 construction standard
+
+### ❄️ Cold Chain Storage
+**✅ PASS Examples:**
+- `coldchain_storage_pass.csv` - Pharmaceutical storage 2-8°C
+
+**❌ FAIL Examples:**
+- `coldchain_storage_fail.csv` - Temperature excursion above safe range
+
+**📋 Specifications:**
+- `coldchain-storage-validation.json` - USP 797 cold storage requirements
+
+### 🍽️ HACCP Food Safety
+**✅ PASS Examples:**
+- `haccp_cooling_pass.csv` - Proper cooling from 135°F to 41°F
+
+**❌ FAIL Examples:**
+- `haccp_cooling_fail.csv` - Slow cooling violating FDA time limits
+
+**📋 Specifications:**
+- `haccp-cooling-validation.json` - FDA Food Code cooling requirements
+
+### 🧪 Sterile Processing
+**✅ PASS Examples:**
+- `sterile_processing_pass.csv` - ISO 17665 steam sterilization
+
+**❌ FAIL Examples:**
+- `sterile_processing_fail.csv` - Inadequate temperature exposure
+
+**📋 Specifications:**
+- `sterile-processing-validation.json` - ISO 17665 sterile processing standard
 
 ### 📦 Generated Outputs
 The `outputs/` directory contains golden reference files:
@@ -136,4 +190,46 @@ For questions about these examples:
 
 ---
 
-*These examples demonstrate ProofKit's comprehensive powder coat cure validation capabilities while providing practical, real-world testing scenarios for quality control applications.*
+## 📋 Data Provenance
+
+### Synthetic Test Data
+**Purpose:** Designed for reliable testing and demonstration
+**Industries:** All 5 industries have synthetic examples
+**Characteristics:**
+- Predictable outcomes (guaranteed PASS/FAIL results)
+- Clean data patterns for educational purposes  
+- Covers common failure modes and edge cases
+- Optimized for automated testing pipelines
+
+**Source Files:**
+- All files copied from `audit/fixtures/` directory
+- Generated using mathematically precise temperature profiles
+- Validated against specification requirements
+- Suitable for CI/CD and regression testing
+
+### Real-World Data Integration
+**Future Enhancement:** Integration with anonymized industrial datasets
+**Target Sources:**
+- Manufacturing quality control systems
+- Laboratory validation processes
+- Regulatory compliance documentation
+- Industry partnership data sharing
+
+**Privacy Protection:**
+- All real-world data will be anonymized
+- Proprietary process parameters will be generalized
+- Company identification will be removed
+- Compliance with data protection regulations
+
+### Data Quality Standards
+**All Examples Meet:**
+- ✅ Schema validation requirements
+- ✅ Temporal consistency checks  
+- ✅ Sensor redundancy principles
+- ✅ Missing data handling protocols
+- ✅ Unit conversion accuracy
+- ✅ Specification compliance verification
+
+---
+
+*These examples demonstrate ProofKit's comprehensive temperature validation capabilities across 5 industries while providing practical, reliable testing scenarios for quality control applications.*

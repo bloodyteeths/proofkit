@@ -28,7 +28,8 @@ import logging
 from core.models import SpecV1, DecisionResult, SensorMode
 from core.sensor_utils import combine_sensor_readings
 from core.temperature_utils import detect_temperature_columns, DecisionError
-from core.decide import calculate_continuous_hold_time
+from core.temperature_utils import calculate_continuous_hold_time
+from core.errors import RequiredSignalMissingError
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +91,17 @@ def calculate_temperature_stability(temperature_series: pd.Series, time_series: 
     Returns:
         Dictionary with temperature stability metrics
     """
+    # Check minimum data points for meaningful stability analysis
+    if len(temperature_series) < 3:
+        return {
+            'max_temp_change_rate_C_per_h': 0.0,
+            'avg_temp_change_rate_C_per_h': 0.0,
+            'temp_stability_violations': 0,
+            'temp_stability_valid': True,
+            'temperature_range_C': float(temperature_series.max() - temperature_series.min()) if len(temperature_series) > 0 else 0.0,
+            'std_deviation_C': float(temperature_series.std()) if len(temperature_series) > 1 else 0.0
+        }
+    
     # Calculate temperature change rates
     time_diff_hours = (time_series.diff().dt.total_seconds() / 3600).fillna(0)
     temp_diff = temperature_series.diff().fillna(0)
@@ -98,13 +110,16 @@ def calculate_temperature_stability(temperature_series: pd.Series, time_series: 
     temp_rate_change = np.abs(temp_diff / time_diff_hours)
     temp_rate_change = temp_rate_change.replace([np.inf, -np.inf], 0)
     
+    # Filter out zero time differences which can cause issues
+    valid_rates = temp_rate_change[temp_rate_change.notna() & (temp_rate_change != np.inf)]
+    
     stability_metrics = {
-        'max_temp_change_rate_C_per_h': float(temp_rate_change.max()),
-        'avg_temp_change_rate_C_per_h': float(temp_rate_change.mean()),
-        'temp_stability_violations': int((temp_rate_change > max_rate_change).sum()),
-        'temp_stability_valid': temp_rate_change.max() <= max_rate_change,
+        'max_temp_change_rate_C_per_h': float(valid_rates.max()) if len(valid_rates) > 0 else 0.0,
+        'avg_temp_change_rate_C_per_h': float(valid_rates.mean()) if len(valid_rates) > 0 else 0.0,
+        'temp_stability_violations': int((valid_rates > max_rate_change).sum()) if len(valid_rates) > 0 else 0,
+        'temp_stability_valid': (valid_rates.max() <= max_rate_change) if len(valid_rates) > 0 else True,
         'temperature_range_C': float(temperature_series.max() - temperature_series.min()),
-        'std_deviation_C': float(temperature_series.std())
+        'std_deviation_C': float(temperature_series.std()) if len(temperature_series) > 1 else 0.0
     }
     
     return stability_metrics
@@ -182,18 +197,24 @@ def validate_concrete_curing_conditions(temperature_series: pd.Series, time_seri
         metrics['reasons'].append(f"Temperature in acceptable range (16-27°C) only {metrics['temp_in_range_pct']:.1f}% of time")
     
     # Validate critical first 24 hours specifically
-    critical_period_end = min(len(temperature_series), 
-                             int(CRITICAL_PERIOD_S / ((time_series.iloc[1] - time_series.iloc[0]).total_seconds())))
-    
-    if critical_period_end > 1:
-        critical_temps = temperature_series.iloc[:critical_period_end]
-        critical_temp_in_range = (critical_temps >= MIN_TEMP_C) & (critical_temps <= MAX_TEMP_C)
-        metrics['critical_temp_in_range_pct'] = float(critical_temp_in_range.mean() * 100)
+    if len(temperature_series) >= 2:
+        sample_interval_s = (time_series.iloc[1] - time_series.iloc[0]).total_seconds()
+        critical_period_end = min(len(temperature_series), 
+                                 int(CRITICAL_PERIOD_S / sample_interval_s))
         
-        if metrics['critical_temp_in_range_pct'] >= 98.0:  # Higher requirement for critical period
-            metrics['critical_period_temp_valid'] = True
+        if critical_period_end > 1:
+            critical_temps = temperature_series.iloc[:critical_period_end]
+            critical_temp_in_range = (critical_temps >= MIN_TEMP_C) & (critical_temps <= MAX_TEMP_C)
+            metrics['critical_temp_in_range_pct'] = float(critical_temp_in_range.mean() * 100)
+            
+            if metrics['critical_temp_in_range_pct'] >= 98.0:  # Higher requirement for critical period
+                metrics['critical_period_temp_valid'] = True
+            else:
+                metrics['reasons'].append(f"Temperature in range only {metrics['critical_temp_in_range_pct']:.1f}% of critical first 24h")
         else:
-            metrics['reasons'].append(f"Temperature in range only {metrics['critical_temp_in_range_pct']:.1f}% of critical first 24h")
+            metrics['reasons'].append("Insufficient data for critical period analysis")
+    else:
+        metrics['reasons'].append("Insufficient data points for critical period analysis")
     
     # Check for temperature violations
     if temperature_series.min() < MIN_TEMP_C:
@@ -226,13 +247,18 @@ def validate_concrete_curing_conditions(temperature_series: pd.Series, time_seri
             metrics['reasons'].append(f"Humidity ≥95%RH only {metrics['humidity_compliance_pct']:.1f}% of time")
         
         # Check critical period humidity
-        if critical_period_end > 1:
-            critical_humidity = humidity_series.iloc[:critical_period_end]
-            critical_humidity_compliant = critical_humidity >= MIN_HUMIDITY_RH
-            critical_humidity_pct = float(critical_humidity_compliant.mean() * 100)
+        if len(temperature_series) >= 2:
+            sample_interval_s = (time_series.iloc[1] - time_series.iloc[0]).total_seconds()
+            critical_period_end = min(len(humidity_series), 
+                                     int(CRITICAL_PERIOD_S / sample_interval_s))
             
-            if critical_humidity_pct < 95.0:
-                metrics['reasons'].append(f"Critical period humidity ≥95%RH only {critical_humidity_pct:.1f}% of first 24h")
+            if critical_period_end > 1:
+                critical_humidity = humidity_series.iloc[:critical_period_end]
+                critical_humidity_compliant = critical_humidity >= MIN_HUMIDITY_RH
+                critical_humidity_pct = float(critical_humidity_compliant.mean() * 100)
+                
+                if critical_humidity_pct < 95.0:
+                    metrics['reasons'].append(f"Critical period humidity ≥95%RH only {critical_humidity_pct:.1f}% of first 24h")
     
     return metrics
 
@@ -260,8 +286,8 @@ def validate_concrete_curing(normalized_df: pd.DataFrame, spec: SpecV1) -> Decis
         if normalized_df.empty:
             raise DecisionError("Normalized DataFrame is empty")
         
-        if len(normalized_df) < 2:
-            raise DecisionError("Insufficient data points for concrete curing analysis")
+        if len(normalized_df) < 5:
+            raise DecisionError("Insufficient data points for concrete curing analysis (minimum 5 required)")
             
         if spec.industry != "concrete":
             raise DecisionError(f"Invalid industry '{spec.industry}' for concrete curing validation")
@@ -275,6 +301,9 @@ def validate_concrete_curing(normalized_df: pd.DataFrame, spec: SpecV1) -> Decis
         
         if timestamp_col is None:
             raise DecisionError("No timestamp column found in normalized data")
+            
+        # Log data characteristics for debugging
+        logger.debug(f"Concrete validation: {len(normalized_df)} data points over {(normalized_df[timestamp_col].iloc[-1] - normalized_df[timestamp_col].iloc[0]).total_seconds()/3600:.1f} hours")
         
         # Ensure timestamps are datetime
         if not pd.api.types.is_datetime64_any_dtype(normalized_df[timestamp_col]):
@@ -283,7 +312,13 @@ def validate_concrete_curing(normalized_df: pd.DataFrame, spec: SpecV1) -> Decis
         # Detect temperature columns
         temp_columns = detect_temperature_columns(normalized_df)
         if not temp_columns:
-            raise DecisionError("No temperature columns found in normalized data")
+            # Get available columns (excluding timestamp)
+            available_cols = [col for col in normalized_df.columns if col != timestamp_col]
+            raise RequiredSignalMissingError(
+                missing_signals=["temperature"],
+                available_signals=available_cols,
+                industry="concrete"
+            )
         
         # Detect humidity columns
         humidity_columns = detect_humidity_columns(normalized_df)
@@ -332,7 +367,8 @@ def validate_concrete_curing(normalized_df: pd.DataFrame, spec: SpecV1) -> Decis
                 max_temp_C=0.0,
                 min_temp_C=0.0,
                 reasons=reasons,
-                warnings=warnings
+                warnings=warnings,
+                industry=spec.industry
             )
         
         # Combine humidity sensor readings if available
@@ -355,25 +391,93 @@ def validate_concrete_curing(normalized_df: pd.DataFrame, spec: SpecV1) -> Decis
             combined_temp, normalized_df[timestamp_col], combined_humidity
         )
 
-        # Enforce required parameters per spec
+        # Enforce required parameters per spec - check early for missing required signals
         require_humidity = bool(getattr(spec, 'parameter_requirements', None) and getattr(spec.parameter_requirements, 'require_humidity', False))
-        if require_humidity and combined_humidity is None:
-            curing_metrics['humidity_valid'] = False
-            curing_metrics['reasons'].append("Humidity data required by specification but not provided")
         
-        # Determine overall pass/fail status
-        pass_decision = (
-            curing_metrics['temperature_range_valid'] and
-            curing_metrics['critical_period_temp_valid'] and
-            curing_metrics['humidity_valid'] and
-            curing_metrics['temperature_stability_valid'] and
-            curing_metrics['curing_duration_adequate']
-        )
-
-        # Determine status with required parameters enforcement
-        status = 'PASS' if pass_decision else 'FAIL'
+        # Check for missing required signals - should return INDETERMINATE
+        missing_signals = []
+        available_signals = list(normalized_df.columns)
+        
         if require_humidity and combined_humidity is None:
+            missing_signals.append("humidity")
+        
+        # If any required signals are missing, return INDETERMINATE
+        if missing_signals:
+            raise RequiredSignalMissingError(
+                missing_signals=missing_signals,
+                available_signals=available_signals,
+                industry="concrete"
+            )
+        
+        # Define 24h window starting at first timestamp (UTC)
+        start_time = normalized_df[timestamp_col].iloc[0]
+        window_24h = start_time + pd.Timedelta(hours=24)
+        
+        # Filter to first 24h window
+        df_24h = normalized_df[normalized_df[timestamp_col] <= window_24h].copy()
+        
+        # Check for insufficient samples in 24h window
+        if len(df_24h) < 10:
             status = 'INDETERMINATE'
+            reasons.append(f"Insufficient samples in 24h window: {len(df_24h)} < 10 required")
+            return DecisionResult(
+                pass_=False,
+                status=status,
+                job_id=spec.job.job_id,
+                target_temp_C=21.5,
+                conservative_threshold_C=16.0,
+                actual_hold_time_s=0.0,
+                required_hold_time_s=spec.spec.hold_time_s,
+                max_temp_C=curing_metrics['max_temp_C'],
+                min_temp_C=curing_metrics['min_temp_C'],
+                reasons=reasons,
+                warnings=warnings,
+                industry=spec.industry,
+                flags=locals().get('flags', {})
+            )
+        
+        # Calculate 24h window compliance
+        samples_meeting_constraints = 0
+        total_samples_24h = len(df_24h)
+        
+        for idx, row in df_24h.iterrows():
+            # Check temperature constraints [16, 27]°C for all temperature sensors
+            temp_values = []
+            for col in temp_columns:
+                if col in row and pd.notna(row[col]):
+                    temp_values.append(row[col])
+            
+            # Check humidity constraint ≥95% if required and available
+            rh_ok = True
+            if require_humidity and combined_humidity is not None:
+                rh_idx = df_24h.index.get_loc(idx)
+                if rh_idx < len(combined_humidity):
+                    rh_value = combined_humidity.iloc[rh_idx]
+                    rh_ok = pd.notna(rh_value) and rh_value >= 95.0
+                else:
+                    rh_ok = False
+            
+            # Sample meets constraints if ALL temps in [16,27]°C AND RH≥95% (if required)
+            if temp_values:
+                all_temp_ok = all(16.0 <= temp <= 27.0 for temp in temp_values)
+                if all_temp_ok and rh_ok:
+                    samples_meeting_constraints += 1
+        
+        # Calculate percentage of samples meeting all constraints in 24h window
+        pct_ok = (samples_meeting_constraints / total_samples_24h) * 100 if total_samples_24h > 0 else 0
+        
+        # Determine status: PASS if ≥95% compliance, FAIL otherwise
+        # At this point required signals are available (would have raised RequiredSignalMissingError above)
+        if pct_ok >= 95.0:
+            status = 'PASS'
+            reasons.append(f"24h window compliance: {pct_ok:.1f}% of samples meet temp ∈ [16,27]°C" + 
+                          (" and RH≥95%" if require_humidity and combined_humidity is not None else ""))
+        else:
+            status = 'FAIL'
+            reasons.append(f"24h window compliance: {pct_ok:.1f}% < 95% required for temp ∈ [16,27]°C" + 
+                          (" and RH≥95%" if require_humidity and combined_humidity is not None else ""))
+        
+        pass_decision = (status == 'PASS')
         
         # Add success reasons if passed
         if pass_decision:
@@ -431,9 +535,13 @@ def validate_concrete_curing(normalized_df: pd.DataFrame, spec: SpecV1) -> Decis
             min_temp_C=curing_metrics['min_temp_C'],
             reasons=reasons,
             warnings=warnings,
+            industry=spec.industry,
             flags=locals().get('flags', {})
         )
     
+    except RequiredSignalMissingError:
+        # Re-raise RequiredSignalMissingError without wrapping
+        raise
     except Exception as e:
         logger.error(f"Concrete curing validation failed: {e}")
         raise DecisionError(f"Concrete curing validation failed: {str(e)}")

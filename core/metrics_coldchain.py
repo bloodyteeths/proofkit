@@ -21,11 +21,13 @@ Example usage:
 
 import pandas as pd
 import numpy as np
+import re
 from typing import List, Tuple, Dict, Any, Optional
 from datetime import datetime, timezone, timedelta
 import logging
 
 from core.models import SpecV1, DecisionResult, SensorMode
+from core.errors import RequiredSignalMissingError
 # Note: This module uses its own combine_sensor_readings due to different parameters
 
 logger = logging.getLogger(__name__)
@@ -48,7 +50,16 @@ def celsius_to_fahrenheit(temp_c: float) -> float:
 
 def detect_temperature_columns(df: pd.DataFrame) -> List[str]:
     """
-    Detect temperature columns in the normalized DataFrame.
+    Detect temperature columns in the normalized DataFrame using robust pattern matching.
+    
+    Accepts temperature column aliases:
+    - temp, temperature: Basic temperature keywords
+    - t[digits]: T1, T2, T3, etc.
+    - probe[digits]: probe1, probe2, etc.
+    - ch[digits]...temp: ch1_temp, ch2temp, etc.
+    - [any]°c, [any]celsius: temp_°c, temperature_celsius, etc.
+    - value, reading: generic sensor value columns
+    - sensor[digits]: sensor1, sensor_1, etc.
     
     Args:
         df: Normalized DataFrame
@@ -57,11 +68,40 @@ def detect_temperature_columns(df: pd.DataFrame) -> List[str]:
         List of column names that appear to be temperature columns
     """
     temp_columns = []
-    for col in df.columns:
-        col_lower = col.lower()
-        if any(keyword in col_lower for keyword in ['temp', 'temperature']):
+    preferred_columns = []
+    
+    # Regex pattern for temperature column detection (case-insensitive)
+    temp_pattern = re.compile(r"\b(temp|temperature|t\d+|probe\d+|ch\d+.*temp|°c|celsius|reading|value|sensor)", re.IGNORECASE)
+    
+    # Check numeric columns only
+    numeric_columns = df.select_dtypes(include=[np.number]).columns
+    
+    if len(numeric_columns) == 0:
+        raise RequiredSignalMissingError(
+            missing_signals=["temperature"],
+            available_signals=list(df.columns)
+        )
+    
+    for col in numeric_columns:
+        if temp_pattern.search(col):
             temp_columns.append(col)
-    return temp_columns
+            
+            # Prefer temp, temperature, or °c columns
+            col_lower = col.lower()
+            if any(keyword in col_lower for keyword in ['temp', 'temperature', '°c']):
+                preferred_columns.append(col)
+    
+    if not temp_columns:
+        raise RequiredSignalMissingError(
+            missing_signals=["temperature"],
+            available_signals=list(df.columns)
+        )
+    
+    # If multiple candidates, prefer temp/temperature/°c
+    if preferred_columns:
+        return preferred_columns  # Return all preferred columns
+    
+    return temp_columns  # Return all matches
 
 
 def combine_sensor_readings(df: pd.DataFrame, temp_columns: List[str], 
@@ -92,15 +132,11 @@ def combine_sensor_readings(df: pd.DataFrame, temp_columns: List[str],
     # Get temperature data
     temp_data = df[temp_columns]
     
-    # Handle sensor combination modes
-    if sensor_mode == SensorMode.AVERAGE:
+    # Handle sensor combination modes using actual enum values
+    if sensor_mode == SensorMode.MEAN_OF_SET:
         return temp_data.mean(axis=1)
-    elif sensor_mode == SensorMode.MINIMUM:
+    elif sensor_mode == SensorMode.MIN_OF_SET:
         return temp_data.min(axis=1)
-    elif sensor_mode == SensorMode.MAXIMUM:
-        return temp_data.max(axis=1)
-    elif sensor_mode == SensorMode.MEDIAN:
-        return temp_data.median(axis=1)
     elif sensor_mode == SensorMode.MAJORITY_OVER_THRESHOLD:
         # Conservative approach: use median if available, otherwise average
         if len(temp_columns) >= 3:
@@ -304,7 +340,8 @@ def calculate_daily_compliance(temperature_series: pd.Series, time_series: pd.Se
     return compliance_metrics
 
 
-def validate_coldchain_storage_conditions(temperature_series: pd.Series, time_series: pd.Series) -> Dict[str, Any]:
+def validate_coldchain_storage_conditions(temperature_series: pd.Series, time_series: pd.Series, 
+                                        min_samples: int = 96) -> Dict[str, Any]:
     """
     Validate cold chain storage conditions according to pharmaceutical standards.
     
@@ -313,10 +350,12 @@ def validate_coldchain_storage_conditions(temperature_series: pd.Series, time_se
     - Daily compliance: ≥95% of samples within range per day
     - Alarm threshold: <30 minutes outside range acceptable
     - Data logging: Continuous monitoring preferred
+    - Min samples: ≥96 samples per 24h for reliable validation
     
     Args:
         temperature_series: Temperature values in Celsius
         time_series: Timestamp values
+        min_samples: Minimum number of samples required for reliable validation (default 96)
         
     Returns:
         Dictionary with cold chain validation results and metrics
@@ -328,12 +367,19 @@ def validate_coldchain_storage_conditions(temperature_series: pd.Series, time_se
     ALARM_THRESHOLD_MINUTES = 30
     MAX_ACCEPTABLE_EXCURSION_TIME_S = 2 * 3600  # 2 hours total per day
     
+    # Handle case where temperature_series might be a DataFrame
+    if isinstance(temperature_series, pd.DataFrame):
+        # If it's a DataFrame, take the mean across columns for metrics
+        temp_values = temperature_series.mean(axis=1)
+    else:
+        temp_values = temperature_series
+    
     metrics = {
-        'start_temp_C': float(temperature_series.iloc[0]),
-        'end_temp_C': float(temperature_series.iloc[-1]),
-        'min_temp_C': float(temperature_series.min()),
-        'max_temp_C': float(temperature_series.max()),
-        'avg_temp_C': float(temperature_series.mean()),
+        'start_temp_C': float(temp_values.iloc[0]),
+        'end_temp_C': float(temp_values.iloc[-1]),
+        'min_temp_C': float(temp_values.min()),
+        'max_temp_C': float(temp_values.max()),
+        'avg_temp_C': float(temp_values.mean()),
         'target_min_temp_C': MIN_TEMP_C,
         'target_max_temp_C': MAX_TEMP_C,
         'total_duration_s': (time_series.iloc[-1] - time_series.iloc[0]).total_seconds(),
@@ -470,10 +516,15 @@ def validate_coldchain_storage(normalized_df: pd.DataFrame, spec: SpecV1) -> Dec
         if not pd.api.types.is_datetime64_any_dtype(normalized_df[timestamp_col]):
             normalized_df[timestamp_col] = pd.to_datetime(normalized_df[timestamp_col])
         
-        # Detect temperature columns
+        # Detect temperature columns - this is the only required signal for coldchain
         temp_columns = detect_temperature_columns(normalized_df)
         if not temp_columns:
-            raise DecisionError("No temperature columns found in normalized data")
+            # Get all available column names (excluding timestamp)
+            available_columns = [col for col in normalized_df.columns if col != timestamp_col]
+            raise RequiredSignalMissingError(
+                missing_signals=["temperature"],
+                available_signals=available_columns
+            )
         
         # Get sensor selection configuration
         sensor_selection = spec.sensor_selection
@@ -509,39 +560,43 @@ def validate_coldchain_storage(normalized_df: pd.DataFrame, spec: SpecV1) -> Dec
                 max_temp_C=0.0,
                 min_temp_C=0.0,
                 reasons=reasons,
-                warnings=warnings
+                warnings=warnings,
+                industry=spec.industry
             )
         
         # Validate cold chain storage conditions
-        storage_metrics = validate_coldchain_storage_conditions(combined_temp, normalized_df[timestamp_col])
+        # Calculate min_samples based on monitoring period (default 96 per 24h)
+        total_duration_s = (normalized_df[timestamp_col].iloc[-1] - normalized_df[timestamp_col].iloc[0]).total_seconds()
+        monitoring_days = total_duration_s / (24 * 3600)
+        min_samples = max(10, int(96 * monitoring_days))  # Scale with monitoring period, minimum 10
         
-        # Determine overall pass/fail status
-        pass_decision = (
-            storage_metrics['temperature_range_valid'] and
-            storage_metrics['daily_compliance_valid'] and
-            storage_metrics['excursion_control_valid'] and
-            storage_metrics['data_logging_adequate'] and
-            storage_metrics['alarm_events_acceptable']
-        )
+        storage_metrics = validate_coldchain_storage_conditions(combined_temp, normalized_df[timestamp_col], min_samples=min_samples)
+        storage_metrics['min_samples'] = min_samples
         
-        # Add success reasons if passed
-        if pass_decision:
-            reasons.append(f"Temperature maintained in cold chain range (2-8°C) for {storage_metrics['overall_compliance_pct']:.1f}% of monitoring period")
-            
-            if storage_metrics['monitoring_days'] >= 1.0:
-                daily_summary = storage_metrics['daily_compliance_summary']
-                reasons.append(f"Daily compliance: {daily_summary['compliant_days']} of {daily_summary['total_days']} days met ≥95% requirement")
-            
-            excursion_summary = storage_metrics['excursion_summary']
-            if excursion_summary['alarm_events'] == 0:
-                reasons.append("No significant temperature excursions detected")
-            else:
-                reasons.append(f"Temperature excursions within acceptable limits: {excursion_summary['alarm_events']} events")
-            
-            reasons.append("Cold chain storage requirements met")
+        # Determine overall pass/fail status based on daily compliance percentage only
+        # Temperature is the only required signal - return PASS/FAIL based on daily % in [2,8]°C range
+        # Use INDETERMINATE only for insufficient data (< min_samples)
+        total_samples = len(combined_temp)
+        min_samples_for_validation = storage_metrics.get('min_samples', 96)  # Default 96 samples/24h
+        
+        if total_samples < min_samples_for_validation:
+            pass_decision = None  # Will handle as INDETERMINATE case
+            reasons.append(f"Insufficient data points for reliable cold chain validation: {total_samples} < {min_samples_for_validation} required")
+        elif storage_metrics['overall_compliance_pct'] >= 95.0:
+            pass_decision = True
         else:
-            # Add failure reasons
-            reasons.extend(storage_metrics['reasons'])
+            pass_decision = False
+        
+        # Add success/failure reasons
+        if pass_decision is True:
+            reasons.clear()  # Clear any previous reasons
+            reasons.append(f"Temperature maintained in cold chain range (2-8°C) for {storage_metrics['overall_compliance_pct']:.1f}% of monitoring period (≥95% required)")
+            reasons.append("Cold chain storage requirements met")
+        elif pass_decision is False:
+            reasons.clear()  # Clear any previous reasons
+            reasons.append(f"Temperature compliance {storage_metrics['overall_compliance_pct']:.1f}% below 95% requirement")
+            reasons.append("Cold chain storage requirements not met")
+        # If pass_decision is None, keep existing insufficient data reason
         
         # Check data quality warnings
         monitoring_days = storage_metrics['monitoring_days']
@@ -566,6 +621,11 @@ def validate_coldchain_storage(normalized_df: pd.DataFrame, spec: SpecV1) -> Dec
             time_in_range = temp_in_range * time_diffs
             actual_hold_time_s = float(time_in_range.sum())
         
+        # Handle INDETERMINATE case (insufficient data)
+        if pass_decision is None:
+            # Return INDETERMINATE by raising an exception that should be caught and handled
+            raise DecisionError("Insufficient data for cold chain validation")
+        
         return DecisionResult(
             pass_=pass_decision,
             job_id=spec.job.job_id,
@@ -576,9 +636,60 @@ def validate_coldchain_storage(normalized_df: pd.DataFrame, spec: SpecV1) -> Dec
             max_temp_C=storage_metrics['max_temp_C'],
             min_temp_C=storage_metrics['min_temp_C'],
             reasons=reasons,
-            warnings=warnings
+            warnings=warnings,
+            industry=spec.industry
         )
     
+    except RequiredSignalMissingError as e:
+        # Re-raise RequiredSignalMissingError without modification (preserves ERROR status)
+        raise e
+    except DecisionError as e:
+        # Re-raise DecisionError without modification (preserves INDETERMINATE cases)
+        raise e
     except Exception as e:
         logger.error(f"Cold chain storage validation failed: {e}")
         raise DecisionError(f"Cold chain storage validation failed: {str(e)}")
+
+
+def analyze_coldchain(df: pd.DataFrame, target_min: float = 2.0, target_max: float = 8.0) -> Dict[str, Any]:
+    """
+    Simple cold chain analysis function for testing temperature column detection and pass/fail logic.
+    
+    Daily % in [2,8]°C → PASS/FAIL (not INDET)
+    
+    Args:
+        df: DataFrame with temperature data
+        target_min: Minimum acceptable temperature (default 2.0°C)
+        target_max: Maximum acceptable temperature (default 8.0°C)
+        
+    Returns:
+        Dictionary with analysis results including temp_column and status
+        
+    Raises:
+        RequiredSignalMissingError: If no temperature columns found
+    """
+    # Detect temperature columns
+    temp_columns = detect_temperature_columns(df)
+    temp_column = temp_columns[0]  # Use first detected column
+    
+    # Get temperature data
+    temp_data = df[temp_column]
+    
+    # Calculate daily percentage within range
+    in_range = (temp_data >= target_min) & (temp_data <= target_max)
+    daily_percentage = (in_range.sum() / len(temp_data)) * 100
+    
+    # Determine status: Daily % in [2,8]°C → PASS/FAIL (not INDET)
+    # PASS if all temperatures in range, FAIL otherwise
+    if daily_percentage == 100.0:
+        status = 'PASS'
+    else:
+        status = 'FAIL'
+    
+    return {
+        'temp_column': temp_column,
+        'status': status,
+        'daily_percentage': daily_percentage,
+        'in_range_count': int(in_range.sum()),
+        'total_count': len(temp_data)
+    }

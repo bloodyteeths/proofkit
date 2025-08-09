@@ -1,0 +1,600 @@
+{
+  "timestamp": "2025-08-08T19:58:08.026917",
+  "total_tests": 19,
+  "passed_tests": 11,
+  "failed_tests": 6,
+  "error_tests": 4,
+  "total_time_ms": 95.06702423095703,
+  "industries_tested": [
+    "autoclave",
+    "coldchain",
+    "concrete",
+    "haccp",
+    "powder",
+    "sterile"
+  ],
+  "results": [
+    {
+      "test_case": {
+        "industry": "autoclave",
+        "test_type": "fail",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/autoclave/fail.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/autoclave/fail.json",
+        "expected_result": "FAIL",
+        "description": "Clear failing case not meeting hold time"
+      },
+      "success": true,
+      "decision": "FAIL",
+      "error_message": null,
+      "execution_time_ms": 16.36981964111328,
+      "decision_data": {
+        "pass": false,
+        "status": "FAIL",
+        "industry": "autoclave",
+        "job_id": "audit_autoclave_fail",
+        "target_temp_C": 121.1,
+        "conservative_threshold_C": 119.0,
+        "actual_hold_time_s": 170.0,
+        "required_hold_time_s": 900,
+        "max_temp_C": 119.7,
+        "min_temp_C": 24.8,
+        "reasons": [
+          "Fo value 2.3 < 12.0 minimum requirement",
+          "Sterilization hold time 2.8min < 15.0min requirement",
+          "Pressure below 15.0 psi for 5.4% of cycle"
+        ],
+        "warnings": [],
+        "flags": {}
+      },
+      "hash_signature": "87a7db4e90243da2"
+    },
+    {
+      "test_case": {
+        "industry": "autoclave",
+        "test_type": "pass",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/autoclave/pass.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/autoclave/pass.json",
+        "expected_result": "PASS",
+        "description": "Clear passing case meeting all requirements"
+      },
+      "success": false,
+      "decision": "FAIL",
+      "error_message": null,
+      "execution_time_ms": 5.388975143432617,
+      "decision_data": {
+        "pass": false,
+        "status": "FAIL",
+        "industry": "autoclave",
+        "job_id": "audit_autoclave_pass",
+        "target_temp_C": 121.1,
+        "conservative_threshold_C": 119.0,
+        "actual_hold_time_s": 570.0,
+        "required_hold_time_s": 900,
+        "max_temp_C": 121.9,
+        "min_temp_C": 24.8,
+        "reasons": [
+          "Fo value 7.6 < 12.0 minimum requirement",
+          "Sterilization hold time 9.5min < 15.0min requirement"
+        ],
+        "warnings": [],
+        "flags": {}
+      },
+      "hash_signature": "011e92e3826fe72c"
+    },
+    {
+      "test_case": {
+        "industry": "coldchain",
+        "test_type": "fail",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/coldchain/fail.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/coldchain/fail.json",
+        "expected_result": "FAIL",
+        "description": "Clear failing case not meeting hold time"
+      },
+      "success": false,
+      "decision": "PASS",
+      "error_message": null,
+      "execution_time_ms": 3.2939910888671875,
+      "decision_data": {
+        "pass": false,
+        "status": "PASS",
+        "industry": "coldchain",
+        "job_id": "audit_coldchain_fail",
+        "target_temp_C": 5.0,
+        "conservative_threshold_C": 2.0,
+        "actual_hold_time_s": 0.0,
+        "required_hold_time_s": 300,
+        "max_temp_C": 0.0,
+        "min_temp_C": 0.0,
+        "reasons": [
+          "Temperature sensor combination failed: Only 1 sensors available, 2 required"
+        ],
+        "warnings": [],
+        "flags": {}
+      },
+      "hash_signature": "1a30b85a761c228a"
+    },
+    {
+      "test_case": {
+        "industry": "coldchain",
+        "test_type": "pass",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/coldchain/pass.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/coldchain/pass.json",
+        "expected_result": "PASS",
+        "description": "Clear passing case meeting all requirements"
+      },
+      "success": true,
+      "decision": "PASS",
+      "error_message": null,
+      "execution_time_ms": 3.1042098999023438,
+      "decision_data": {
+        "pass": false,
+        "status": "PASS",
+        "industry": "coldchain",
+        "job_id": "audit_coldchain_pass",
+        "target_temp_C": 5.0,
+        "conservative_threshold_C": 2.0,
+        "actual_hold_time_s": 0.0,
+        "required_hold_time_s": 300,
+        "max_temp_C": 0.0,
+        "min_temp_C": 0.0,
+        "reasons": [
+          "Temperature sensor combination failed: Only 1 sensors available, 2 required"
+        ],
+        "warnings": [],
+        "flags": {}
+      },
+      "hash_signature": "3bcf812a5542ee41"
+    },
+    {
+      "test_case": {
+        "industry": "concrete",
+        "test_type": "fail",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/concrete/fail.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/concrete/fail.json",
+        "expected_result": "FAIL",
+        "description": "Clear failing case not meeting hold time"
+      },
+      "success": true,
+      "decision": "FAIL",
+      "error_message": null,
+      "execution_time_ms": 5.079746246337891,
+      "decision_data": {
+        "pass": false,
+        "status": "FAIL",
+        "industry": "concrete",
+        "job_id": "audit_concrete_fail",
+        "target_temp_C": 21.5,
+        "conservative_threshold_C": 16.0,
+        "actual_hold_time_s": 60.0,
+        "required_hold_time_s": 172800,
+        "max_temp_C": 18.400000000000002,
+        "min_temp_C": -13.9,
+        "reasons": [
+          "Curing monitoring period 0.4h < 24h minimum requirement",
+          "Temperature in acceptable range (16-27\u00b0C) only 7.8% of time",
+          "Temperature in range only 7.8% of critical first 24h",
+          "Temperature below 16.0\u00b0C detected in 47 samples",
+          "Excessive temperature change rate: 948.0\u00b0C/h > 5.0\u00b0C/h limit"
+        ],
+        "warnings": [
+          "No humidity sensors detected - validation will proceed without humidity monitoring",
+          "Monitoring period (0.0 days) shorter than recommended 24h minimum",
+          "Large temperature variation (32.3\u00b0C) may affect curing quality",
+          "Average temperature (1.0\u00b0C) on lower end - may slow curing process"
+        ],
+        "flags": {
+          "fallback_used": true
+        }
+      },
+      "hash_signature": "1b6da7e8076ab576"
+    },
+    {
+      "test_case": {
+        "industry": "concrete",
+        "test_type": "pass",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/concrete/pass.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/concrete/pass.json",
+        "expected_result": "PASS",
+        "description": "Clear passing case meeting all requirements"
+      },
+      "success": false,
+      "decision": "FAIL",
+      "error_message": null,
+      "execution_time_ms": 3.8909912109375,
+      "decision_data": {
+        "pass": false,
+        "status": "FAIL",
+        "industry": "concrete",
+        "job_id": "audit_concrete_pass",
+        "target_temp_C": 21.5,
+        "conservative_threshold_C": 16.0,
+        "actual_hold_time_s": 1500.0,
+        "required_hold_time_s": 172800,
+        "max_temp_C": 22.833333333333332,
+        "min_temp_C": 22.133333333333336,
+        "reasons": [
+          "Curing monitoring period 0.4h < 24h minimum requirement",
+          "Excessive temperature change rate: 84.0\u00b0C/h > 5.0\u00b0C/h limit"
+        ],
+        "warnings": [
+          "No humidity sensors detected - validation will proceed without humidity monitoring",
+          "Monitoring period (0.0 days) shorter than recommended 24h minimum"
+        ],
+        "flags": {
+          "fallback_used": true
+        }
+      },
+      "hash_signature": "73f77d3077175b47"
+    },
+    {
+      "test_case": {
+        "industry": "haccp",
+        "test_type": "borderline",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/haccp/borderline.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/haccp/borderline.json",
+        "expected_result": null,
+        "description": "Edge case near threshold boundaries"
+      },
+      "success": true,
+      "decision": "PASS",
+      "error_message": null,
+      "execution_time_ms": 5.967140197753906,
+      "decision_data": {
+        "pass": false,
+        "status": "PASS",
+        "industry": "haccp",
+        "job_id": "audit_haccp_borderline",
+        "target_temp_C": 5.0,
+        "conservative_threshold_C": 5.0,
+        "actual_hold_time_s": 0.0,
+        "required_hold_time_s": 7200,
+        "max_temp_C": 58.19520219289882,
+        "min_temp_C": 25.003668294548106,
+        "reasons": [
+          "Starting temperature 77.0\u00b0F < 135\u00b0F requirement",
+          "Temperature never reached 70\u00b0F (Phase 1 target not achieved)",
+          "Temperature never reached 41\u00b0F (Phase 2 target not achieved)"
+        ],
+        "warnings": [],
+        "flags": {}
+      },
+      "hash_signature": "2b5bd3a5a373525a"
+    },
+    {
+      "test_case": {
+        "industry": "haccp",
+        "test_type": "fail",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/haccp/fail.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/haccp/fail.json",
+        "expected_result": "FAIL",
+        "description": "Clear failing case not meeting hold time"
+      },
+      "success": false,
+      "decision": "PASS",
+      "error_message": null,
+      "execution_time_ms": 6.0977935791015625,
+      "decision_data": {
+        "pass": false,
+        "status": "PASS",
+        "industry": "haccp",
+        "job_id": "audit_haccp_fail",
+        "target_temp_C": 5.0,
+        "conservative_threshold_C": 5.0,
+        "actual_hold_time_s": 0.0,
+        "required_hold_time_s": 7200,
+        "max_temp_C": 55.23169445679307,
+        "min_temp_C": 24.892405982403243,
+        "reasons": [
+          "Starting temperature 76.8\u00b0F < 135\u00b0F requirement",
+          "Temperature never reached 70\u00b0F (Phase 1 target not achieved)",
+          "Temperature never reached 41\u00b0F (Phase 2 target not achieved)"
+        ],
+        "warnings": [],
+        "flags": {}
+      },
+      "hash_signature": "fdc0a71b7d24c491"
+    },
+    {
+      "test_case": {
+        "industry": "haccp",
+        "test_type": "missing_required",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/haccp/missing_required.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/haccp/missing_required.json",
+        "expected_result": "ERROR",
+        "description": "Missing required sensors"
+      },
+      "success": false,
+      "decision": "PASS",
+      "error_message": null,
+      "execution_time_ms": 6.2122344970703125,
+      "decision_data": {
+        "pass": false,
+        "status": "PASS",
+        "industry": "haccp",
+        "job_id": "audit_haccp_missing_required",
+        "target_temp_C": 5.0,
+        "conservative_threshold_C": 5.0,
+        "actual_hold_time_s": 0.0,
+        "required_hold_time_s": 7200,
+        "max_temp_C": 60.394827856449076,
+        "min_temp_C": 24.9581990562409,
+        "reasons": [
+          "Starting temperature 76.9\u00b0F < 135\u00b0F requirement",
+          "Temperature never reached 70\u00b0F (Phase 1 target not achieved)",
+          "Temperature never reached 41\u00b0F (Phase 2 target not achieved)"
+        ],
+        "warnings": [],
+        "flags": {}
+      },
+      "hash_signature": "a58c0a5745a3d7c2"
+    },
+    {
+      "test_case": {
+        "industry": "haccp",
+        "test_type": "pass",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/haccp/pass.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/haccp/pass.json",
+        "expected_result": "PASS",
+        "description": "Clear passing case meeting all requirements"
+      },
+      "success": true,
+      "decision": "PASS",
+      "error_message": null,
+      "execution_time_ms": 6.8569183349609375,
+      "decision_data": {
+        "pass": false,
+        "status": "PASS",
+        "industry": "haccp",
+        "job_id": "audit_haccp_pass",
+        "target_temp_C": 5.0,
+        "conservative_threshold_C": 5.0,
+        "actual_hold_time_s": 0.0,
+        "required_hold_time_s": 7200,
+        "max_temp_C": 62.37776402835298,
+        "min_temp_C": 24.978589811533283,
+        "reasons": [
+          "Starting temperature 77.0\u00b0F < 135\u00b0F requirement",
+          "Temperature never reached 70\u00b0F (Phase 1 target not achieved)",
+          "Temperature never reached 41\u00b0F (Phase 2 target not achieved)"
+        ],
+        "warnings": [],
+        "flags": {}
+      },
+      "hash_signature": "ac3c94b03525e363"
+    },
+    {
+      "test_case": {
+        "industry": "powder",
+        "test_type": "borderline",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/powder/borderline.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/powder/borderline.json",
+        "expected_result": null,
+        "description": "Edge case near threshold boundaries"
+      },
+      "success": true,
+      "decision": "FAIL",
+      "error_message": null,
+      "execution_time_ms": 4.118919372558594,
+      "decision_data": {
+        "pass": false,
+        "status": "FAIL",
+        "industry": "powder",
+        "job_id": "audit_powder_borderline",
+        "target_temp_C": 180.0,
+        "conservative_threshold_C": 182.0,
+        "actual_hold_time_s": 250.0,
+        "required_hold_time_s": 600,
+        "max_temp_C": 182.3,
+        "min_temp_C": 25.1,
+        "reasons": [
+          "Insufficient continuous hold time: 250s < 600s",
+          "Ramp rate too high: 181.8\u00b0C/min > 10.0\u00b0C/min"
+        ],
+        "warnings": [],
+        "flags": {}
+      },
+      "hash_signature": "b7970d1f8e668ab7"
+    },
+    {
+      "test_case": {
+        "industry": "powder",
+        "test_type": "dup_ts",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/powder/dup_ts.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/powder/dup_ts.json",
+        "expected_result": "ERROR",
+        "description": "Duplicate timestamp entries"
+      },
+      "success": true,
+      "decision": "ERROR",
+      "error_message": "DataQualityError: Duplicate timestamps not allowed",
+      "execution_time_ms": 1.9969940185546875,
+      "decision_data": null,
+      "hash_signature": null
+    },
+    {
+      "test_case": {
+        "industry": "powder",
+        "test_type": "fail",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/powder/fail.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/powder/fail.json",
+        "expected_result": "FAIL",
+        "description": "Clear failing case not meeting hold time"
+      },
+      "success": true,
+      "decision": "FAIL",
+      "error_message": null,
+      "execution_time_ms": 3.5860538482666016,
+      "decision_data": {
+        "pass": false,
+        "status": "FAIL",
+        "industry": "powder",
+        "job_id": "audit_powder_fail",
+        "target_temp_C": 180.0,
+        "conservative_threshold_C": 182.0,
+        "actual_hold_time_s": 0.0,
+        "required_hold_time_s": 600,
+        "max_temp_C": 180.0,
+        "min_temp_C": 25.1,
+        "reasons": [
+          "Temperature never reached conservative threshold of 182.0\u00b0C",
+          "Maximum temperature recorded: 180.0\u00b0C"
+        ],
+        "warnings": [],
+        "flags": {}
+      },
+      "hash_signature": "51ddf5d092c24d1c"
+    },
+    {
+      "test_case": {
+        "industry": "powder",
+        "test_type": "gap",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/powder/gap.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/powder/gap.json",
+        "expected_result": "ERROR",
+        "description": "Data gaps exceeding allowed limits"
+      },
+      "success": false,
+      "decision": null,
+      "error_message": "Normalization error: Data quality checks failed:\n- Data gaps too large: 1 gaps > 60.0s (max: 130.0s)",
+      "execution_time_ms": 2.949953079223633,
+      "decision_data": null,
+      "hash_signature": null
+    },
+    {
+      "test_case": {
+        "industry": "powder",
+        "test_type": "missing_required",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/powder/missing_required.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/powder/missing_required.json",
+        "expected_result": "ERROR",
+        "description": "Missing required sensors"
+      },
+      "success": true,
+      "decision": "ERROR",
+      "error_message": "Unexpected RequiredSignalMissingError: Only 1 sensors available, 2 required for powder coating",
+      "execution_time_ms": 2.6750564575195312,
+      "decision_data": null,
+      "hash_signature": null
+    },
+    {
+      "test_case": {
+        "industry": "powder",
+        "test_type": "pass",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/powder/pass.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/powder/pass.json",
+        "expected_result": "PASS",
+        "description": "Clear passing case meeting all requirements"
+      },
+      "success": false,
+      "decision": "FAIL",
+      "error_message": null,
+      "execution_time_ms": 3.8568973541259766,
+      "decision_data": {
+        "pass": false,
+        "status": "FAIL",
+        "industry": "powder",
+        "job_id": "audit_powder_pass",
+        "target_temp_C": 180.0,
+        "conservative_threshold_C": 182.0,
+        "actual_hold_time_s": 470.0,
+        "required_hold_time_s": 600,
+        "max_temp_C": 184.0,
+        "min_temp_C": 25.1,
+        "reasons": [
+          "Insufficient continuous hold time: 470s < 600s",
+          "Ramp rate too high: 81.0\u00b0C/min > 10.0\u00b0C/min"
+        ],
+        "warnings": [],
+        "flags": {}
+      },
+      "hash_signature": "ddf2d18efdd7ce5a"
+    },
+    {
+      "test_case": {
+        "industry": "powder",
+        "test_type": "tz_shift",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/powder/tz_shift.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/powder/tz_shift.json",
+        "expected_result": null,
+        "description": "Mixed timezone data"
+      },
+      "success": false,
+      "decision": null,
+      "error_message": "Normalization error: Data quality checks failed:\n- Sampling period too large: 3610.0s > 300.0s\n- Data gaps too large: 1 gaps > 60.0s (max: 3610.0s)",
+      "execution_time_ms": 3.3049583435058594,
+      "decision_data": null,
+      "hash_signature": null
+    },
+    {
+      "test_case": {
+        "industry": "sterile",
+        "test_type": "fail",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/sterile/fail.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/sterile/fail.json",
+        "expected_result": "FAIL",
+        "description": "Clear failing case not meeting hold time"
+      },
+      "success": true,
+      "decision": "FAIL",
+      "error_message": null,
+      "execution_time_ms": 5.303144454956055,
+      "decision_data": {
+        "pass": false,
+        "status": "FAIL",
+        "industry": "sterile",
+        "job_id": "audit_sterile_fail",
+        "target_temp_C": 55.0,
+        "conservative_threshold_C": 50.0,
+        "actual_hold_time_s": 0.0,
+        "required_hold_time_s": 120,
+        "max_temp_C": 55.0,
+        "min_temp_C": 10.4,
+        "reasons": [
+          "Sterilization time 0.0h < 0.03333333333333333h minimum requirement",
+          "Temperature dropped below 50.0\u00b0C during sterilization phase",
+          "Humidity outside range (45.0-85.0%RH) for 100.0% of sterilization phase",
+          "EtO gas concentration not adequately maintained during sterilization phase"
+        ],
+        "warnings": [],
+        "flags": {}
+      },
+      "hash_signature": "335162768b78ca09"
+    },
+    {
+      "test_case": {
+        "industry": "sterile",
+        "test_type": "pass",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/sterile/pass.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/sterile/pass.json",
+        "expected_result": "PASS",
+        "description": "Clear passing case meeting all requirements"
+      },
+      "success": true,
+      "decision": "PASS",
+      "error_message": null,
+      "execution_time_ms": 4.575014114379883,
+      "decision_data": {
+        "pass": true,
+        "status": "PASS",
+        "industry": "sterile",
+        "job_id": "audit_sterile_pass",
+        "target_temp_C": 55.0,
+        "conservative_threshold_C": 50.0,
+        "actual_hold_time_s": 160.0,
+        "required_hold_time_s": 120,
+        "max_temp_C": 55.0,
+        "min_temp_C": 24.8,
+        "reasons": [
+          "Temperature maintained in sterilization range (50-60\u00b0C) for 0.0h",
+          "Humidity maintained in acceptable range (45-85%RH)",
+          "EtO gas concentration adequately maintained during sterilization",
+          "EtO sterilization cycle phases completed successfully",
+          "EtO sterilization requirements met"
+        ],
+        "warnings": [],
+        "flags": {}
+      },
+      "hash_signature": "f11decee43b61a4f"
+    }
+  ]
+}

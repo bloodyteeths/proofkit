@@ -1,0 +1,9 @@
+{
+  "pass": false,
+  "status": "FAIL",
+  "actual_hold_time_s": 0.0,
+  "target_temp_C": 5.0,
+  "conservative_threshold": null,
+  "ramp_rate_C_per_min": null,
+  "time_to_threshold_s": null
+}

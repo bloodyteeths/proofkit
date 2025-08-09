@@ -1,0 +1,18 @@
+<!-- Press Strip (toggleable) -->
+{% if config.SHOW_PRESS_STRIP %}
+<section class="press-strip py-3 bg-gray-50 border-t border-b">
+  <div class="container-wide">
+    <div class="flex items-center justify-center gap-8 opacity-60">
+      <span class="text-xs text-gray-500 uppercase tracking-wider">As seen in</span>
+      
+      <!-- Placeholder logos - replace with actual press logos -->
+      <div class="flex items-center gap-6">
+        <div class="w-24 h-8 bg-gray-200 rounded" title="TechCrunch"></div>
+        <div class="w-20 h-8 bg-gray-200 rounded" title="Forbes"></div>
+        <div class="w-28 h-8 bg-gray-200 rounded" title="Manufacturing Today"></div>
+        <div class="w-24 h-8 bg-gray-200 rounded" title="Food Safety Magazine"></div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}

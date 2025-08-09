@@ -1,0 +1,70 @@
+{
+  "dataset_collection": "haccp_food_safety",
+  "created": "2024-08-08T00:00:00Z",
+  "description": "FDA HACCP food safety cooling specifications and guidance documents",
+  "standards": [
+    "FDA Food Code",
+    "FSIS 9 CFR 417",
+    "FSMA Preventive Controls Rule"
+  ],
+  "files": [
+    {
+      "filename": "raw/FDA_Cooling_Cooked_Time_Temperature.pdf",
+      "description": "FDA guidance for time/temperature control during cooling of cooked foods",
+      "format": "PDF",
+      "size_bytes": 316928,
+      "sha256": "77a7a043fa441609af5eabd9b9bd0be0bda1e74d04d7bbdbe379a62fd490db05",
+      "pages": "unknown",
+      "validated": true,
+      "source_type": "official_guidance",
+      "source_url": "https://www.fda.gov/media/181882/download",
+      "compliance_standards": ["FDA Food Code §3-501.14"]
+    },
+    {
+      "filename": "raw/FDA_Food_Code_2017.pdf",
+      "description": "Complete FDA Food Code 2017 comprehensive food safety guidance",
+      "format": "PDF",
+      "size_bytes": 5929984,
+      "sha256": "7af9f63807f62d80823fd1fdfd9f3e144021e5b5414a60cd8e6846f859c066e7",
+      "pages": "unknown",
+      "validated": true,
+      "source_type": "official_regulation",
+      "source_url": "https://www.fda.gov/media/110822/download",
+      "compliance_standards": ["FDA Food Code 2017"]
+    }
+  ],
+  "metadata": {
+    "industry": "food_service",
+    "process_type": "haccp_cooling",
+    "critical_parameters": [
+      "cooling_time",
+      "temperature_stages",
+      "danger_zone_management"
+    ],
+    "validation_requirements": {
+      "temperature_accuracy": "±1°F",
+      "logging_interval": "30 minutes",
+      "two_stage_cooling": "required"
+    }
+  },
+  "haccp_requirements": {
+    "stage_1_cooling": {
+      "from_temperature": "135°F (57°C)",
+      "to_temperature": "70°F (21°C)",
+      "maximum_time": "2 hours"
+    },
+    "stage_2_cooling": {
+      "from_temperature": "70°F (21°C)",
+      "to_temperature": "41°F (5°C)",
+      "maximum_time": "4 hours"
+    },
+    "total_cooling_time": "6 hours maximum",
+    "danger_zone": "41°F to 135°F (5°C to 57°C)"
+  },
+  "quality_assurance": {
+    "data_integrity": "SHA256 verified",
+    "format_validation": "PDF structure confirmed",
+    "source_verification": "Official FDA documents",
+    "completeness": "Complete regulatory guidance documents"
+  }
+}

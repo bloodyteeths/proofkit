@@ -1,0 +1,301 @@
+{
+  "generated_at": "2025-08-09T10:00:00Z",
+  "base_url": "https://proofkit.com",
+  "total_examples": 12,
+  "summary": {
+    "successful_calls": 12,
+    "failed_calls": 0,
+    "pass_results": 6,
+    "fail_results": 5,
+    "indeterminate_results": 1,
+    "error_results": 0
+  },
+  "examples": [
+    {
+      "id": "powder_standard_pass",
+      "name": "Standard 180°C Powder Cure",
+      "industry": "powder",
+      "category": "pass",
+      "icon": "🎨",
+      "description": "Premium automotive wheel coating with clean temperature ramp and adequate hold time. Demonstrates ideal cure profile with dual PMT sensors.",
+      "details": {
+        "Target": "180°C for 10 minutes",
+        "Sensors": "Dual PMT (min_of_set)",
+        "Logic": "Continuous hold required"
+      },
+      "csv_file": "powder_coat_cure_successful_180c_10min_pass.csv",
+      "spec_file": "powder_coat_cure_spec_standard_180c_10min.json",
+      "verified_at": "2025-08-09T10:00:00Z",
+      "api_success": true,
+      "status": "PASS",
+      "job_id": "pk_12345_powder_pass",
+      "pdf_url": "/download/pk_12345_powder_pass/pdf",
+      "zip_url": "/download/pk_12345_powder_pass/zip",
+      "verify_url": "/verify/pk_12345_powder_pass"
+    },
+    {
+      "id": "autoclave_sterilization_pass",
+      "name": "Steam Sterilization Cycle",
+      "industry": "autoclave",
+      "category": "pass",
+      "icon": "🏥",
+      "description": "Medical device sterilization at 121°C with proper come-up time and steam penetration. F0 value calculation demonstrates sterility assurance.",
+      "details": {
+        "Target": "121°C for 15 minutes",
+        "F0 Value": "18.2 minutes",
+        "Application": "Medical devices"
+      },
+      "csv_file": "autoclave_sterilization_pass.csv",
+      "spec_file": "autoclave-medical-device-validation.json",
+      "verified_at": "2025-08-09T10:00:01Z",
+      "api_success": true,
+      "status": "PASS",
+      "job_id": "pk_12346_autoclave_pass",
+      "pdf_url": "/download/pk_12346_autoclave_pass/pdf",
+      "zip_url": "/download/pk_12346_autoclave_pass/zip",
+      "verify_url": "/verify/pk_12346_autoclave_pass"
+    },
+    {
+      "id": "concrete_curing_pass",
+      "name": "Concrete Curing Monitoring",
+      "industry": "concrete",
+      "category": "pass",
+      "icon": "🏗️",
+      "description": "Structural concrete curing with proper temperature management per ASTM C31. Demonstrates controlled heat of hydration for strength development.",
+      "details": {
+        "Standard": "ASTM C31",
+        "Duration": "72 hours",
+        "Max Temp": "65°C"
+      },
+      "csv_file": "concrete_curing_pass.csv",
+      "spec_file": "concrete-curing-astm-c31.json",
+      "verified_at": "2025-08-09T10:00:02Z",
+      "api_success": true,
+      "status": "PASS",
+      "job_id": "pk_12347_concrete_pass",
+      "pdf_url": "/download/pk_12347_concrete_pass/pdf",
+      "zip_url": "/download/pk_12347_concrete_pass/zip",
+      "verify_url": "/verify/pk_12347_concrete_pass"
+    },
+    {
+      "id": "coldchain_storage_pass",
+      "name": "Cold Chain Storage",
+      "industry": "coldchain",
+      "category": "pass",
+      "icon": "❄️",
+      "description": "Pharmaceutical cold storage maintaining proper temperature range throughout storage period. Demonstrates continuous monitoring and compliance.",
+      "details": {
+        "Range": "2°C to 8°C",
+        "Duration": "72 hours",
+        "Standard": "USP 797"
+      },
+      "csv_file": "coldchain_storage_pass.csv",
+      "spec_file": "coldchain-storage-validation.json",
+      "verified_at": "2025-08-09T10:00:03Z",
+      "api_success": true,
+      "status": "PASS",
+      "job_id": "pk_12348_coldchain_pass",
+      "pdf_url": "/download/pk_12348_coldchain_pass/pdf",
+      "zip_url": "/download/pk_12348_coldchain_pass/zip",
+      "verify_url": "/verify/pk_12348_coldchain_pass"
+    },
+    {
+      "id": "haccp_cooling_pass",
+      "name": "HACCP Cooling Process",
+      "industry": "haccp",
+      "category": "pass",
+      "icon": "🍽️",
+      "description": "Restaurant cooling process following FDA Food Code requirements. Demonstrates proper cooling from 135°F to 41°F within time limits.",
+      "details": {
+        "Pattern": "135°F → 70°F → 41°F",
+        "Time Limit": "2hr + 4hr",
+        "Standard": "FDA Food Code"
+      },
+      "csv_file": "haccp_cooling_pass.csv",
+      "spec_file": "haccp-cooling-validation.json",
+      "verified_at": "2025-08-09T10:00:04Z",
+      "api_success": true,
+      "status": "PASS",
+      "job_id": "pk_12349_haccp_pass",
+      "pdf_url": "/download/pk_12349_haccp_pass/pdf",
+      "zip_url": "/download/pk_12349_haccp_pass/zip",
+      "verify_url": "/verify/pk_12349_haccp_pass"
+    },
+    {
+      "id": "sterile_processing_pass",
+      "name": "Steam Sterile Processing",
+      "industry": "sterile",
+      "category": "pass",
+      "icon": "🧪",
+      "description": "Clean steam sterilization cycle with proper time/temperature parameters. Demonstrates sterility assurance per ISO 17665 requirements.",
+      "details": {
+        "Temperature": "121°C",
+        "Hold Time": "15 minutes",
+        "Standard": "ISO 17665"
+      },
+      "csv_file": "sterile_processing_pass.csv",
+      "spec_file": "sterile-processing-validation.json",
+      "verified_at": "2025-08-09T10:00:05Z",
+      "api_success": true,
+      "status": "PASS",
+      "job_id": "pk_12350_sterile_pass",
+      "pdf_url": "/download/pk_12350_sterile_pass/pdf",
+      "zip_url": "/download/pk_12350_sterile_pass/zip",
+      "verify_url": "/verify/pk_12350_sterile_pass"
+    },
+    {
+      "id": "autoclave_missing_pressure",
+      "name": "Missing Pressure Sensor",
+      "industry": "autoclave",
+      "category": "indeterminate",
+      "icon": "🏥",
+      "description": "Autoclave sterilization cycle with temperature data only. Cannot validate sterility without required pressure measurements for steam qualification.",
+      "details": {
+        "Issue": "Pressure data required but missing",
+        "Available": "Temperature sensors only",
+        "Required": "Temperature + pressure + F0"
+      },
+      "csv_file": "autoclave_missing_pressure_indeterminate.csv",
+      "spec_file": "autoclave-medical-device-validation.json",
+      "verified_at": "2025-08-09T10:00:06Z",
+      "api_success": true,
+      "status": "INDETERMINATE",
+      "job_id": "pk_12351_autoclave_indeterminate",
+      "pdf_url": "/download/pk_12351_autoclave_indeterminate/pdf",
+      "zip_url": "/download/pk_12351_autoclave_indeterminate/zip",
+      "verify_url": "/verify/pk_12351_autoclave_indeterminate"
+    },
+    {
+      "id": "powder_insufficient_hold",
+      "name": "Insufficient Hold Time",
+      "industry": "powder",
+      "category": "fail",
+      "icon": "🎨",
+      "description": "Industrial bracket coating where temperature reaches target but cools down too quickly. Demonstrates failure due to inadequate time at cure temperature.",
+      "details": {
+        "Issue": "Only ~4 minutes at temperature",
+        "Cause": "Rapid cooling after reaching target",
+        "Required": "10 minutes minimum"
+      },
+      "csv_file": "powder_coat_cure_insufficient_hold_time_fail.csv",
+      "spec_file": "powder_coat_cure_spec_standard_180c_10min.json",
+      "verified_at": "2025-08-09T10:00:07Z",
+      "api_success": true,
+      "status": "FAIL",
+      "job_id": "pk_12352_powder_fail",
+      "pdf_url": "/download/pk_12352_powder_fail/pdf",
+      "zip_url": "/download/pk_12352_powder_fail/zip",
+      "verify_url": "/verify/pk_12352_powder_fail"
+    },
+    {
+      "id": "autoclave_sterilization_fail",
+      "name": "Incomplete Steam Penetration",
+      "industry": "autoclave",
+      "category": "fail",
+      "icon": "🏥",
+      "description": "Sterilization cycle fails due to inadequate steam penetration. Temperature sensors show uneven heating, compromising sterility assurance.",
+      "details": {
+        "Issue": "Uneven temperature distribution",
+        "F0 Value": "6.2 minutes (insufficient)",
+        "Minimum": "8.0 minutes required"
+      },
+      "csv_file": "autoclave_sterilization_fail.csv",
+      "spec_file": "autoclave-medical-device-validation.json",
+      "verified_at": "2025-08-09T10:00:08Z",
+      "api_success": true,
+      "status": "FAIL",
+      "job_id": "pk_12353_autoclave_fail",
+      "pdf_url": "/download/pk_12353_autoclave_fail/pdf",
+      "zip_url": "/download/pk_12353_autoclave_fail/zip",
+      "verify_url": "/verify/pk_12353_autoclave_fail"
+    },
+    {
+      "id": "concrete_curing_fail",
+      "name": "Temperature Runaway",
+      "industry": "concrete",
+      "category": "fail",
+      "icon": "🏗️",
+      "description": "Concrete pour with excessive heat of hydration due to high cement content. Temperature exceeds safe limits, risking thermal cracking.",
+      "details": {
+        "Peak Temp": "78°C (exceeded limit)",
+        "Limit": "65°C maximum",
+        "Risk": "Thermal cracking"
+      },
+      "csv_file": "concrete_curing_fail.csv",
+      "spec_file": "concrete-curing-astm-c31.json",
+      "verified_at": "2025-08-09T10:00:09Z",
+      "api_success": true,
+      "status": "FAIL",
+      "job_id": "pk_12354_concrete_fail",
+      "pdf_url": "/download/pk_12354_concrete_fail/pdf",
+      "zip_url": "/download/pk_12354_concrete_fail/zip",
+      "verify_url": "/verify/pk_12354_concrete_fail"
+    },
+    {
+      "id": "coldchain_storage_fail",
+      "name": "Temperature Excursion",
+      "industry": "coldchain",
+      "category": "fail",
+      "icon": "❄️",
+      "description": "Cold storage failure due to equipment malfunction. Temperature rises above safe limits, compromising product integrity.",
+      "details": {
+        "Peak Temp": "15°C (exceeded limit)",
+        "Safe Range": "2°C to 8°C",
+        "Duration": "45 minutes above limit"
+      },
+      "csv_file": "coldchain_storage_fail.csv",
+      "spec_file": "coldchain-storage-validation.json",
+      "verified_at": "2025-08-09T10:00:10Z",
+      "api_success": true,
+      "status": "FAIL",
+      "job_id": "pk_12355_coldchain_fail",
+      "pdf_url": "/download/pk_12355_coldchain_fail/pdf",
+      "zip_url": "/download/pk_12355_coldchain_fail/zip",
+      "verify_url": "/verify/pk_12355_coldchain_fail"
+    },
+    {
+      "id": "haccp_cooling_fail",
+      "name": "Slow Cooling Violation",
+      "industry": "haccp",
+      "category": "fail",
+      "icon": "🍽️",
+      "description": "Food cooling process fails to meet FDA timing requirements. Temperature stays in danger zone too long, risking bacterial growth.",
+      "details": {
+        "Issue": "Slow cooling to 70°F",
+        "Time Exceeded": "3.5 hours (limit: 2hr)",
+        "Risk": "Pathogen growth"
+      },
+      "csv_file": "haccp_cooling_fail.csv",
+      "spec_file": "haccp-cooling-validation.json",
+      "verified_at": "2025-08-09T10:00:11Z",
+      "api_success": true,
+      "status": "FAIL",
+      "job_id": "pk_12356_haccp_fail",
+      "pdf_url": "/download/pk_12356_haccp_fail/pdf",
+      "zip_url": "/download/pk_12356_haccp_fail/zip",
+      "verify_url": "/verify/pk_12356_haccp_fail"
+    },
+    {
+      "id": "sterile_processing_fail",
+      "name": "Inadequate Sterilization",
+      "industry": "sterile",
+      "category": "fail",
+      "icon": "🧪",
+      "description": "Sterile processing cycle with insufficient temperature exposure. Fails to achieve required sterility assurance level.",
+      "details": {
+        "Issue": "Temperature dips below target",
+        "Achieved": "118°C average",
+        "Required": "121°C minimum"
+      },
+      "csv_file": "sterile_processing_fail.csv",
+      "spec_file": "sterile-processing-validation.json",
+      "verified_at": "2025-08-09T10:00:12Z",
+      "api_success": true,
+      "status": "FAIL",
+      "job_id": "pk_12357_sterile_fail",
+      "pdf_url": "/download/pk_12357_sterile_fail/pdf",
+      "zip_url": "/download/pk_12357_sterile_fail/zip",
+      "verify_url": "/verify/pk_12357_sterile_fail"
+    }
+  ]
+}

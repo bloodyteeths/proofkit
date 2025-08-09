@@ -185,9 +185,17 @@ def create_header_section(certificate_no: str) -> Table:
 
 
 def create_status_badge(decision: DecisionResult) -> Table:
-    """Create centered PASS/FAIL badge with drop shadow effect."""
-    status = "PASS" if decision.pass_ else "FAIL"
-    status_color = COLOR_EMERALD_CMYK if decision.pass_ else COLOR_CRIMSON_CMYK
+    """Create centered PASS/FAIL/INDETERMINATE badge with drop shadow effect."""
+    # Use decision.status as the primary source of truth
+    status = getattr(decision, 'status', 'PASS' if decision.pass_ else 'FAIL')
+    
+    # Set color based on status
+    if status == 'INDETERMINATE':
+        status_color = CMYKColor(0.00, 0.65, 1.00, 0.05)  # Orange in CMYK
+    elif status == 'PASS':
+        status_color = COLOR_EMERALD_CMYK
+    else:  # FAIL
+        status_color = COLOR_CRIMSON_CMYK
     
     # Badge with fixed 18mm height
     badge_data = [[status]]
@@ -276,10 +284,19 @@ def create_results_column(decision: DecisionResult) -> Table:
                   ParagraphStyle('Header', fontSize=10, textColor=COLOR_NAVY_CMYK))],
     ]
     
-    status_color = COLOR_EMERALD_CMYK if decision.pass_ else COLOR_CRIMSON_CMYK
+    # Use decision.status as source of truth for display
+    status = getattr(decision, 'status', 'PASS' if decision.pass_ else 'FAIL')
+    
+    # Set color based on status
+    if status == 'INDETERMINATE':
+        status_color = CMYKColor(0.00, 0.65, 1.00, 0.05)  # Orange in CMYK
+    elif status == 'PASS':
+        status_color = COLOR_EMERALD_CMYK
+    else:  # FAIL
+        status_color = COLOR_CRIMSON_CMYK
     
     details = [
-        ('Status', 'PASS' if decision.pass_ else 'FAIL'),
+        ('Status', status),
         ('Actual Hold Time', f"{int(decision.actual_hold_time_s)}s"),
         ('Required Hold Time', f"{int(decision.required_hold_time_s)}s"),
         ('Max Temperature', f"{decision.max_temp_C:.1f}°C"),
@@ -306,6 +323,29 @@ def create_results_column(decision: DecisionResult) -> Table:
                 Paragraph(field, label_style),
                 Paragraph(value, value_style)
             ])
+    
+    # Add fallback note if used
+    try:
+        if getattr(decision, 'flags', {}).get('fallback_used'):
+            results_data.append([
+                Paragraph('Note', label_style),
+                Paragraph('Auto-detected sensors', value_style)
+            ])
+    except Exception:
+        pass
+    
+    # Show required vs present sensors for safety-critical processes
+    try:
+        flags = getattr(decision, 'flags', {})
+        if flags.get('required_sensors') and flags.get('present_sensors'):
+            required_sensors = flags['required_sensors']
+            present_sensors = flags['present_sensors']
+            results_data.append([
+                Paragraph('Required Sensors', label_style),
+                Paragraph(f"{len(present_sensors)}/{len(required_sensors)}", value_style)
+            ])
+    except Exception:
+        pass
     
     results_table = Table(results_data, colWidths=[45*mm, 25*mm])
     results_table.setStyle(TableStyle([

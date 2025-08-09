@@ -1,0 +1,1023 @@
+{% extends "modern_base.html" %}
+
+{% block title %}ProofKit Examples - Temperature Log Validation Samples{% endblock %}
+{% block description %}Download real-world temperature validation examples with PASS/FAIL scenarios, CSV data, and JSON specifications across multiple industries.{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-container">
+        <div class="hero-grid">
+            <div>
+                <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(255, 255, 255, 0.2); padding: 0.5rem 1rem; border-radius: 2rem; margin-bottom: 1.5rem;">
+                    <span style="font-size: 1.5rem;">📊</span>
+                    <span style="font-weight: 600;">Examples & Test Data</span>
+                </div>
+                <h1>
+                    Real-World<br>
+                    <span class="highlight">Validation Examples</span>
+                </h1>
+                <p>
+                    Download CSV data, specifications, and expected results across multiple industries. 
+                    Test ProofKit with real temperature validation scenarios.
+                </p>
+                <div class="hero-actions">
+                    <a href="#examples" class="btn btn-primary">
+                        Browse Examples →
+                    </a>
+                    <a href="/app" class="btn btn-secondary">
+                        Try ProofKit
+                    </a>
+                </div>
+            </div>
+            <div class="card glass">
+                <div style="background: white; border-radius: 0.5rem; padding: 1.5rem; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                        <span style="font-size: 2rem;">📊</span>
+                        <span style="font-weight: 600; color: #1a1a1a;">Test Datasets</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1rem;">
+                        <div style="text-align: center; padding: 0.75rem; background: #f0f9ff; border-radius: 0.5rem;">
+                            <div style="font-size: 0.75rem; color: #0369a1; text-transform: uppercase; letter-spacing: 0.05em;">Datasets</div>
+                            <div style="font-size: 1.25rem; font-weight: bold; color: #1a1a1a;">15+</div>
+                        </div>
+                        <div style="text-align: center; padding: 0.75rem; background: #f0f9ff; border-radius: 0.5rem;">
+                            <div style="font-size: 0.75rem; color: #0369a1; text-transform: uppercase; letter-spacing: 0.05em;">Industries</div>
+                            <div style="font-size: 1.25rem; font-weight: bold; color: #1a1a1a;">5</div>
+                        </div>
+                    </div>
+                    <div style="padding: 0.75rem; background: #dbeafe; border-radius: 0.5rem; text-align: center;">
+                        <span style="color: #1e40af; font-weight: bold; font-size: 0.875rem;">📊 100% REAL DATA</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Examples Filter/Navigation -->
+<section class="section">
+  <div class="section-container">
+    <div class="filter-tabs">
+      <button class="filter-btn active" data-filter="all">All Examples</button>
+      <button class="filter-btn" data-filter="pass">✅ PASS Cases</button>
+      <button class="filter-btn" data-filter="indeterminate">⚠️ INDETERMINATE Cases</button>
+      <button class="filter-btn" data-filter="fail">❌ FAIL Cases</button>
+      <button class="filter-btn" data-filter="powder">Powder Coating</button>
+      <button class="filter-btn" data-filter="autoclave">Sterilization</button>
+      <button class="filter-btn" data-filter="concrete">Concrete</button>
+      <button class="filter-btn" data-filter="coldchain">Cold Chain</button>
+      <button class="filter-btn" data-filter="haccp">HACCP</button>
+      <button class="filter-btn" data-filter="sterile">Sterile Processing</button>
+    </div>
+  </div>
+</section>
+
+<!-- Pass Examples -->
+<section id="examples" class="section" data-category="pass">
+  <div class="section-container">
+    <div class="section-header">
+      <h2>✅ Successful Validation Examples (PASS)</h2>
+      <p>These examples demonstrate successful temperature processes that meet all specification requirements</p>
+    </div>
+    
+    <div class="examples-grid">
+      <div class="example-tile" data-filter="pass powder">
+        <div class="example-header">
+          <div class="example-icon">🎨</div>
+          <div class="example-meta">
+            <h3>Standard 180°C Powder Cure</h3>
+            <div class="example-tags">
+              <span class="tag pass">PASS</span>
+              <span class="tag industry">Powder Coating</span>
+            </div>
+          </div>
+        </div>
+        <p>Premium automotive wheel coating with clean temperature ramp and adequate hold time. Demonstrates ideal cure profile with dual PMT sensors.</p>
+        
+        <div class="example-details">
+          <div class="detail-row">
+            <span class="detail-label">Target:</span>
+            <span class="detail-value">180°C for 10 minutes</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Sensors:</span>
+            <span class="detail-value">Dual PMT (min_of_set)</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Logic:</span>
+            <span class="detail-value">Continuous hold required</span>
+          </div>
+        </div>
+        
+        <div class="example-actions">
+          <a href="/examples/powder_coat_cure_successful_180c_10min_pass.csv" class="btn btn-sm" download>
+            📄 CSV Data
+          </a>
+          <a href="/examples/powder_coat_cure_spec_standard_180c_10min.json" class="btn btn-sm btn-outline" download>
+            ⚙️ JSON Spec
+          </a>
+        </div>
+      </div>
+      
+      <div class="example-tile" data-filter="pass autoclave">
+        <div class="example-header">
+          <div class="example-icon">🏥</div>
+          <div class="example-meta">
+            <h3>Steam Sterilization Cycle</h3>
+            <div class="example-tags">
+              <span class="tag pass">PASS</span>
+              <span class="tag industry">Autoclave</span>
+            </div>
+          </div>
+        </div>
+        <p>Medical device sterilization at 121°C with proper come-up time and steam penetration. F0 value calculation demonstrates sterility assurance.</p>
+        
+        <div class="example-details">
+          <div class="detail-row">
+            <span class="detail-label">Target:</span>
+            <span class="detail-value">121°C for 15 minutes</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">F0 Value:</span>
+            <span class="detail-value">18.2 minutes</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Application:</span>
+            <span class="detail-value">Medical devices</span>
+          </div>
+        </div>
+        
+        <div class="example-actions">
+          <a href="/examples/autoclave_sterilization_pass.csv" class="btn btn-sm" download>
+            📄 CSV Data
+          </a>
+          <a href="/examples/autoclave-medical-device-validation.json" class="btn btn-sm btn-outline" download>
+            ⚙️ JSON Spec
+          </a>
+        </div>
+      </div>
+      
+      <div class="example-tile" data-filter="pass concrete">
+        <div class="example-header">
+          <div class="example-icon">🏗️</div>
+          <div class="example-meta">
+            <h3>Concrete Curing Monitoring</h3>
+            <div class="example-tags">
+              <span class="tag pass">PASS</span>
+              <span class="tag industry">Construction</span>
+            </div>
+          </div>
+        </div>
+        <p>Structural concrete curing with proper temperature management per ASTM C31. Demonstrates controlled heat of hydration for strength development.</p>
+        
+        <div class="example-details">
+          <div class="detail-row">
+            <span class="detail-label">Standard:</span>
+            <span class="detail-value">ASTM C31</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Duration:</span>
+            <span class="detail-value">72 hours</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Max Temp:</span>
+            <span class="detail-value">65°C</span>
+          </div>
+        </div>
+        
+        <div class="example-actions">
+          <a href="/examples/concrete_curing_pass.csv" class="btn btn-sm" download>
+            📄 CSV Data
+          </a>
+          <a href="/examples/concrete-curing-astm-c31.json" class="btn btn-sm btn-outline" download>
+            ⚙️ JSON Spec
+          </a>
+        </div>
+      </div>
+      
+      <div class="example-tile" data-filter="pass coldchain">
+        <div class="example-header">
+          <div class="example-icon">❄️</div>
+          <div class="example-meta">
+            <h3>Cold Chain Storage</h3>
+            <div class="example-tags">
+              <span class="tag pass">PASS</span>
+              <span class="tag industry">Cold Chain</span>
+            </div>
+          </div>
+        </div>
+        <p>Pharmaceutical cold storage maintaining proper temperature range throughout storage period. Demonstrates continuous monitoring and compliance.</p>
+        
+        <div class="example-details">
+          <div class="detail-row">
+            <span class="detail-label">Range:</span>
+            <span class="detail-value">2°C to 8°C</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Duration:</span>
+            <span class="detail-value">72 hours</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Standard:</span>
+            <span class="detail-value">USP 797</span>
+          </div>
+        </div>
+        
+        <div class="example-actions">
+          <a href="/examples/coldchain_storage_pass.csv" class="btn btn-sm" download>
+            📄 CSV Data
+          </a>
+          <a href="/examples/coldchain-storage-validation.json" class="btn btn-sm btn-outline" download>
+            ⚙️ JSON Spec
+          </a>
+        </div>
+      </div>
+      
+      <div class="example-tile" data-filter="pass haccp">
+        <div class="example-header">
+          <div class="example-icon">🍽️</div>
+          <div class="example-meta">
+            <h3>HACCP Cooling Process</h3>
+            <div class="example-tags">
+              <span class="tag pass">PASS</span>
+              <span class="tag industry">Food Safety</span>
+            </div>
+          </div>
+        </div>
+        <p>Restaurant cooling process following FDA Food Code requirements. Demonstrates proper cooling from 135°F to 41°F within time limits.</p>
+        
+        <div class="example-details">
+          <div class="detail-row">
+            <span class="detail-label">Pattern:</span>
+            <span class="detail-value">135°F → 70°F → 41°F</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Time Limit:</span>
+            <span class="detail-value">2hr + 4hr</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Standard:</span>
+            <span class="detail-value">FDA Food Code</span>
+          </div>
+        </div>
+        
+        <div class="example-actions">
+          <a href="/examples/haccp_cooling_pass.csv" class="btn btn-sm" download>
+            📄 CSV Data
+          </a>
+          <a href="/examples/haccp-cooling-validation.json" class="btn btn-sm btn-outline" download>
+            ⚙️ JSON Spec
+          </a>
+        </div>
+      </div>
+      
+      <div class="example-tile" data-filter="pass sterile">
+        <div class="example-header">
+          <div class="example-icon">🧪</div>
+          <div class="example-meta">
+            <h3>Steam Sterile Processing</h3>
+            <div class="example-tags">
+              <span class="tag pass">PASS</span>
+              <span class="tag industry">Sterile Processing</span>
+            </div>
+          </div>
+        </div>
+        <p>Clean steam sterilization cycle with proper time/temperature parameters. Demonstrates sterility assurance per ISO 17665 requirements.</p>
+        
+        <div class="example-details">
+          <div class="detail-row">
+            <span class="detail-label">Temperature:</span>
+            <span class="detail-value">121°C</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Hold Time:</span>
+            <span class="detail-value">15 minutes</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Standard:</span>
+            <span class="detail-value">ISO 17665</span>
+          </div>
+        </div>
+        
+        <div class="example-actions">
+          <a href="/examples/sterile_processing_pass.csv" class="btn btn-sm" download>
+            📄 CSV Data
+          </a>
+          <a href="/examples/sterile-processing-validation.json" class="btn btn-sm btn-outline" download>
+            ⚙️ JSON Spec
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Indeterminate Examples -->
+<section class="section" style="background: #fefbf3;" data-category="indeterminate">
+  <div class="section-container">
+    <div class="section-header">
+      <h2>⚠️ Indeterminate Validation Examples</h2>
+      <p>These examples show cases where validation cannot be completed due to missing required sensor data</p>
+    </div>
+    
+    <div class="examples-grid">
+      <div class="example-tile" data-filter="indeterminate autoclave">
+        <div class="example-header">
+          <div class="example-icon">🏥</div>
+          <div class="example-meta">
+            <h3>Missing Pressure Sensor</h3>
+            <div class="example-tags">
+              <span class="tag indeterminate">INDETERMINATE</span>
+              <span class="tag industry">Autoclave</span>
+            </div>
+          </div>
+        </div>
+        <p>Autoclave sterilization cycle with temperature data only. Cannot validate sterility without required pressure measurements for steam qualification.</p>
+        
+        <div class="example-details">
+          <div class="detail-row">
+            <span class="detail-label">Issue:</span>
+            <span class="detail-value">Pressure data required but missing</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Available:</span>
+            <span class="detail-value">Temperature sensors only</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Required:</span>
+            <span class="detail-value">Temperature + pressure + F0</span>
+          </div>
+        </div>
+        
+        <div class="example-actions">
+          <a href="/examples/autoclave_missing_pressure_indeterminate.csv" class="btn btn-sm" download>
+            📄 CSV Data
+          </a>
+          <a href="/examples/autoclave-medical-device-validation.json" class="btn btn-sm btn-outline" download>
+            ⚙️ JSON Spec
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Fail Examples -->
+<section class="section" style="background: #f7fafc;" data-category="fail">
+  <div class="section-container">
+    <div class="section-header">
+      <h2>❌ Failed Validation Examples (FAIL)</h2>
+      <p>These examples show common failure modes and quality issues across different processes</p>
+    </div>
+    
+    <div class="examples-grid">
+      <div class="example-tile" data-filter="fail powder">
+        <div class="example-header">
+          <div class="example-icon">🎨</div>
+          <div class="example-meta">
+            <h3>Insufficient Hold Time</h3>
+            <div class="example-tags">
+              <span class="tag fail">FAIL</span>
+              <span class="tag industry">Powder Coating</span>
+            </div>
+          </div>
+        </div>
+        <p>Industrial bracket coating where temperature reaches target but cools down too quickly. Demonstrates failure due to inadequate time at cure temperature.</p>
+        
+        <div class="example-details">
+          <div class="detail-row">
+            <span class="detail-label">Issue:</span>
+            <span class="detail-value">Only ~4 minutes at temperature</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Cause:</span>
+            <span class="detail-value">Rapid cooling after reaching target</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Required:</span>
+            <span class="detail-value">10 minutes minimum</span>
+          </div>
+        </div>
+        
+        <div class="example-actions">
+          <a href="/examples/powder_coat_cure_insufficient_hold_time_fail.csv" class="btn btn-sm" download>
+            📄 CSV Data
+          </a>
+          <a href="/examples/powder_coat_cure_spec_standard_180c_10min.json" class="btn btn-sm btn-outline" download>
+            ⚙️ JSON Spec
+          </a>
+        </div>
+      </div>
+      
+      <div class="example-tile" data-filter="fail autoclave">
+        <div class="example-header">
+          <div class="example-icon">🏥</div>
+          <div class="example-meta">
+            <h3>Incomplete Steam Penetration</h3>
+            <div class="example-tags">
+              <span class="tag fail">FAIL</span>
+              <span class="tag industry">Autoclave</span>
+            </div>
+          </div>
+        </div>
+        <p>Sterilization cycle fails due to inadequate steam penetration. Temperature sensors show uneven heating, compromising sterility assurance.</p>
+        
+        <div class="example-details">
+          <div class="detail-row">
+            <span class="detail-label">Issue:</span>
+            <span class="detail-value">Uneven temperature distribution</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">F0 Value:</span>
+            <span class="detail-value">6.2 minutes (insufficient)</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Minimum:</span>
+            <span class="detail-value">8.0 minutes required</span>
+          </div>
+        </div>
+        
+        <div class="example-actions">
+          <a href="/examples/autoclave_sterilization_fail.csv" class="btn btn-sm" download>
+            📄 CSV Data
+          </a>
+          <a href="/examples/autoclave-medical-device-validation.json" class="btn btn-sm btn-outline" download>
+            ⚙️ JSON Spec
+          </a>
+        </div>
+      </div>
+      
+      <div class="example-tile" data-filter="fail concrete">
+        <div class="example-header">
+          <div class="example-icon">🏗️</div>
+          <div class="example-meta">
+            <h3>Temperature Runaway</h3>
+            <div class="example-tags">
+              <span class="tag fail">FAIL</span>
+              <span class="tag industry">Construction</span>
+            </div>
+          </div>
+        </div>
+        <p>Concrete pour with excessive heat of hydration due to high cement content. Temperature exceeds safe limits, risking thermal cracking.</p>
+        
+        <div class="example-details">
+          <div class="detail-row">
+            <span class="detail-label">Peak Temp:</span>
+            <span class="detail-value">78°C (exceeded limit)</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Limit:</span>
+            <span class="detail-value">65°C maximum</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Risk:</span>
+            <span class="detail-value">Thermal cracking</span>
+          </div>
+        </div>
+        
+        <div class="example-actions">
+          <a href="/examples/concrete_curing_fail.csv" class="btn btn-sm" download>
+            📄 CSV Data
+          </a>
+          <a href="/examples/concrete-curing-astm-c31.json" class="btn btn-sm btn-outline" download>
+            ⚙️ JSON Spec
+          </a>
+        </div>
+      </div>
+      
+      <div class="example-tile" data-filter="fail coldchain">
+        <div class="example-header">
+          <div class="example-icon">❄️</div>
+          <div class="example-meta">
+            <h3>Temperature Excursion</h3>
+            <div class="example-tags">
+              <span class="tag fail">FAIL</span>
+              <span class="tag industry">Cold Chain</span>
+            </div>
+          </div>
+        </div>
+        <p>Cold storage failure due to equipment malfunction. Temperature rises above safe limits, compromising product integrity.</p>
+        
+        <div class="example-details">
+          <div class="detail-row">
+            <span class="detail-label">Peak Temp:</span>
+            <span class="detail-value">15°C (exceeded limit)</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Safe Range:</span>
+            <span class="detail-value">2°C to 8°C</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Duration:</span>
+            <span class="detail-value">45 minutes above limit</span>
+          </div>
+        </div>
+        
+        <div class="example-actions">
+          <a href="/examples/coldchain_storage_fail.csv" class="btn btn-sm" download>
+            📄 CSV Data
+          </a>
+          <a href="/examples/coldchain-storage-validation.json" class="btn btn-sm btn-outline" download>
+            ⚙️ JSON Spec
+          </a>
+        </div>
+      </div>
+      
+      <div class="example-tile" data-filter="fail haccp">
+        <div class="example-header">
+          <div class="example-icon">🍽️</div>
+          <div class="example-meta">
+            <h3>Slow Cooling Violation</h3>
+            <div class="example-tags">
+              <span class="tag fail">FAIL</span>
+              <span class="tag industry">Food Safety</span>
+            </div>
+          </div>
+        </div>
+        <p>Food cooling process fails to meet FDA timing requirements. Temperature stays in danger zone too long, risking bacterial growth.</p>
+        
+        <div class="example-details">
+          <div class="detail-row">
+            <span class="detail-label">Issue:</span>
+            <span class="detail-value">Slow cooling to 70°F</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Time Exceeded:</span>
+            <span class="detail-value">3.5 hours (limit: 2hr)</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Risk:</span>
+            <span class="detail-value">Pathogen growth</span>
+          </div>
+        </div>
+        
+        <div class="example-actions">
+          <a href="/examples/haccp_cooling_fail.csv" class="btn btn-sm" download>
+            📄 CSV Data
+          </a>
+          <a href="/examples/haccp-cooling-validation.json" class="btn btn-sm btn-outline" download>
+            ⚙️ JSON Spec
+          </a>
+        </div>
+      </div>
+      
+      <div class="example-tile" data-filter="fail sterile">
+        <div class="example-header">
+          <div class="example-icon">🧪</div>
+          <div class="example-meta">
+            <h3>Inadequate Sterilization</h3>
+            <div class="example-tags">
+              <span class="tag fail">FAIL</span>
+              <span class="tag industry">Sterile Processing</span>
+            </div>
+          </div>
+        </div>
+        <p>Sterile processing cycle with insufficient temperature exposure. Fails to achieve required sterility assurance level.</p>
+        
+        <div class="example-details">
+          <div class="detail-row">
+            <span class="detail-label">Issue:</span>
+            <span class="detail-value">Temperature dips below target</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Achieved:</span>
+            <span class="detail-value">118°C average</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Required:</span>
+            <span class="detail-value">121°C minimum</span>
+          </div>
+        </div>
+        
+        <div class="example-actions">
+          <a href="/examples/sterile_processing_fail.csv" class="btn btn-sm" download>
+            📄 CSV Data
+          </a>
+          <a href="/examples/sterile-processing-validation.json" class="btn btn-sm btn-outline" download>
+            ⚙️ JSON Spec
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How to Use -->
+<section class="section">
+  <div class="section-container">
+    <div class="section-header" style="text-align: center;">
+      <h2>How to Use These Examples</h2>
+      <p>Get started with ProofKit using our comprehensive test datasets</p>
+    </div>
+    
+    <div class="process-steps">
+      <div class="step-item">
+        <div class="step-number">1</div>
+        <div class="step-content">
+          <h3>Download Example Data</h3>
+          <p>Choose a CSV temperature data file and its corresponding JSON specification from the examples above.</p>
+        </div>
+      </div>
+      
+      <div class="step-item">
+        <div class="step-number">2</div>
+        <div class="step-content">
+          <h3>Upload to ProofKit</h3>
+          <p>Use the main ProofKit interface to upload your chosen files. The system will process them automatically.</p>
+        </div>
+      </div>
+      
+      <div class="step-item">
+        <div class="step-number">3</div>
+        <div class="step-content">
+          <h3>Compare Results</h3>
+          <p>Review the generated proof PDF and compare with the expected PASS/FAIL result from the example.</p>
+        </div>
+      </div>
+      
+      <div class="step-item">
+        <div class="step-number">4</div>
+        <div class="step-content">
+          <h3>Verify Evidence</h3>
+          <p>Download the evidence bundle and test the cryptographic verification process.</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="text-center">
+      <a href="/app" class="btn btn-primary btn-lg">
+        <span>Try ProofKit Now</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="m9 18 6-6-6-6"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block styles %}
+<style>
+/* Examples specific styles */
+#examples {
+  margin-top: 2rem;
+}
+
+/* Filter Tabs */
+.filter-tabs {
+  padding: 2rem 0;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: center;
+}
+
+.filter-tabs {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: 0.75rem 1.5rem;
+  border: 2px solid #e2e8f0;
+  background: white;
+  color: #64748b;
+  border-radius: 2rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.filter-btn:hover,
+.filter-btn.active {
+  border-color: #667eea;
+  background: #667eea;
+  color: white;
+}
+
+/* Examples Grid */
+.examples-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 2rem;
+}
+
+.example-tile {
+  background: white;
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.example-tile:hover {
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px);
+}
+
+.example-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.example-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.example-meta {
+  flex-grow: 1;
+}
+
+.example-meta h3 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+  color: #1e293b;
+}
+
+.example-tags {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.tag {
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.tag.pass {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.tag.fail {
+  background: #fecaca;
+  color: #dc2626;
+}
+
+.tag.indeterminate {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
+.tag.industry {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
+/* Live verification styles */
+.verification-status {
+  margin-top: 1rem;
+}
+
+.verified-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #10b981;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.verification-info {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.verification-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.verification-label {
+  font-weight: 600;
+  color: #065f46;
+  font-size: 0.85rem;
+}
+
+.verification-time {
+  font-family: 'SF Mono', Monaco, monospace;
+  font-size: 0.8rem;
+  color: #10b981;
+  font-weight: 600;
+}
+
+.btn-primary {
+  background: #10b981;
+  color: white;
+  border: 1px solid #10b981;
+}
+
+.btn-primary:hover {
+  background: #059669;
+  border-color: #059669;
+}
+
+.btn-secondary {
+  background: #6b7280;
+  color: white;
+  border: 1px solid #6b7280;
+}
+
+.btn-secondary:hover {
+  background: #4b5563;
+  border-color: #4b5563;
+}
+
+.example-tile p {
+  color: #64748b;
+  line-height: 1.6;
+  margin: 0 0 1.5rem 0;
+}
+
+.example-details {
+  background: #f8fafc;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.detail-row:last-child {
+  margin-bottom: 0;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+.detail-value {
+  font-family: 'SF Mono', Monaco, monospace;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.example-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* Process Steps */
+.process-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.step-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border-radius: 50%;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.step-content h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  color: #1e293b;
+}
+
+.step-content p {
+  color: #64748b;
+  margin: 0;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+/* Button Styles */
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  border-radius: 0.375rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 2rem;
+  }
+  
+  .hero-stats {
+    gap: 2rem;
+  }
+  
+  .examples-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .filter-tabs {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .example-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.75rem;
+  }
+  
+  .detail-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+  
+  .process-steps {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-stats {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .example-tile {
+    padding: 1.5rem;
+  }
+  
+  .example-actions {
+    flex-direction: column;
+  }
+}
+
+/* Filter functionality */
+.example-tile[data-filter] {
+  transition: all 0.3s ease;
+}
+
+.example-tile.hidden {
+  display: none;
+}
+</style>
+
+<script>
+// Filter functionality
+document.addEventListener('DOMContentLoaded', function() {
+  const filterButtons = document.querySelectorAll('.filter-btn');
+  const exampleTiles = document.querySelectorAll('.example-tile');
+  
+  filterButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      const filter = this.getAttribute('data-filter');
+      
+      // Update active button
+      filterButtons.forEach(btn => btn.classList.remove('active'));
+      this.classList.add('active');
+      
+      // Filter examples
+      exampleTiles.forEach(tile => {
+        const tileFilters = tile.getAttribute('data-filter');
+        
+        if (filter === 'all' || tileFilters.includes(filter)) {
+          tile.classList.remove('hidden');
+        } else {
+          tile.classList.add('hidden');
+        }
+      });
+    });
+  });
+});
+</script>
+{% endblock %}

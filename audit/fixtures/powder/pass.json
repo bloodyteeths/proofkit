@@ -1,0 +1,38 @@
+{
+  "version": "1.0",
+  "industry": "powder",
+  "job": {
+    "job_id": "audit_powder_pass"
+  },
+  "spec": {
+    "method": "OVEN_AIR",
+    "target_temp_C": 180.0,
+    "hold_time_s": 600,
+    "temp_band_C": {
+      "min": 170.0,
+      "max": 190.0
+    },
+    "sensor_uncertainty_C": 2.0
+  },
+  "data_requirements": {
+    "max_sample_period_s": 30.0,
+    "allowed_gaps_s": 60.0
+  },
+  "sensor_selection": {
+    "mode": "min_of_set",
+    "require_at_least": 2
+  },
+  "logic": {
+    "continuous": true,
+    "max_total_dips_s": 0
+  },
+  "preconditions": {
+    "max_ramp_rate_C_per_min": 10.0,
+    "max_time_to_threshold_s": 300
+  },
+  "reporting": {
+    "units": "C",
+    "language": "en",
+    "timezone": "UTC"
+  }
+}

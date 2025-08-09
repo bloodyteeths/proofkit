@@ -1,0 +1,33 @@
+timestamp,temperature_celsius,humidity_percent,door_status,alarm_status,storage_zone,product_category,notes
+2024-03-01 08:00:00,2.1,65.2,closed,normal,zone_a,biologics,Morning temperature check
+2024-03-01 08:15:00,2.3,64.8,closed,normal,zone_a,biologics,
+2024-03-01 08:30:00,2.2,65.1,closed,normal,zone_a,biologics,
+2024-03-01 08:45:00,2.0,65.5,closed,normal,zone_a,biologics,
+2024-03-01 09:00:00,2.4,64.6,closed,normal,zone_a,biologics,
+2024-03-01 09:15:00,4.2,63.8,open,normal,zone_a,biologics,Door opened for inventory
+2024-03-01 09:16:00,5.8,62.1,open,normal,zone_a,biologics,Temperature rise during access
+2024-03-01 09:17:00,7.1,60.8,open,normal,zone_a,biologics,
+2024-03-01 09:18:00,6.8,61.2,closed,normal,zone_a,biologics,Door closed
+2024-03-01 09:30:00,4.5,63.2,closed,normal,zone_a,biologics,Recovery phase
+2024-03-01 09:45:00,3.1,64.1,closed,normal,zone_a,biologics,
+2024-03-01 10:00:00,2.3,64.9,closed,normal,zone_a,biologics,Temperature stabilized
+2024-03-01 10:15:00,2.1,65.2,closed,normal,zone_a,biologics,
+2024-03-01 10:30:00,2.0,65.4,closed,normal,zone_a,biologics,
+2024-03-01 10:45:00,2.2,65.1,closed,normal,zone_a,biologics,
+2024-03-01 11:00:00,8.5,58.2,closed,high_temp,zone_a,biologics,Compressor failure detected
+2024-03-01 11:15:00,12.1,54.8,closed,high_temp,zone_a,biologics,Temperature rising - emergency protocols
+2024-03-01 11:30:00,15.8,51.2,closed,high_temp,zone_a,biologics,Critical temperature exceeded
+2024-03-01 11:45:00,18.2,48.6,closed,high_temp,zone_a,biologics,Product integrity compromised
+2024-03-01 12:00:00,20.1,46.8,closed,high_temp,zone_a,biologics,Backup cooling activated
+2024-03-01 12:15:00,18.9,47.2,closed,high_temp,zone_a,biologics,Temperature peak reached
+2024-03-01 12:30:00,16.4,49.1,closed,high_temp,zone_a,biologics,Cooling system responding
+2024-03-01 12:45:00,13.8,51.8,closed,high_temp,zone_a,biologics,
+2024-03-01 13:00:00,11.2,54.2,closed,high_temp,zone_a,biologics,
+2024-03-01 13:15:00,8.6,57.1,closed,high_temp,zone_a,biologics,Approaching acceptable range
+2024-03-01 13:30:00,6.2,59.8,closed,normal,zone_a,biologics,Temperature back in range
+2024-03-01 13:45:00,4.1,62.4,closed,normal,zone_a,biologics,
+2024-03-01 14:00:00,2.8,64.2,closed,normal,zone_a,biologics,
+2024-03-01 14:15:00,2.3,64.9,closed,normal,zone_a,biologics,
+2024-03-01 14:30:00,2.1,65.2,closed,normal,zone_a,biologics,System stabilized - incident logged
+2024-03-01 14:45:00,2.0,65.4,closed,normal,zone_a,biologics,
+2024-03-01 15:00:00,2.2,65.1,closed,normal,zone_a,biologics,Normal operations resumed

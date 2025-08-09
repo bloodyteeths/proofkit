@@ -1,0 +1,31 @@
+timestamp,temperature_celsius,pressure_kpa,steam_quality_percent,cycle_phase,notes
+2024-01-01 10:00:00,25.2,101.3,0,preconditioning,Ambient conditions - loading chamber
+2024-01-01 10:05:00,35.8,105.2,15,preconditioning,Chamber heating begins
+2024-01-01 10:10:00,55.4,115.8,32,air_removal,Air removal phase - vacuum pulls
+2024-01-01 10:15:00,75.2,125.4,48,air_removal,Continued air evacuation
+2024-01-01 10:20:00,95.6,135.7,65,heating,Steam injection begins
+2024-01-01 10:25:00,115.8,145.2,78,heating,Temperature ramping to target
+2024-01-01 10:30:00,119.5,147.8,85,heating,Approaching sterilization temp
+2024-01-01 10:35:00,121.2,148.6,92,sterilization,Target reached - 121°C for 15 min per ISO 17665
+2024-01-01 10:36:00,121.1,148.5,93,sterilization,Sterilization hold period
+2024-01-01 10:37:00,121.3,148.7,94,sterilization,
+2024-01-01 10:38:00,121.0,148.4,93,sterilization,
+2024-01-01 10:39:00,121.2,148.6,94,sterilization,
+2024-01-01 10:40:00,121.1,148.5,93,sterilization,
+2024-01-01 10:41:00,121.3,148.8,94,sterilization,
+2024-01-01 10:42:00,121.2,148.6,93,sterilization,
+2024-01-01 10:43:00,121.0,148.3,93,sterilization,
+2024-01-01 10:44:00,121.1,148.5,94,sterilization,
+2024-01-01 10:45:00,121.2,148.6,93,sterilization,
+2024-01-01 10:46:00,121.3,148.7,94,sterilization,
+2024-01-01 10:47:00,121.1,148.4,93,sterilization,
+2024-01-01 10:48:00,121.0,148.3,93,sterilization,
+2024-01-01 10:49:00,121.2,148.6,94,sterilization,
+2024-01-01 10:50:00,121.1,148.5,93,sterilization,15-minute sterilization hold complete
+2024-01-01 10:51:00,118.5,145.2,88,cooling,Exhaust phase begins
+2024-01-01 10:55:00,105.4,130.8,75,cooling,Steam venting
+2024-01-01 11:00:00,85.2,120.4,58,cooling,Cooling cycle
+2024-01-01 11:05:00,65.8,112.6,42,cooling,Temperature declining
+2024-01-01 11:10:00,45.2,108.3,28,drying,Drying phase - vacuum applied
+2024-01-01 11:15:00,35.6,105.8,15,drying,Final drying
+2024-01-01 11:20:00,28.4,102.1,8,complete,Cycle complete - door unlock enabled

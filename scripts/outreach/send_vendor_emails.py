@@ -57,9 +57,10 @@ def extract_subject_and_body(rendered: str) -> Dict[str, str]:
 
 def send_postmark(to_email: str, subject: str, html_body: str, text_body: str):
     token = os.getenv("POSTMARK_API_TOKEN") or os.getenv("POSTMARK_TOKEN")
-    from_email = os.getenv("EMAIL_FROM", "John <john@proofkit.net>")
+    from_email = os.getenv("EMAIL_FROM", "Atilla <john@proofkit.net>")
     reply_to = os.getenv("REPLY_TO", "john@proofkit.net")
-    message_stream = os.getenv("POSTMARK_MESSAGE_STREAM", "broadcast")
+    # For 1:1 outreach, default to the transactional/outbound stream
+    message_stream = os.getenv("POSTMARK_MESSAGE_STREAM", "outbound")
     if not token:
         print("ERROR: POSTMARK_API_TOKEN not set")
         return False, 0, "missing token"
@@ -77,10 +78,19 @@ def send_postmark(to_email: str, subject: str, html_body: str, text_body: str):
         "HtmlBody": html_body,
         "TextBody": text_body,
         "MessageStream": message_stream,
-        "Headers": [
-            {"Name": "List-Unsubscribe", "Value": "<mailto:john@proofkit.net?subject=unsubscribe>"}
-        ],
+        # Intentionally omit bulk/list headers to keep messages looking 1:1
     }
+    # If broadcast stream is explicitly selected, allow optional unsubscribe header
+    if message_stream == "broadcast":
+        list_unsub = os.getenv("LIST_UNSUBSCRIBE", "")
+        if list_unsub:
+            data["Headers"] = [{"Name": "List-Unsubscribe", "Value": list_unsub}]
+    # Reduce tracking signals
+    data["TrackOpens"] = False
+    data["TrackLinks"] = "None"
+    # Optionally send text-only to look more 1:1
+    if os.getenv("TEXT_ONLY", "0").lower() in ("1", "true", "yes"):
+        data.pop("HtmlBody", None)
     with httpx.Client(timeout=20.0) as client:
         resp = client.post(url, headers=headers, json=data)
     if resp.status_code == 200:
@@ -114,7 +124,7 @@ def main() -> int:
     template_md = tmpl_path.read_text(encoding="utf-8")
     # Single-sentence value proposition used across all variants
     one_liner = (
-        "We're ProofKit — we turn temperature logs (CSV/PDF) into inspector-ready, tamper-evident PDF/A-3 certificates in ~30 seconds."
+        "We co-create tamper-evident, inspector-ready PDF/A-3 certificates from temperature logs in ~30 seconds (co-branded)."
     )
 
     # Load sent history for deduplication
@@ -139,17 +149,15 @@ def main() -> int:
     start = template_md.find("## Template A")
     end = template_md.find("---", start + 1)
     template_a_full = template_md[start:end].strip() if start != -1 and end != -1 else template_md
-    # Short, interesting, no phone, tight CTA; we still allow placeholders
+    # Short, offer-driven body (no built-in greeting/signature to avoid duplicates)
     template_a = (
-        "**Subject**: Partnering with [VENDOR]: instant, audit-ready certificates for your customers\n\n"
+        "**Subject**: Partner idea for [VENDOR]\n\n"
         "**Email Body**:\n\n"
-        "Hi [CONTACT_NAME],\n\n"
-        "First—kudos on [VENDOR]'s work. We’ve seen customers praise your reliability.\n\n"
+        "Saw [VENDOR]’s work — when customers ask for an inspector-ready certificate instead of raw CSVs, how do you handle it today?\n\n"
         f"{one_liner}\n\n"
-        "Your customers get inspector-ready docs without changing their workflow — great for CFR 21, HACCP, ASTM. There’s no downside: no code changes, no impact on your margins.\n\n"
-        "Idea: a co-branded [VENDOR] template your team can share. Low lift for you, big value for users.\n\n"
-        "Reply YES and I’ll send a [VENDOR]-branded sample today (or build it from a public CSV you share). Prefer a quick chat? Propose a 15‑min slot and I’ll make it work.\n\n"
-        "Best,\n[YOUR_NAME] — ProofKit (proofkit.net)\n"
+        "No code changes. No pricing changes. We can co-create 1–2 [VENDOR]-branded templates within 72 hours at no cost.\n\n"
+        "If it’s not useful, we’ll delete it. If it helps, we can formalize a light partner program—entirely optional.\n\n"
+        "Should I send a [VENDOR]-branded sample Monday for a quick look?"
     )
 
     sent = 0
@@ -536,11 +544,12 @@ def main() -> int:
                 continue
             contact_name = row.get("Contact_Name", "").strip() or "Team"
             website = row.get("Website", "").strip()
+            personal_note = (row.get("Personal_Note", "") or "").strip()
 
             replacements = {
                 "CONTACT_NAME": contact_name,
                 "VENDOR": company,
-                "YOUR_NAME": "John",
+                "YOUR_NAME": "Atilla",
                 "EMAIL": "john@proofkit.net",
                 "PHONE": row.get("Phone", ""),
             }
@@ -551,49 +560,55 @@ def main() -> int:
                     profile_key = key
                     break
 
-            if profile_key:
+            # Dean Jackson 9-word email mode (partnership framing): single question, no greeting/signature
+            if os.getenv("NINE_WORD", "0").lower() in ("1", "true", "yes"):
+                subject = "Quick partnership question"
+                # 9 words: Are you open to a [VENDOR] certificate partnership now?
+                body = f"Are you open to a {company} certificate partnership now?"
+                html_body = f"""
+                <div style='font-family: Inter, Arial, sans-serif; line-height: 1.6;'>
+                  {body.replace('\n', '<br>')}
+                </div>
+                """
+                text_body = body
+                # Send immediately using minimal pacing rules below
+            elif profile_key:
                 vp = vendor_profiles[profile_key]
-                subject = f"{company}: reserve a pilot slot for co‑branded certificates (we pay 15%)"
+                # Softer, human subject; remove % and scarcity cues
+                subject = f"Partner idea for {company}"
                 # Clear, concise partnership explainer appended to vendor-specific offer
                 terms_clarifier = (
-                    "What you get: 15% of certificate fees from your co-branded templates, paid monthly; co-branded templates/page; usage report + payout; optional API/S3 delivery. "
-                    "What we handle: build/maintain templates, onboarding, billing, support, compliance. "
-                    "No impact on your pricing/margins; end users pay ProofKit per-certificate. Pilot: 1–2 templates live in ~7 days."
+                    "If useful, we can set up a small pilot: 1–2 co‑branded templates in about a week. We handle build, onboarding and support; your pricing/margins stay as is."
                 )
                 no_downside = (
-                    "No downside: zero code changes, zero impact on your margins. Users keep using your devices — they simply get clear, inspector‑ready certificates instead of raw CSVs."
+                    "No code changes on your side. Users keep using your devices — they just get clear, inspector‑ready certificates instead of raw CSVs."
                 )
-                hold_until = time.strftime("%b %d", time.gmtime(time.time() + 7 * 86400))
-                scarcity_line = (
-                    f"We’re opening {slots_total} co‑brand slots this quarter; {slots_in_build} already in build. I can hold a slot for {company} until {hold_until}."
-                )
+                # Remove scarcity language for first touch
+                scarcity_line = ""
+                personal_line = (f"{personal_note}\n\n" if personal_note else "")
                 body = (
                     f"Hi {contact_name},\n\n"
+                    f"{personal_line}"
                     f"{vp['compliment']}\n\n"
                     f"{one_liner}\n\n"
                     f"What we hear: {vp['pain']}\n\n"
                     f"Why it helps {company}: {vp['wiifm']}\n\n"
                     f"{no_downside}\n\n"
                     f"Proof: {vp['proof']}\n\n"
-                    f"Partner terms: {vp['offer']}\n\n{terms_clarifier}\n\n{scarcity_line}\n\n"
-                    f"Reply YES and I’ll send a {company}-branded sample today (we can use a public CSV or one you share). Prefer a quick chat? Propose a 15‑min slot and I’ll make it work."
+                    f"We can co-create 1–2 {company}-branded templates within 72 hours at no cost. If it’s not useful, we’ll delete it; if it helps, we can formalize a light partner program—your call.\n\n"
+                    f"Should I send a {company}-branded sample Monday for a quick look?\n\n– Atilla"
                 )
-                body = body + f"\n\nOr pick a time: {calendly_url}"
+                if os.getenv("INCLUDE_CALENDLY", "0") in ("1", "true", "yes"):
+                    body = body + f"\n\nIf easier, here’s a time link: {calendly_url}"
             else:
                 rendered = render_template(template_a, replacements)
                 parsed = extract_subject_and_body(rendered)
-                # Subtly incorporate a pilot slot reference
-                subject = f"{company}: reserved pilot slot — instant co‑branded certificates (we pay 15%)"
-                # Generic terms clarifier for concise template
-                generic_terms = (
-                    "Partner terms: We pay 15% of certificate fees generated when your customers use your co-branded templates on ProofKit. "
-                    "No change to your pricing/margins; we handle build, onboarding, billing, and support; monthly usage report + payout; pilot in ~7 days."
-                )
-                hold_until = time.strftime("%b %d", time.gmtime(time.time() + 7 * 86400))
-                scarcity_line = (
-                    f"We’re opening {slots_total} co‑brand slots this quarter; {slots_in_build} already in build. I can hold a slot for {company} until {hold_until}."
-                )
-                body = parsed["body"] + f"\n\n{generic_terms}\n\n{scarcity_line}\n\nOr pick a time: {calendly_url}"
+                subject = f"Partner idea for {company}"
+                opening = f"Hi {contact_name},\n\n"
+                note = f"{personal_note}\n\n" if personal_note else ""
+                body = opening + note + parsed["body"] + "\n\n– Atilla"
+                if os.getenv("INCLUDE_CALENDLY", "0") in ("1", "true", "yes"):
+                    body = body + f"\n\nIf easier, here’s a time link: {calendly_url}"
 
             # Insert one-line personalization if available
             ps_line: Optional[str] = None
@@ -604,19 +619,15 @@ def main() -> int:
             if ps_line:
                 body = body + f"\n\n{ps_line}"
 
-            # Build HTML minimal wrapper (no phone number, correct site)
-            html_body = f"""
-            <div style='font-family: Inter, Arial, sans-serif; line-height: 1.6;'>
-              {body.replace('\n', '<br>')}
-              <hr>
-              <p style='font-size:12px;color:#6b7280'>
-                Tamsar, Inc. • <a href='{website_url}'>{website_url}</a><br>
-                131 CONTINENTAL DR, STE 305, New Castle, DE 19713<br>
-                Don’t want emails from us? Reply with "unsubscribe".
-              </p>
-            </div>
-            """
-            text_body = body + f"\n\n---\nTamsar, Inc. • {website_url}\n131 CONTINENTAL DR, STE 305, New Castle, DE 19713\nUnsubscribe: reply with 'unsubscribe'\n"
+            # Build HTML minimal wrapper; allow text-only mode to strip it entirely
+            if os.getenv("NINE_WORD", "0").lower() not in ("1", "true", "yes"):
+                html_body = f"""
+                <div style='font-family: Inter, Arial, sans-serif; line-height: 1.6;'>
+                  {body.replace('\n', '<br>')}
+                </div>
+                """
+                # Minimal text signature to reduce bulk signals
+                text_body = body
 
             if args.dry_run:
                 print("\n--- DRY RUN ---")

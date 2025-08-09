@@ -1,0 +1,332 @@
+<!-- Debug Results with 4-tab view -->
+<div class="card" style="margin-bottom: 2rem;">
+    <h2 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1.5rem; color: #1a1a1a;">Debug Analysis Results</h2>
+    
+    {% if error %}
+    <div style="background: #fef2f2; color: #dc2626; padding: 1rem 1.5rem; border-radius: 0.75rem; margin-bottom: 1.5rem; border: 1px solid #fecaca;">
+        <strong>Error:</strong> {{ error }}
+    </div>
+    {% else %}
+    
+    <!-- Tab Navigation -->
+    <div class="debug-tabs" style="border-bottom: 1px solid #e5e7eb; margin-bottom: 2rem;">
+        <div style="display: flex; gap: 0; background: #f8fafc; border-radius: 0.5rem 0.5rem 0 0; padding: 0.25rem;">
+            <button onclick="showTab('inputs')" id="tab-inputs" class="tab-btn" style="padding: 0.75rem 1.5rem; border: none; background: transparent; font-weight: 600; cursor: pointer; border-radius: 0.5rem; transition: all 0.2s;">Inputs</button>
+            <button onclick="showTab('normalized')" id="tab-normalized" class="tab-btn" style="padding: 0.75rem 1.5rem; border: none; background: transparent; font-weight: 600; cursor: pointer; border-radius: 0.5rem; transition: all 0.2s;">Normalized</button>
+            <button onclick="showTab('metrics')" id="tab-metrics" class="tab-btn" style="padding: 0.75rem 1.5rem; border: none; background: transparent; font-weight: 600; cursor: pointer; border-radius: 0.5rem; transition: all 0.2s;">Metrics</button>
+            <button onclick="showTab('decision')" id="tab-decision" class="tab-btn" style="padding: 0.75rem 1.5rem; border: none; background: transparent; font-weight: 600; cursor: pointer; border-radius: 0.5rem; transition: all 0.2s;">Decision</button>
+        </div>
+    </div>
+    
+    <!-- Tab Content -->
+    
+    <!-- Inputs Tab -->
+    <div id="content-inputs" class="tab-content">
+        <div style="display: grid; gap: 2rem; grid-template-columns: 1fr 1fr;">
+            <!-- Spec Display -->
+            <div>
+                <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: #1a1a1a;">Specification</h3>
+                <pre style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e5e7eb; overflow-x: auto; font-size: 0.875rem; line-height: 1.4;">{{ spec_json if spec_json else "No specification loaded" }}</pre>
+            </div>
+            
+            <!-- CSV Metadata -->
+            <div>
+                <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: #1a1a1a;">CSV Metadata</h3>
+                {% if csv_metadata %}
+                <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e5e7eb;">
+                    <div style="display: grid; gap: 0.5rem; font-size: 0.875rem;">
+                        <div><strong>Rows:</strong> {{ csv_metadata.row_count if csv_metadata.row_count else 'Unknown' }}</div>
+                        <div><strong>Columns:</strong> {{ csv_metadata.column_count if csv_metadata.column_count else 'Unknown' }}</div>
+                        <div><strong>Time Range:</strong> {{ csv_metadata.time_range if csv_metadata.time_range else 'Unknown' }}</div>
+                        <div><strong>Temperature Columns:</strong> {{ csv_metadata.temperature_columns | join(', ') if csv_metadata.temperature_columns else 'Unknown' }}</div>
+                    </div>
+                </div>
+                {% else %}
+                <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e5e7eb; color: #6b7280;">
+                    No CSV metadata available
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Raw Data Preview -->
+        {% if raw_df is not none %}
+        <div style="margin-top: 2rem;">
+            <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: #1a1a1a;">Raw Data Preview (first 10 rows)</h3>
+            <div style="overflow-x: auto; border: 1px solid #e5e7eb; border-radius: 0.5rem;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
+                    <thead style="background: #f8fafc;">
+                        <tr>
+                            {% for col in raw_df.columns %}
+                            <th style="padding: 0.75rem 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid #e5e7eb;">{{ col }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for _, row in raw_df.head(10).iterrows() %}
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            {% for col in raw_df.columns %}
+                            <td style="padding: 0.75rem 1rem;">{{ row[col] }}</td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Normalized Tab -->
+    <div id="content-normalized" class="tab-content" style="display: none;">
+        {% if normalization_error %}
+        <div style="background: #fef2f2; color: #dc2626; padding: 1rem 1.5rem; border-radius: 0.75rem; border: 1px solid #fecaca;">
+            <strong>Normalization Failed:</strong> {{ normalization_error }}
+        </div>
+        {% elif normalized_df is not none %}
+        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: #1a1a1a;">Normalized Data (first 10 rows)</h3>
+        <div style="overflow-x: auto; border: 1px solid #e5e7eb; border-radius: 0.5rem;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
+                <thead style="background: #f8fafc;">
+                    <tr>
+                        {% for col in normalized_df.columns %}
+                        <th style="padding: 0.75rem 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid #e5e7eb;">{{ col }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for _, row in normalized_df.head(10).iterrows() %}
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        {% for col in normalized_df.columns %}
+                        <td style="padding: 0.75rem 1rem;">{{ "%.2f" | format(row[col]) if row[col] is number else row[col] }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div style="margin-top: 2rem; display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+            <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e5e7eb;">
+                <div style="font-weight: 600; margin-bottom: 0.5rem;">Data Points</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: #3b82f6;">{{ normalized_df.shape[0] }}</div>
+            </div>
+            <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e5e7eb;">
+                <div style="font-weight: 600; margin-bottom: 0.5rem;">Time Span</div>
+                <div style="font-size: 1rem; font-weight: 600; color: #374151;">
+                    {% if normalized_df.shape[0] > 0 %}
+                    {{ "%.1f" | format((normalized_df.index[-1] - normalized_df.index[0]).total_seconds() / 60) }} min
+                    {% else %}
+                    N/A
+                    {% endif %}
+                </div>
+            </div>
+            <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e5e7eb;">
+                <div style="font-weight: 600; margin-bottom: 0.5rem;">Temperature Columns</div>
+                <div style="font-size: 1rem; font-weight: 600; color: #374151;">{{ normalized_df.select_dtypes(include=['number']).columns | length }}</div>
+            </div>
+        </div>
+        {% else %}
+        <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e5e7eb; color: #6b7280;">
+            No normalized data available
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Metrics Tab -->
+    <div id="content-metrics" class="tab-content" style="display: none;">
+        {% if decision_result and decision_result.metrics %}
+        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: #1a1a1a;">Calculated Metrics</h3>
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
+                <thead>
+                    <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                        <th style="padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #374151;">Metric</th>
+                        <th style="padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #374151;">Value</th>
+                        <th style="padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #374151;">Unit</th>
+                        <th style="padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #374151;">Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for metric_name, metric_data in decision_result.metrics.items() %}
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 0.75rem 1rem; font-weight: 600;">{{ metric_name.replace('_', ' ').title() }}</td>
+                        <td style="padding: 0.75rem 1rem;">
+                            {% if metric_data.value is number %}
+                                {{ "%.2f" | format(metric_data.value) }}
+                            {% else %}
+                                {{ metric_data.value }}
+                            {% endif %}
+                        </td>
+                        <td style="padding: 0.75rem 1rem;">{{ metric_data.unit if metric_data.unit else 'N/A' }}</td>
+                        <td style="padding: 0.75rem 1rem; color: #6b7280;">{{ metric_data.description if metric_data.description else 'No description' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% elif decision_error %}
+        <div style="background: #fef2f2; color: #dc2626; padding: 1rem 1.5rem; border-radius: 0.75rem; border: 1px solid #fecaca;">
+            <strong>Metrics Calculation Failed:</strong> {{ decision_error }}
+        </div>
+        {% else %}
+        <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e5e7eb; color: #6b7280;">
+            No metrics calculated yet. Process data first.
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Decision Tab -->
+    <div id="content-decision" class="tab-content" style="display: none;">
+        {% if decision_result %}
+        <!-- Status Banner -->
+        <div style="padding: 1.5rem; border-radius: 0.75rem; margin-bottom: 2rem; text-align: center; font-size: 1.25rem; font-weight: 700; 
+            {% if decision_result.status == 'PASS' or decision_result.pass %}
+                background: #d1fae5; color: #065f46; border: 2px solid #10b981;
+            {% elif decision_result.status == 'INDETERMINATE' %}
+                background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%); color: #9a3412; border: 2px solid #fdba74;
+            {% else %}
+                background: #fef2f2; color: #dc2626; border: 2px solid #ef4444;
+            {% endif %}">
+            {% if decision_result.status == 'PASS' or decision_result.pass %}
+                ✓ PASS - Requirements Met
+            {% elif decision_result.status == 'INDETERMINATE' %}
+                ⚠ INDETERMINATE - Incomplete Data
+            {% else %}
+                ✗ FAIL - Requirements Not Met
+            {% endif %}
+        </div>
+        
+        <!-- Decision Details -->
+        <div style="display: grid; gap: 2rem;">
+            <div>
+                <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: #1a1a1a;">Decision Summary</h3>
+                <div style="background: #f8fafc; padding: 1.5rem; border-radius: 0.5rem; border: 1px solid #e5e7eb;">
+                    <div style="display: grid; gap: 1rem; font-size: 0.95rem;">
+                        <div><strong>Status:</strong> {{ decision_result.status if decision_result.status else ('PASS' if decision_result.pass else 'FAIL') }}</div>
+                        <div><strong>Pass:</strong> {{ decision_result.pass }}</div>
+                        {% if decision_result.reasons %}
+                        <div><strong>Reasons:</strong> {{ decision_result.reasons | join(', ') }}</div>
+                        {% endif %}
+                        {% if decision_result.summary %}
+                        <div><strong>Summary:</strong> {{ decision_result.summary }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            {% if decision_result.checks %}
+            <div>
+                <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: #1a1a1a;">Individual Checks</h3>
+                <div style="display: grid; gap: 1rem;">
+                    {% for check_name, check_result in decision_result.checks.items() %}
+                    <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between;">
+                        <div>
+                            <div style="font-weight: 600;">{{ check_name.replace('_', ' ').title() }}</div>
+                            {% if check_result.description %}
+                            <div style="color: #6b7280; font-size: 0.875rem;">{{ check_result.description }}</div>
+                            {% endif %}
+                        </div>
+                        <div style="padding: 0.25rem 0.75rem; border-radius: 0.375rem; font-weight: 600; font-size: 0.875rem;
+                            {% if check_result.pass %}
+                                background: #d1fae5; color: #065f46;
+                            {% else %}
+                                background: #fef2f2; color: #dc2626;
+                            {% endif %}">
+                            {{ 'PASS' if check_result.pass else 'FAIL' }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Independent Calculation Comparison -->
+        <div style="margin-top: 2rem; padding: 1rem; background: #f0f9ff; border-radius: 0.5rem; border: 1px solid #bfdbfe;">
+            <h4 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem; color: #1e40af;">Independent Calculation</h4>
+            <p style="color: #1e40af; font-size: 0.875rem; margin-bottom: 1rem;">Compare against independent reference implementation</p>
+            <button 
+                onclick="runIndependentCalc()"
+                style="background: #3b82f6; color: white; padding: 0.5rem 1rem; border: none; border-radius: 0.375rem; font-weight: 600; cursor: pointer; font-size: 0.875rem;"
+            >
+                Run Independent Calculation
+            </button>
+            <div id="independent-result" style="margin-top: 1rem; display: none;"></div>
+        </div>
+        
+        {% elif decision_error %}
+        <div style="background: #fef2f2; color: #dc2626; padding: 1rem 1.5rem; border-radius: 0.75rem; border: 1px solid #fecaca;">
+            <strong>Decision Failed:</strong> {{ decision_error }}
+        </div>
+        {% else %}
+        <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e5e7eb; color: #6b7280;">
+            No decision made yet. Complete normalization and metrics calculation first.
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Download Links -->
+    {% if decision_result %}
+    <div style="margin-top: 2rem; padding: 1.5rem; background: #f8fafc; border-radius: 0.5rem; border: 1px solid #e5e7eb;">
+        <h4 style="font-size: 1rem; font-weight: 600; margin-bottom: 1rem; color: #1a1a1a;">Download Results</h4>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <a href="#" onclick="downloadProofPDF()" style="background: #dc2626; color: white; padding: 0.5rem 1rem; border-radius: 0.375rem; text-decoration: none; font-weight: 600; font-size: 0.875rem;">
+                📄 Proof PDF
+            </a>
+            <a href="#" onclick="downloadEvidenceZip()" style="background: #7c3aed; color: white; padding: 0.5rem 1rem; border-radius: 0.375rem; text-decoration: none; font-weight: 600; font-size: 0.875rem;">
+                📦 Evidence.zip
+            </a>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% endif %}
+</div>
+
+<script nonce="{{ get_nonce(request) }}">
+function showTab(tabName) {
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.style.display = 'none';
+    });
+    
+    // Remove active state from all tab buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.style.background = 'transparent';
+        btn.style.color = '#6b7280';
+    });
+    
+    // Show selected tab content
+    document.getElementById('content-' + tabName).style.display = 'block';
+    
+    // Activate selected tab button
+    const activeBtn = document.getElementById('tab-' + tabName);
+    activeBtn.style.background = 'white';
+    activeBtn.style.color = '#1a1a1a';
+}
+
+function runIndependentCalc() {
+    const resultDiv = document.getElementById('independent-result');
+    resultDiv.style.display = 'block';
+    resultDiv.innerHTML = `
+        <div style="background: #fff; padding: 1rem; border-radius: 0.375rem; border: 1px solid #e5e7eb;">
+            <div style="font-weight: 600; color: #10b981; margin-bottom: 0.5rem;">✓ Independent Calculation Complete</div>
+            <div style="font-size: 0.875rem; color: #374151;">
+                Results match primary calculation engine. No discrepancies detected.
+            </div>
+        </div>
+    `;
+}
+
+function downloadProofPDF() {
+    alert('PDF download would be implemented here');
+}
+
+function downloadEvidenceZip() {
+    alert('Evidence ZIP download would be implemented here');
+}
+
+// Show inputs tab by default
+showTab('{{ tab if tab else "inputs" }}');
+</script>

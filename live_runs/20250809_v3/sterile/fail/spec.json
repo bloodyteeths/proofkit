@@ -1,0 +1,8 @@
+{
+  "industry": "sterile",
+  "parameters": {
+    "min_temp": 55,
+    "exposure_hours": 12,
+    "min_humidity": 50
+  }
+}

@@ -1,0 +1,680 @@
+"""
+ProofKit EtO (Ethylene Oxide) Sterilization Validation Metrics Engine
+
+Implements EtO sterilization validation according to medical device sterilization standards
+(ISO 11135, AAMI/ANSI/ISO 11135). Validates critical sterilization parameters:
+- Temperature: 50-60°C maintained throughout cycle
+- Humidity: 45-85% RH during conditioning and sterilization
+- Gas concentration: EtO levels maintained for required exposure time
+- Preconditioning, sterilization, and aeration phases
+
+Example usage:
+    from core.metrics_sterile import validate_eto_sterilization
+    from core.models import SpecV1
+    
+    spec = SpecV1(**spec_data)  # Sterile industry spec
+    normalized_df = pd.read_csv("eto_sterilization_data.csv")
+    
+    result = validate_eto_sterilization(normalized_df, spec)
+    print(f"EtO Sterilization: {'PASS' if result.pass_ else 'FAIL'}")
+"""
+
+import pandas as pd
+import numpy as np
+from typing import List, Tuple, Dict, Any, Optional
+from datetime import datetime, timezone
+import logging
+
+from core.models import SpecV1, DecisionResult, SensorMode
+from core.sensor_utils import combine_sensor_readings
+from core.temperature_utils import detect_temperature_columns, DecisionError
+from core.temperature_utils import calculate_continuous_hold_time
+
+logger = logging.getLogger(__name__)
+
+
+def validate_sterile_environment(df: pd.DataFrame, spec: SpecV1) -> DecisionResult:
+    """
+    Validate sterile environment conditions.
+    
+    Args:
+        df: Input DataFrame with sensor data
+        spec: Specification with requirements
+        
+    Returns:
+        DecisionResult with validation outcome
+    """
+    return validate_eto_sterilization(df, spec)
+
+
+def check_iso_temperature_window(df: pd.DataFrame, temp_columns: List[str], 
+                                min_temp_C: float, max_temp_C: float,
+                                max_violation_percent: float) -> Dict[str, Any]:
+    """Check ISO temperature window compliance."""
+    result = {
+        "compliant": True,
+        "violation_percent": 0.0,
+        "total_samples": len(df),
+        "violation_samples": 0,
+        "violation_periods": []
+    }
+    
+    for col in temp_columns:
+        if col in df.columns:
+            violations = (df[col] < min_temp_C) | (df[col] > max_temp_C)
+            result["violation_samples"] += violations.sum()
+    
+    result["violation_percent"] = (result["violation_samples"] / (result["total_samples"] * len(temp_columns))) * 100
+    result["compliant"] = result["violation_percent"] <= max_violation_percent
+    
+    return result
+
+
+def check_humidity_control(df: pd.DataFrame, humidity_columns: List[str],
+                          min_rh: float, max_rh: float) -> Dict[str, Any]:
+    """Check humidity control within specifications."""
+    result = {
+        "compliant": True,
+        "avg_humidity": 0.0,
+        "min_humidity": 100.0,
+        "max_humidity": 0.0
+    }
+    
+    for col in humidity_columns:
+        if col in df.columns:
+            result["avg_humidity"] = df[col].mean()
+            result["min_humidity"] = min(result["min_humidity"], df[col].min())
+            result["max_humidity"] = max(result["max_humidity"], df[col].max())
+    
+    result["compliant"] = result["min_humidity"] >= min_rh and result["max_humidity"] <= max_rh
+    
+    return result
+
+
+def validate_environmental_stability(df: pd.DataFrame, temp_columns: List[str],
+                                    max_variation_C: float) -> Dict[str, Any]:
+    """Validate environmental stability requirements."""
+    result = {
+        "stable": True,
+        "max_variation": 0.0,
+        "stability_periods": []
+    }
+    
+    for col in temp_columns:
+        if col in df.columns:
+            variation = df[col].max() - df[col].min()
+            result["max_variation"] = max(result["max_variation"], variation)
+    
+    result["stable"] = result["max_variation"] <= max_variation_C
+    
+    return result
+
+
+def calculate_process_deviation(df: pd.DataFrame, target_temp_C: float,
+                               temp_columns: List[str]) -> Dict[str, Any]:
+    """Calculate process deviation from target temperature."""
+    result = {
+        "mean_deviation": 0.0,
+        "max_deviation": 0.0,
+        "std_deviation": 0.0
+    }
+    
+    deviations = []
+    for col in temp_columns:
+        if col in df.columns:
+            col_deviation = abs(df[col] - target_temp_C)
+            deviations.extend(col_deviation.tolist())
+    
+    if deviations:
+        result["mean_deviation"] = np.mean(deviations)
+        result["max_deviation"] = np.max(deviations)
+        result["std_deviation"] = np.std(deviations)
+    
+    return result
+
+
+def detect_humidity_columns(df: pd.DataFrame) -> List[str]:
+    """
+    Detect relative humidity columns in the DataFrame.
+    
+    Args:
+        df: Input DataFrame
+        
+    Returns:
+        List of humidity column names
+    """
+    import re
+    
+    humidity_patterns = [
+        r'.*humidity.*', r'.*rh.*', r'.*relative.*', r'.*moisture.*',
+        r'.*_rh$', r'.*_humidity$', r'.*%rh.*'
+    ]
+    
+    humidity_columns = []
+    
+    for col in df.columns:
+        if col.lower() == 'timestamp' or 'time' in col.lower():
+            continue
+            
+        col_lower = col.lower()
+        if any(re.match(pattern, col_lower) for pattern in humidity_patterns):
+            # Verify it's numeric
+            if pd.api.types.is_numeric_dtype(df[col]):
+                humidity_columns.append(col)
+    
+    return humidity_columns
+
+
+def detect_gas_concentration_columns(df: pd.DataFrame) -> List[str]:
+    """
+    Detect EtO gas concentration columns in the DataFrame.
+    
+    Args:
+        df: Input DataFrame
+        
+    Returns:
+        List of gas concentration column names
+    """
+    import re
+    
+    gas_patterns = [
+        r'.*eto.*', r'.*ethylene.*oxide.*', r'.*gas.*', r'.*concentration.*',
+        r'.*ppm.*', r'.*mg/l.*', r'.*_eto$', r'.*_gas$'
+    ]
+    
+    gas_columns = []
+    
+    for col in df.columns:
+        if col.lower() == 'timestamp' or 'time' in col.lower():
+            continue
+            
+        col_lower = col.lower()
+        if any(re.match(pattern, col_lower) for pattern in gas_patterns):
+            # Verify it's numeric
+            if pd.api.types.is_numeric_dtype(df[col]):
+                gas_columns.append(col)
+    
+    return gas_columns
+
+
+def identify_eto_cycle_phases(temperature_series: pd.Series, humidity_series: Optional[pd.Series],
+                             gas_series: Optional[pd.Series], time_series: pd.Series) -> Dict[str, Any]:
+    """
+    Identify different phases of EtO sterilization cycle based on parameter changes.
+    
+    Typical EtO cycle phases:
+    1. Preconditioning: Temperature and humidity ramp up
+    2. Gas injection: EtO concentration increases
+    3. Sterilization: Parameters maintained at target levels
+    4. Evacuation/Aeration: Gas concentration decreases
+    
+    Args:
+        temperature_series: Temperature values in Celsius
+        humidity_series: Optional humidity values in %RH
+        gas_series: Optional EtO concentration values
+        time_series: Timestamp values
+        
+    Returns:
+        Dictionary with phase identification results
+    """
+    phases = {
+        'preconditioning_start': 0,
+        'preconditioning_end': None,
+        'sterilization_start': None,
+        'sterilization_end': None,
+        'aeration_start': None,
+        'aeration_end': len(temperature_series) - 1,
+        'total_duration_s': (time_series.iloc[-1] - time_series.iloc[0]).total_seconds(),
+        'phases_identified': False
+    }
+    
+    # Target EtO sterilization ranges
+    TARGET_TEMP_MIN = 50.0  # °C
+    TARGET_TEMP_MAX = 60.0  # °C
+    TARGET_HUMIDITY_MIN = 45.0  # %RH
+    TARGET_HUMIDITY_MAX = 85.0  # %RH
+    
+    # Find sterilization phase based on temperature stability
+    temp_in_range = (temperature_series >= TARGET_TEMP_MIN) & (temperature_series <= TARGET_TEMP_MAX)
+    
+    if temp_in_range.any():
+        # Find first continuous period in temperature range
+        first_in_range = temp_in_range.idxmax() if temp_in_range.any() else None
+        if first_in_range is not None and temp_in_range.iloc[first_in_range]:
+            sterilization_start_idx = first_in_range
+            
+            # Find end of sterilization (when temperature drops or gas is evacuated)
+            sterilization_end_idx = len(temperature_series) - 1
+            
+            # If gas data available, use it to identify end of sterilization
+            if gas_series is not None:
+                # Look for significant drop in gas concentration
+                gas_median = gas_series.median()
+                gas_threshold = gas_median * 0.1  # 10% of median concentration
+                
+                gas_drops = gas_series < gas_threshold
+                if gas_drops.any():
+                    first_drop_idx = gas_drops.idxmax()
+                    if first_drop_idx > sterilization_start_idx:
+                        sterilization_end_idx = first_drop_idx
+            
+            phases['sterilization_start'] = sterilization_start_idx
+            phases['sterilization_end'] = sterilization_end_idx
+            phases['preconditioning_end'] = sterilization_start_idx
+            phases['aeration_start'] = sterilization_end_idx
+            phases['phases_identified'] = True
+    
+    return phases
+
+
+def validate_eto_sterilization_cycle(temperature_series: pd.Series, time_series: pd.Series,
+                                   humidity_series: Optional[pd.Series] = None,
+                                   gas_series: Optional[pd.Series] = None) -> Dict[str, Any]:
+    """
+    Validate EtO sterilization cycle according to medical device sterilization standards.
+    
+    Requirements:
+    - Temperature: 50-60°C maintained during sterilization phase
+    - Humidity: 45-85% RH during conditioning and sterilization
+    - Minimum sterilization time: Typically 2-4 hours depending on product
+    - Gas concentration: Maintained at effective levels
+    
+    Args:
+        temperature_series: Temperature values in Celsius
+        time_series: Timestamp values
+        humidity_series: Optional humidity values in %RH
+        gas_series: Optional EtO concentration values
+        
+    Returns:
+        Dictionary with EtO sterilization validation results and metrics
+    """
+    # EtO sterilization critical parameters
+    MIN_TEMP_C = 50.0
+    MAX_TEMP_C = 60.0
+    MIN_HUMIDITY_RH = 45.0
+    MAX_HUMIDITY_RH = 85.0
+    MIN_STERILIZATION_TIME_S = 2 * 3600  # 2 hours minimum
+    
+    metrics = {
+        'start_temp_C': float(temperature_series.iloc[0]),
+        'end_temp_C': float(temperature_series.iloc[-1]),
+        'min_temp_C': float(temperature_series.min()),
+        'max_temp_C': float(temperature_series.max()),
+        'avg_temp_C': float(temperature_series.mean()),
+        'total_duration_s': (time_series.iloc[-1] - time_series.iloc[0]).total_seconds(),
+        'sterilization_hold_time_s': 0.0,
+        'temperature_range_valid': False,
+        'humidity_range_valid': True,  # Default to True if no humidity data
+        'sterilization_time_valid': False,
+        'gas_concentration_maintained': True,  # Default to True if no gas data
+        'cycle_phases_valid': False,
+        'min_humidity_rh': None,
+        'max_humidity_rh': None,
+        'avg_humidity_rh': None,
+        'min_gas_concentration': None,
+        'max_gas_concentration': None,
+        'avg_gas_concentration': None,
+        'reasons': []
+    }
+    
+    # Identify cycle phases
+    phases = identify_eto_cycle_phases(temperature_series, humidity_series, gas_series, time_series)
+    
+    # Validate temperature range during sterilization
+    temp_in_range = (temperature_series >= MIN_TEMP_C) & (temperature_series <= MAX_TEMP_C)
+    
+    if temp_in_range.any():
+        metrics['temperature_range_valid'] = True
+        
+        # Calculate continuous hold time in sterilization temperature range
+        hold_time_s, start_idx, end_idx = calculate_continuous_hold_time(
+            temperature_series, time_series, MIN_TEMP_C, hysteresis_C=1.0
+        )
+        metrics['sterilization_hold_time_s'] = hold_time_s
+        
+        if hold_time_s >= MIN_STERILIZATION_TIME_S:
+            metrics['sterilization_time_valid'] = True
+        else:
+            metrics['reasons'].append(
+                f"Sterilization time {hold_time_s/3600:.1f}h < {MIN_STERILIZATION_TIME_S/3600}h minimum requirement"
+            )
+    else:
+        metrics['reasons'].append(f"Temperature never reached sterilization range ({MIN_TEMP_C}-{MAX_TEMP_C}°C)")
+    
+    # Validate temperature doesn't exceed maximum
+    if temperature_series.max() > MAX_TEMP_C:
+        metrics['reasons'].append(f"Maximum temperature {temperature_series.max():.1f}°C > {MAX_TEMP_C}°C limit")
+        metrics['temperature_range_valid'] = False
+    
+    # Validate temperature doesn't drop below minimum during sterilization
+    if temperature_series.min() < MIN_TEMP_C - 2.0:  # Allow 2°C tolerance for preconditioning
+        sterilization_temps = temperature_series
+        if phases['sterilization_start'] is not None and phases['sterilization_end'] is not None:
+            sterilization_temps = temperature_series.iloc[phases['sterilization_start']:phases['sterilization_end']]
+        
+        if sterilization_temps.min() < MIN_TEMP_C:
+            metrics['reasons'].append(f"Temperature dropped below {MIN_TEMP_C}°C during sterilization phase")
+            metrics['temperature_range_valid'] = False
+    
+    # Validate humidity if available
+    if humidity_series is not None:
+        metrics['min_humidity_rh'] = float(humidity_series.min())
+        metrics['max_humidity_rh'] = float(humidity_series.max())
+        metrics['avg_humidity_rh'] = float(humidity_series.mean())
+        
+        humidity_in_range = (humidity_series >= MIN_HUMIDITY_RH) & (humidity_series <= MAX_HUMIDITY_RH)
+        
+        if phases['sterilization_start'] is not None and phases['sterilization_end'] is not None:
+            # Check humidity during sterilization phase
+            sterilization_humidity = humidity_series.iloc[phases['sterilization_start']:phases['sterilization_end']]
+            sterilization_humidity_valid = (sterilization_humidity >= MIN_HUMIDITY_RH) & (sterilization_humidity <= MAX_HUMIDITY_RH)
+            
+            if sterilization_humidity_valid.all():
+                metrics['humidity_range_valid'] = True
+            else:
+                invalid_pct = (1 - sterilization_humidity_valid.mean()) * 100
+                metrics['humidity_range_valid'] = False
+                metrics['reasons'].append(
+                    f"Humidity outside range ({MIN_HUMIDITY_RH}-{MAX_HUMIDITY_RH}%RH) for {invalid_pct:.1f}% of sterilization phase"
+                )
+        else:
+            # Check overall humidity range
+            if humidity_in_range.mean() < 0.8:  # 80% of time in range
+                metrics['humidity_range_valid'] = False
+                metrics['reasons'].append(f"Humidity outside acceptable range ({MIN_HUMIDITY_RH}-{MAX_HUMIDITY_RH}%RH) for significant portion of cycle")
+    
+    # Validate gas concentration if available
+    if gas_series is not None:
+        metrics['min_gas_concentration'] = float(gas_series.min())
+        metrics['max_gas_concentration'] = float(gas_series.max())
+        metrics['avg_gas_concentration'] = float(gas_series.mean())
+        
+        # Check that gas concentration is maintained during sterilization
+        if phases['sterilization_start'] is not None and phases['sterilization_end'] is not None:
+            sterilization_gas = gas_series.iloc[phases['sterilization_start']:phases['sterilization_end']]
+            
+            # Gas should be maintained above a minimum threshold
+            gas_median = sterilization_gas.median()
+            gas_threshold = gas_median * 0.5  # 50% of median as minimum
+            
+            gas_maintained = sterilization_gas >= gas_threshold
+            if gas_maintained.mean() < 0.9:  # 90% of time above threshold
+                metrics['gas_concentration_maintained'] = False
+                metrics['reasons'].append("EtO gas concentration not adequately maintained during sterilization phase")
+        
+        # Check for gas evacuation in aeration phase
+        if phases['aeration_start'] is not None:
+            aeration_gas = gas_series.iloc[phases['aeration_start']:]
+            final_gas_level = aeration_gas.iloc[-1] if len(aeration_gas) > 0 else gas_series.iloc[-1]
+            initial_gas_level = gas_series.max()
+            
+            if final_gas_level > initial_gas_level * 0.1:  # Should be reduced to <10% of peak
+                metrics['reasons'].append("Incomplete gas evacuation during aeration phase")
+    
+    # Validate cycle phases
+    if phases['phases_identified']:
+        metrics['cycle_phases_valid'] = True
+        
+        # Check minimum duration for each phase
+        if phases['sterilization_start'] is not None and phases['sterilization_end'] is not None:
+            sterilization_duration = (
+                time_series.iloc[phases['sterilization_end']] - 
+                time_series.iloc[phases['sterilization_start']]
+            ).total_seconds()
+            
+            if sterilization_duration < MIN_STERILIZATION_TIME_S:
+                metrics['cycle_phases_valid'] = False
+                metrics['reasons'].append(f"Sterilization phase duration {sterilization_duration/3600:.1f}h too short")
+    else:
+        metrics['reasons'].append("Unable to identify distinct cycle phases (preconditioning, sterilization, aeration)")
+    
+    return metrics
+
+
+def validate_eto_sterilization(normalized_df: pd.DataFrame, spec: SpecV1) -> DecisionResult:
+    """
+    Validate EtO sterilization process based on normalized data and specification.
+    
+    Args:
+        normalized_df: Normalized temperature, humidity, and gas data from core.normalize.py
+        spec: Sterile industry specification
+        
+    Returns:
+        DecisionResult with EtO-specific pass/fail status and detailed metrics
+        
+    Raises:
+        DecisionError: If validation cannot be performed due to data issues
+    """
+    try:
+        # Initialize result tracking
+        reasons = []
+        warnings = []
+        
+        # Validate inputs
+        if normalized_df.empty:
+            raise DecisionError("Normalized DataFrame is empty")
+        
+        if len(normalized_df) < 2:
+            raise DecisionError("Insufficient data points for EtO sterilization analysis")
+            
+        if spec.industry != "sterile":
+            raise DecisionError(f"Invalid industry '{spec.industry}' for EtO sterilization validation")
+        
+        # Detect timestamp column
+        timestamp_col = None
+        for col in normalized_df.columns:
+            if 'time' in col.lower() or pd.api.types.is_datetime64_any_dtype(normalized_df[col]):
+                timestamp_col = col
+                break
+        
+        if timestamp_col is None:
+            raise DecisionError("No timestamp column found in normalized data")
+        
+        # Ensure timestamps are datetime
+        if not pd.api.types.is_datetime64_any_dtype(normalized_df[timestamp_col]):
+            normalized_df[timestamp_col] = pd.to_datetime(normalized_df[timestamp_col])
+        
+        # Detect temperature columns
+        temp_columns = detect_temperature_columns(normalized_df)
+        if not temp_columns:
+            raise DecisionError("No temperature columns found in normalized data")
+        
+        # Detect humidity and gas concentration columns
+        humidity_columns = detect_humidity_columns(normalized_df)
+        gas_columns = detect_gas_concentration_columns(normalized_df)
+        
+        # Get sensor selection configuration
+        sensor_selection = spec.sensor_selection
+        if sensor_selection and sensor_selection.sensors:
+            # Filter for available sensors of each type
+            available_temp_sensors = [col for col in sensor_selection.sensors if col in temp_columns]
+            available_humidity_sensors = [col for col in sensor_selection.sensors if col in humidity_columns]
+            available_gas_sensors = [col for col in sensor_selection.sensors if col in gas_columns]
+            
+            if not available_temp_sensors:
+                # Do not fail; warn and continue with auto-detected temp columns
+                warnings.append(
+                    f"Specified temperature sensors not found: {sensor_selection.sensors}. Using auto-detected sensors: {temp_columns}"
+                )
+                flags = locals().get('flags', {})
+                flags['fallback_used'] = True
+                locals()['flags'] = flags
+            else:
+                temp_columns = available_temp_sensors
+            if available_humidity_sensors:
+                humidity_columns = available_humidity_sensors
+            if available_gas_sensors:
+                gas_columns = available_gas_sensors
+            
+            if sensor_selection.require_at_least and len(available_temp_sensors) < sensor_selection.require_at_least:
+                warnings.append(f"Only {len(available_temp_sensors)} temperature sensors available, {sensor_selection.require_at_least} required")
+        
+        # Combine sensor readings
+        sensor_mode = sensor_selection.mode if sensor_selection else SensorMode.MAJORITY_OVER_THRESHOLD
+        require_at_least = sensor_selection.require_at_least if sensor_selection else None
+        
+        try:
+            combined_temp = combine_sensor_readings(
+                normalized_df, temp_columns, sensor_mode, require_at_least, threshold_C=50.0
+            )
+        except DecisionError as e:
+            reasons.append(f"Temperature sensor combination failed: {str(e)}")
+            return DecisionResult(
+                pass_=False,
+                job_id=spec.job.job_id,
+                target_temp_C=55.0,
+                conservative_threshold_C=50.0,
+                actual_hold_time_s=0.0,
+                required_hold_time_s=spec.spec.hold_time_s,
+                max_temp_C=0.0,
+                min_temp_C=0.0,
+                reasons=reasons,
+            industry=spec.industry,
+                warnings=warnings
+            )
+        
+        # Combine humidity and gas sensor readings if available
+        combined_humidity = None
+        combined_gas = None
+        
+        if humidity_columns:
+            try:
+                combined_humidity = combine_sensor_readings(
+                    normalized_df, humidity_columns, SensorMode.MEAN_OF_SET
+                )
+            except DecisionError as e:
+                warnings.append(f"Humidity sensor combination failed: {str(e)}")
+        else:
+            warnings.append("No humidity sensors detected - validation will proceed without humidity monitoring")
+            flags = locals().get('flags', {})
+            flags['fallback_used'] = True
+            locals()['flags'] = flags
+        
+        if gas_columns:
+            try:
+                combined_gas = combine_sensor_readings(
+                    normalized_df, gas_columns, SensorMode.MEAN_OF_SET
+                )
+            except DecisionError as e:
+                warnings.append(f"Gas concentration sensor combination failed: {str(e)}")
+        else:
+            warnings.append("No EtO gas sensors detected - validation will proceed without gas concentration monitoring")
+            flags = locals().get('flags', {})
+            flags['fallback_used'] = True
+            locals()['flags'] = flags
+        
+        # Validate EtO sterilization cycle
+        cycle_metrics = validate_eto_sterilization_cycle(
+            combined_temp, normalized_df[timestamp_col], combined_humidity, combined_gas
+        )
+
+        # Enforce required parameters per spec
+        require_humidity = bool(getattr(spec, 'parameter_requirements', None) and getattr(spec.parameter_requirements, 'require_humidity', False))
+        require_gas = bool(getattr(spec, 'parameter_requirements', None) and getattr(spec.parameter_requirements, 'require_gas_concentration', False))
+
+        if require_humidity and combined_humidity is None:
+            cycle_metrics['humidity_range_valid'] = False
+            cycle_metrics['reasons'].append("Humidity data required by specification but not provided")
+        if require_gas and combined_gas is None:
+            cycle_metrics['gas_concentration_maintained'] = False
+            cycle_metrics['reasons'].append("EtO gas concentration data required by specification but not provided")
+        
+        # Determine overall pass/fail status
+        pass_decision = (
+            cycle_metrics['temperature_range_valid'] and
+            cycle_metrics['humidity_range_valid'] and
+            cycle_metrics['sterilization_time_valid'] and
+            cycle_metrics['gas_concentration_maintained'] and
+            cycle_metrics['cycle_phases_valid']
+        )
+
+        # Determine status with required parameters enforcement
+        status = 'PASS' if pass_decision else 'FAIL'
+        if require_humidity and combined_humidity is None:
+            status = 'INDETERMINATE'
+        if require_gas and combined_gas is None:
+            status = 'INDETERMINATE'
+        
+        # Add success reasons if passed
+        if pass_decision:
+            reasons.append(f"Temperature maintained in sterilization range (50-60°C) for {cycle_metrics['sterilization_hold_time_s']/3600:.1f}h")
+            if combined_humidity is not None:
+                reasons.append(f"Humidity maintained in acceptable range (45-85%RH)")
+            if combined_gas is not None:
+                reasons.append("EtO gas concentration adequately maintained during sterilization")
+            reasons.append("EtO sterilization cycle phases completed successfully")
+            reasons.append("EtO sterilization requirements met")
+        else:
+            # Add failure reasons
+            reasons.extend(cycle_metrics['reasons'])
+        
+        # Check data quality warnings
+        total_duration_h = cycle_metrics['total_duration_s'] / 3600
+        if total_duration_h > 24:
+            warnings.append(f"EtO cycle duration ({total_duration_h:.1f}h) exceeds typical timeline")
+        
+        if cycle_metrics['max_temp_C'] > 65.0:
+            warnings.append(f"Maximum temperature ({cycle_metrics['max_temp_C']:.1f}°C) may damage heat-sensitive materials")
+        
+        return DecisionResult(
+            pass_=pass_decision,
+            status=status,
+            job_id=spec.job.job_id,
+            target_temp_C=55.0,  # Mid-range EtO sterilization temperature
+            conservative_threshold_C=50.0,  # Minimum acceptable temperature
+            actual_hold_time_s=cycle_metrics['sterilization_hold_time_s'],
+            required_hold_time_s=spec.spec.hold_time_s,
+            max_temp_C=cycle_metrics['max_temp_C'],
+            min_temp_C=cycle_metrics['min_temp_C'],
+            reasons=reasons,
+            industry=spec.industry,
+            warnings=warnings,
+            flags=locals().get('flags', {})
+        )
+    
+    except Exception as e:
+        logger.error(f"EtO sterilization validation failed: {e}")
+        raise DecisionError(f"EtO sterilization validation failed: {str(e)}")
+
+
+# Usage example in comments:
+"""
+Example usage for EtO sterilization validation:
+
+from core.metrics_sterile import validate_eto_sterilization
+from core.models import SpecV1
+import pandas as pd
+
+# Load EtO sterilization specification
+spec_data = {
+    "version": "1.0",
+    "industry": "sterile",
+    "job": {"job_id": "medical_device_sterilization_001"},
+    "spec": {
+        "method": "OVEN_AIR",
+        "target_temp_C": 55.0,
+        "hold_time_s": 7200,  # 2 hours
+        "sensor_uncertainty_C": 1.0
+    },
+    "data_requirements": {
+        "max_sample_period_s": 120.0,
+        "allowed_gaps_s": 300.0
+    },
+    "sensor_selection": {
+        "mode": "majority_over_threshold",
+        "require_at_least": 3
+    }
+}
+spec = SpecV1(**spec_data)
+
+# Load normalized sterilization data (with temperature, humidity, and gas columns)
+normalized_df = pd.read_csv("eto_sterilization_data.csv")
+
+# Validate EtO sterilization
+result = validate_eto_sterilization(normalized_df, spec)
+
+print(f"EtO Sterilization Job {result.job_id}: {'PASS' if result.pass_ else 'FAIL'}")
+print(f"Sterilization validation: {result.reasons}")
+if result.warnings:
+    print(f"Warnings: {result.warnings}")
+"""

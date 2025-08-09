@@ -18,6 +18,10 @@ from typing import Optional, Dict, Any
 from pathlib import Path
 import httpx
 import jwt
+import smtplib
+import ssl
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from fastapi import Request, HTTPException, Depends
 from fastapi.responses import JSONResponse, RedirectResponse
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -137,10 +141,15 @@ class MagicLinkAuth:
             base_url = os.environ.get("BASE_URL", "https://www.proofkit.net")
             verify_url = f"{base_url}/auth/verify?token={magic_link}"
             
+            # Backend selection
+            email_backend = (os.getenv('EMAIL_BACKEND') or 'postmark').lower()
+
             # Get Postmark configuration at runtime
-            postmark_token = os.environ.get('POSTMARK_TOKEN', os.environ.get('POSTMARK_API_TOKEN', ''))
-            from_email = os.environ.get('FROM_EMAIL', 'no-reply@proofkit.net')
-            reply_to = os.environ.get('REPLY_TO_EMAIL', 'support@proofkit.net')
+            postmark_token = os.getenv('POSTMARK_API_TOKEN') or os.getenv('POSTMARK_TOKEN') or ''
+            # Prefer EMAIL_FROM/REPLY_TO but keep backward compat
+            from_email = os.getenv('EMAIL_FROM') or os.getenv('FROM_EMAIL', 'no-reply@proofkit.net')
+            reply_to = os.getenv('REPLY_TO') or os.getenv('REPLY_TO_EMAIL', 'support@proofkit.net')
+            message_stream = os.getenv('POSTMARK_MESSAGE_STREAM') or os.getenv('POSTMARK_STREAM') or 'outbound'
             
             # Evaluate dev mode at runtime
             email_dev_mode = os.environ.get("EMAIL_DEV_MODE", "false").lower() == "true"
@@ -149,7 +158,57 @@ class MagicLinkAuth:
             logger.info(f"Email config - Token present: {bool(postmark_token)}, Dev mode: {email_dev_mode}, From: {from_email}")
             
             # Check if we should use Postmark or development mode
-            # Always use Postmark if token is present and dev mode is not explicitly enabled
+            # If explicitly using SES backend, send via SMTP
+            if email_backend == 'ses' and not email_dev_mode:
+                ses_host = os.getenv('SES_SMTP_HOST', 'email-smtp.us-east-1.amazonaws.com')
+                ses_port = int(os.getenv('SES_SMTP_PORT', '587'))
+                ses_username = os.getenv('SES_SMTP_USERNAME')
+                ses_password = os.getenv('SES_SMTP_PASSWORD')
+
+                if not (ses_username and ses_password):
+                    logger.error("SES credentials missing (SES_SMTP_USERNAME/SES_SMTP_PASSWORD)")
+                    return False
+
+                # Build MIME email
+                msg = MIMEMultipart('alternative')
+                msg['Subject'] = f"ProofKit Login - {role.value.upper()} Access"
+                msg['From'] = from_email
+                msg['To'] = email
+                msg['Reply-To'] = reply_to
+
+                html_body = f"""
+                <!DOCTYPE html>
+                <html><body>
+                <p>You requested access to ProofKit with {role.value.upper()} privileges.</p>
+                <p><a href=\"{verify_url}\">Access ProofKit</a></p>
+                <p>This link expires in {MAGIC_LINK_EXPIRY_MINUTES} minutes.</p>
+                </body></html>
+                """
+                text_body = (
+                    "ProofKit Magic Link\n\n"
+                    f"Role: {role.value.upper()}\n"
+                    f"Link: {verify_url}\n\n"
+                    f"Expires in {MAGIC_LINK_EXPIRY_MINUTES} minutes."
+                )
+                msg.attach(MIMEText(text_body, 'plain'))
+                msg.attach(MIMEText(html_body, 'html'))
+
+                try:
+                    context = ssl.create_default_context()
+                    with smtplib.SMTP(ses_host, ses_port) as server:
+                        server.starttls(context=context)
+                        server.login(ses_username, ses_password)
+                        server.sendmail(from_email, [email], msg.as_string())
+                    logger.info(f"SES email sent to {email}")
+                    return True
+                except Exception as smtp_err:
+                    logger.error(f"SES send failed: {smtp_err}")
+                    if email_dev_mode:
+                        self._store_dev_link(email, verify_url)
+                        return True
+                    return False
+
+            # Use Postmark if token is present (unless explicitly in dev mode)
             if postmark_token and not email_dev_mode:
                 # Production mode - send via Postmark
                 html_body = f"""
@@ -235,7 +294,7 @@ class MagicLinkAuth:
                     "Subject": f"ProofKit Login - {role.value.upper()} Access",
                     "HtmlBody": html_body,
                     "TextBody": text_body,
-                    "MessageStream": "outbound"
+                    "MessageStream": message_stream
                 }
                 
                 logger.info(f"Sending Postmark email to {email} with token starting with {postmark_token[:10] if postmark_token else 'MISSING'}...")
@@ -255,13 +314,17 @@ class MagicLinkAuth:
                     if email_dev_mode:
                         logger.info(f"Falling back to development mode. Magic link for {email}: {verify_url}")
                         self._store_dev_link(email, verify_url)
-                    return False  # Return False if Postmark fails in production
+                        return True
+                    return False  # Return False if Postmark fails and not in dev mode
             else:
-                # Development mode - log the link and show it in response
-                logger.info(f"Development mode or no Postmark token. Magic link for {email}: {verify_url}")
-                # Store the link temporarily for development access
-                self._store_dev_link(email, verify_url)
-                return True
+                # No token or explicitly in dev mode
+                if email_dev_mode:
+                    logger.info(f"Development mode - not sending email. Magic link for {email}: {verify_url}")
+                    self._store_dev_link(email, verify_url)
+                    return True
+                # Not in dev mode and no token → cannot send
+                logger.error("Email sending not configured: POSTMARK_API_TOKEN missing and EMAIL_DEV_MODE is false")
+                return False
                 
         except Exception as e:
             logger.error(f"Failed to send magic link email to {email}: {e}")

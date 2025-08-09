@@ -1,0 +1,41 @@
+{
+  "timestamp": "2025-08-09T12:44:53.298229",
+  "base_url": "https://proofkit-prod.fly.dev",
+  "summary": {
+    "total": 12,
+    "passed": 12,
+    "failed": 0
+  },
+  "industries": {
+    "powder": {
+      "page": "OK",
+      "pass": "OK",
+      "fail": "OK"
+    },
+    "autoclave": {
+      "page": "OK",
+      "pass": "OK",
+      "fail": "OK"
+    },
+    "sterile": {
+      "page": "OK",
+      "pass": "OK",
+      "fail": "OK"
+    },
+    "haccp": {
+      "page": "OK",
+      "pass": "OK",
+      "fail": "OK"
+    },
+    "concrete": {
+      "page": "OK",
+      "pass": "OK",
+      "fail": "OK"
+    },
+    "coldchain": {
+      "page": "OK",
+      "pass": "OK",
+      "fail": "OK"
+    }
+  }
+}

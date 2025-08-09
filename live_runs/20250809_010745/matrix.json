@@ -1,0 +1,62 @@
+{
+  "powder": {
+    "pass": {
+      "success": false,
+      "error": "HTTP 401: {\"error\":\"Authentication required\",\"message\":\"Sign in to use the API\"}"
+    },
+    "fail": {
+      "success": false,
+      "error": "HTTP 401: {\"error\":\"Authentication required\",\"message\":\"Sign in to use the API\"}"
+    }
+  },
+  "autoclave": {
+    "pass": {
+      "success": false,
+      "error": "HTTP 401: {\"error\":\"Authentication required\",\"message\":\"Sign in to use the API\"}"
+    },
+    "fail": {
+      "success": false,
+      "error": "HTTP 401: {\"error\":\"Authentication required\",\"message\":\"Sign in to use the API\"}"
+    }
+  },
+  "coldchain": {
+    "pass": {
+      "success": false,
+      "error": "HTTP 401: {\"error\":\"Authentication required\",\"message\":\"Sign in to use the API\"}"
+    },
+    "fail": {
+      "success": false,
+      "error": "HTTP 401: {\"error\":\"Authentication required\",\"message\":\"Sign in to use the API\"}"
+    }
+  },
+  "haccp": {
+    "pass": {
+      "success": false,
+      "error": "HTTP 401: {\"error\":\"Authentication required\",\"message\":\"Sign in to use the API\"}"
+    },
+    "fail": {
+      "success": false,
+      "error": "HTTP 401: {\"error\":\"Authentication required\",\"message\":\"Sign in to use the API\"}"
+    }
+  },
+  "concrete": {
+    "pass": {
+      "success": false,
+      "error": "HTTP 401: {\"error\":\"Authentication required\",\"message\":\"Sign in to use the API\"}"
+    },
+    "fail": {
+      "success": false,
+      "error": "HTTP 401: {\"error\":\"Authentication required\",\"message\":\"Sign in to use the API\"}"
+    }
+  },
+  "sterile": {
+    "pass": {
+      "success": false,
+      "error": "HTTP 401: {\"error\":\"Authentication required\",\"message\":\"Sign in to use the API\"}"
+    },
+    "fail": {
+      "success": false,
+      "error": "HTTP 401: {\"error\":\"Authentication required\",\"message\":\"Sign in to use the API\"}"
+    }
+  }
+}

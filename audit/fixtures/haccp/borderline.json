@@ -1,0 +1,41 @@
+{
+  "version": "1.0",
+  "industry": "haccp",
+  "job": {
+    "job_id": "audit_haccp_borderline"
+  },
+  "spec": {
+    "method": "OVEN_AIR",
+    "target_temp_C": 57.22,
+    "hold_time_s": 7200,
+    "temp_band_C": {
+      "min": 5.0,
+      "max": 57.22
+    },
+    "sensor_uncertainty_C": 1.0
+  },
+  "data_requirements": {
+    "max_sample_period_s": 60.0,
+    "allowed_gaps_s": 120.0
+  },
+  "sensor_selection": {
+    "mode": "mean_of_set",
+    "require_at_least": 1
+  },
+  "parameter_requirements": {
+    "require_humidity": false
+  },
+  "logic": {
+    "continuous": false,
+    "max_total_dips_s": 300
+  },
+  "preconditions": {
+    "max_ramp_rate_C_per_min": 15.0,
+    "max_time_to_threshold_s": 3600
+  },
+  "reporting": {
+    "units": "F",
+    "language": "en",
+    "timezone": "UTC"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "version": "1.0",
+  "created": "2025-08-08T00:00:00Z",
+  "industry": "coldchain",
+  "name": "Pharmaceutical Cold Storage Monitoring",
+  "description": "Cold chain temperature monitoring for pharmaceutical products per USP <659>",
+  "data_requirements": {
+    "required_columns": ["timestamp", "temperature_celsius"],
+    "optional_columns": ["humidity_percent", "door_status", "alarm_status", "storage_zone", "product_category", "notes"],
+    "max_sample_period_s": 1800,
+    "allowed_gaps_s": 3600,
+    "min_samples": 5
+  },
+  "target_conditions": {
+    "temperature_range": {
+      "min": 2.0,
+      "max": 8.0,
+      "unit": "celsius"
+    },
+    "excursion_limits": {
+      "max_temperature": 15.0,
+      "max_duration_s": 86400,
+      "recovery_time_s": 7200
+    }
+  },
+  "pass_criteria": {
+    "continuous_monitoring": true,
+    "excursion_tolerance": "limited",
+    "recovery_required": true
+  },
+  "sensor_uncertainty": {
+    "temperature_c": 0.5,
+    "humidity_percent": 3.0
+  },
+  "validation_standard": "USP <659>"
+}

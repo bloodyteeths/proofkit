@@ -1,0 +1,322 @@
+{
+  "timestamp": "2025-08-08T17:54:47.389909",
+  "total_tests": 19,
+  "passed_tests": 2,
+  "failed_tests": 0,
+  "error_tests": 19,
+  "total_time_ms": 65.92798233032227,
+  "industries_tested": [
+    "autoclave",
+    "coldchain",
+    "concrete",
+    "haccp",
+    "powder",
+    "sterile"
+  ],
+  "results": [
+    {
+      "test_case": {
+        "industry": "autoclave",
+        "test_type": "fail",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/autoclave/fail.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/autoclave/fail.json",
+        "expected_result": "FAIL",
+        "description": "Clear failing case not meeting hold time"
+      },
+      "success": false,
+      "decision": null,
+      "error_message": "Decision error: 'dict' object has no attribute 'industry'",
+      "execution_time_ms": 22.66216278076172,
+      "decision_data": null,
+      "hash_signature": null
+    },
+    {
+      "test_case": {
+        "industry": "autoclave",
+        "test_type": "pass",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/autoclave/pass.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/autoclave/pass.json",
+        "expected_result": "PASS",
+        "description": "Clear passing case meeting all requirements"
+      },
+      "success": false,
+      "decision": null,
+      "error_message": "Decision error: 'dict' object has no attribute 'industry'",
+      "execution_time_ms": 4.235744476318359,
+      "decision_data": null,
+      "hash_signature": null
+    },
+    {
+      "test_case": {
+        "industry": "coldchain",
+        "test_type": "fail",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/coldchain/fail.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/coldchain/fail.json",
+        "expected_result": "FAIL",
+        "description": "Clear failing case not meeting hold time"
+      },
+      "success": false,
+      "decision": null,
+      "error_message": "Invalid spec: 2 validation errors for SpecV1\nspec.method\n  Input should be 'PMT' or 'OVEN_AIR' [type=enum, input_value='REFRIGERATION', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.11/v/enum\nsensor_selection.mode\n  Input should be 'min_of_set', 'mean_of_set' or 'majority_over_threshold' [type=enum, input_value='mean', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.11/v/enum",
+      "execution_time_ms": 0.6120204925537109,
+      "decision_data": null,
+      "hash_signature": null
+    },
+    {
+      "test_case": {
+        "industry": "coldchain",
+        "test_type": "pass",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/coldchain/pass.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/coldchain/pass.json",
+        "expected_result": "PASS",
+        "description": "Clear passing case meeting all requirements"
+      },
+      "success": false,
+      "decision": null,
+      "error_message": "Invalid spec: 2 validation errors for SpecV1\nspec.method\n  Input should be 'PMT' or 'OVEN_AIR' [type=enum, input_value='REFRIGERATION', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.11/v/enum\nsensor_selection.mode\n  Input should be 'min_of_set', 'mean_of_set' or 'majority_over_threshold' [type=enum, input_value='mean', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.11/v/enum",
+      "execution_time_ms": 0.2307891845703125,
+      "decision_data": null,
+      "hash_signature": null
+    },
+    {
+      "test_case": {
+        "industry": "concrete",
+        "test_type": "fail",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/concrete/fail.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/concrete/fail.json",
+        "expected_result": "FAIL",
+        "description": "Clear failing case not meeting hold time"
+      },
+      "success": false,
+      "decision": null,
+      "error_message": "Invalid spec: 2 validation errors for SpecV1\nspec.method\n  Input should be 'PMT' or 'OVEN_AIR' [type=enum, input_value='AMBIENT_CURE', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.11/v/enum\nsensor_selection.mode\n  Input should be 'min_of_set', 'mean_of_set' or 'majority_over_threshold' [type=enum, input_value='mean', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.11/v/enum",
+      "execution_time_ms": 0.19097328186035156,
+      "decision_data": null,
+      "hash_signature": null
+    },
+    {
+      "test_case": {
+        "industry": "concrete",
+        "test_type": "pass",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/concrete/pass.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/concrete/pass.json",
+        "expected_result": "PASS",
+        "description": "Clear passing case meeting all requirements"
+      },
+      "success": false,
+      "decision": null,
+      "error_message": "Invalid spec: 2 validation errors for SpecV1\nspec.method\n  Input should be 'PMT' or 'OVEN_AIR' [type=enum, input_value='AMBIENT_CURE', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.11/v/enum\nsensor_selection.mode\n  Input should be 'min_of_set', 'mean_of_set' or 'majority_over_threshold' [type=enum, input_value='mean', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.11/v/enum",
+      "execution_time_ms": 0.17070770263671875,
+      "decision_data": null,
+      "hash_signature": null
+    },
+    {
+      "test_case": {
+        "industry": "haccp",
+        "test_type": "borderline",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/haccp/borderline.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/haccp/borderline.json",
+        "expected_result": null,
+        "description": "Edge case near threshold boundaries"
+      },
+      "success": false,
+      "decision": null,
+      "error_message": "Decision error: 'dict' object has no attribute 'industry'",
+      "execution_time_ms": 3.774881362915039,
+      "decision_data": null,
+      "hash_signature": null
+    },
+    {
+      "test_case": {
+        "industry": "haccp",
+        "test_type": "fail",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/haccp/fail.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/haccp/fail.json",
+        "expected_result": "FAIL",
+        "description": "Clear failing case not meeting hold time"
+      },
+      "success": false,
+      "decision": null,
+      "error_message": "Decision error: 'dict' object has no attribute 'industry'",
+      "execution_time_ms": 3.8793087005615234,
+      "decision_data": null,
+      "hash_signature": null
+    },
+    {
+      "test_case": {
+        "industry": "haccp",
+        "test_type": "missing_required",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/haccp/missing_required.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/haccp/missing_required.json",
+        "expected_result": "ERROR",
+        "description": "Missing required sensors"
+      },
+      "success": true,
+      "decision": null,
+      "error_message": "Decision error: 'dict' object has no attribute 'industry'",
+      "execution_time_ms": 3.819704055786133,
+      "decision_data": null,
+      "hash_signature": null
+    },
+    {
+      "test_case": {
+        "industry": "haccp",
+        "test_type": "pass",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/haccp/pass.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/haccp/pass.json",
+        "expected_result": "PASS",
+        "description": "Clear passing case meeting all requirements"
+      },
+      "success": false,
+      "decision": null,
+      "error_message": "Decision error: 'dict' object has no attribute 'industry'",
+      "execution_time_ms": 3.6580562591552734,
+      "decision_data": null,
+      "hash_signature": null
+    },
+    {
+      "test_case": {
+        "industry": "powder",
+        "test_type": "borderline",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/powder/borderline.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/powder/borderline.json",
+        "expected_result": null,
+        "description": "Edge case near threshold boundaries"
+      },
+      "success": false,
+      "decision": null,
+      "error_message": "Decision error: 'dict' object has no attribute 'industry'",
+      "execution_time_ms": 3.5529136657714844,
+      "decision_data": null,
+      "hash_signature": null
+    },
+    {
+      "test_case": {
+        "industry": "powder",
+        "test_type": "dup_ts",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/powder/dup_ts.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/powder/dup_ts.json",
+        "expected_result": "ERROR",
+        "description": "Duplicate timestamp entries"
+      },
+      "success": false,
+      "decision": null,
+      "error_message": "Normalization error: name 'logger' is not defined",
+      "execution_time_ms": 1.8701553344726562,
+      "decision_data": null,
+      "hash_signature": null
+    },
+    {
+      "test_case": {
+        "industry": "powder",
+        "test_type": "fail",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/powder/fail.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/powder/fail.json",
+        "expected_result": "FAIL",
+        "description": "Clear failing case not meeting hold time"
+      },
+      "success": false,
+      "decision": null,
+      "error_message": "Decision error: 'dict' object has no attribute 'industry'",
+      "execution_time_ms": 3.2660961151123047,
+      "decision_data": null,
+      "hash_signature": null
+    },
+    {
+      "test_case": {
+        "industry": "powder",
+        "test_type": "gap",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/powder/gap.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/powder/gap.json",
+        "expected_result": "ERROR",
+        "description": "Data gaps exceeding allowed limits"
+      },
+      "success": false,
+      "decision": null,
+      "error_message": "Normalization error: Data quality checks failed:\n- Data gaps too large: 1 gaps > 60.0s (max: 130.0s)",
+      "execution_time_ms": 2.731800079345703,
+      "decision_data": null,
+      "hash_signature": null
+    },
+    {
+      "test_case": {
+        "industry": "powder",
+        "test_type": "missing_required",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/powder/missing_required.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/powder/missing_required.json",
+        "expected_result": "ERROR",
+        "description": "Missing required sensors"
+      },
+      "success": true,
+      "decision": null,
+      "error_message": "Decision error: 'dict' object has no attribute 'industry'",
+      "execution_time_ms": 3.1828880310058594,
+      "decision_data": null,
+      "hash_signature": null
+    },
+    {
+      "test_case": {
+        "industry": "powder",
+        "test_type": "pass",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/powder/pass.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/powder/pass.json",
+        "expected_result": "PASS",
+        "description": "Clear passing case meeting all requirements"
+      },
+      "success": false,
+      "decision": null,
+      "error_message": "Decision error: 'dict' object has no attribute 'industry'",
+      "execution_time_ms": 3.705739974975586,
+      "decision_data": null,
+      "hash_signature": null
+    },
+    {
+      "test_case": {
+        "industry": "powder",
+        "test_type": "tz_shift",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/powder/tz_shift.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/powder/tz_shift.json",
+        "expected_result": null,
+        "description": "Mixed timezone data"
+      },
+      "success": false,
+      "decision": null,
+      "error_message": "Normalization error: Unable to parse timestamps in column 'timestamp': Can only use .dt accessor with datetimelike values",
+      "execution_time_ms": 3.6258697509765625,
+      "decision_data": null,
+      "hash_signature": null
+    },
+    {
+      "test_case": {
+        "industry": "sterile",
+        "test_type": "fail",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/sterile/fail.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/sterile/fail.json",
+        "expected_result": "FAIL",
+        "description": "Clear failing case not meeting hold time"
+      },
+      "success": false,
+      "decision": null,
+      "error_message": "Invalid spec: 1 validation error for SpecV1\nspec.method\n  Input should be 'PMT' or 'OVEN_AIR' [type=enum, input_value='ETO_STERILIZATION', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.11/v/enum",
+      "execution_time_ms": 0.2880096435546875,
+      "decision_data": null,
+      "hash_signature": null
+    },
+    {
+      "test_case": {
+        "industry": "sterile",
+        "test_type": "pass",
+        "csv_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/sterile/pass.csv",
+        "spec_path": "/Users/tamsar/Downloads/csv SaaS/audit/fixtures/sterile/pass.json",
+        "expected_result": "PASS",
+        "description": "Clear passing case meeting all requirements"
+      },
+      "success": false,
+      "decision": null,
+      "error_message": "Invalid spec: 1 validation error for SpecV1\nspec.method\n  Input should be 'PMT' or 'OVEN_AIR' [type=enum, input_value='ETO_STERILIZATION', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.11/v/enum",
+      "execution_time_ms": 0.1800060272216797,
+      "decision_data": null,
+      "hash_signature": null
+    }
+  ]
+}

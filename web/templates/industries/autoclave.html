@@ -1,126 +1,70 @@
 {% extends "modern_base.html" %}
 
-{% block title %}Autoclave Sterilization Validation - ProofKit{% endblock %}
-{% block description %}Generate compliant autoclave sterilization validation certificates with F0 value calculations, instant analysis, and audit-ready documentation.{% endblock %}
-{% block description %}Professional autoclave sterilization validation with temperature and pressure monitoring. Generate inspector-ready proof PDFs for medical device and pharmaceutical sterilization.{% endblock %}
-{% block og_image %}https://www.proofkit.net/static/hero/autoclave-hero.webp{% endblock %}
-{% block twitter_image %}https://www.proofkit.net/static/hero/autoclave-hero.webp{% endblock %}
+{% block title %}Autoclave Sterilization - ProofKit{% endblock %}
+{% block description %}Professional autoclave sterilization validation with F0 calculation and pressure monitoring for medical devices and pharmaceutical applications.{% endblock %}
+
+{% block head_extra %}
+<meta name="industry" content="autoclave">
+<meta name="description" content="Autoclave sterilization validation with F0 calculation and pressure monitoring">
+{% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
-<section class="hero">
-    <div class="hero-container">
-        <div class="hero-grid">
-            <div>
-                <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(255, 255, 255, 0.2); padding: 0.5rem 1rem; border-radius: 2rem; margin-bottom: 1.5rem;">
-                    <span style="font-size: 1.5rem;">🏥</span>
-                    <span style="font-weight: 600;">Autoclave Sterilization</span>
-                </div>
-                <h1>
-                    Medical Device<br>
-                    <span class="highlight">Sterilization</span>
-                </h1>
-                <p>
-                    Generate FDA-compliant validation reports for autoclave sterilization cycles. 
-                    Meet USP, ISO, and medical device regulatory requirements.
-                </p>
-                <div class="hero-actions">
-                    <a href="/app?industry=autoclave" class="btn btn-primary">
-                        Validate Sterilization →
-                    </a>
-                    <a href="/examples" class="btn btn-secondary">
-                        View Examples
-                    </a>
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <h1 class="mb-4">Autoclave Sterilization Validation</h1>
+            <span data-liveqa="industry" style="display:none">autoclave</span>
+            
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h2 class="h5 card-title">Industry Standards</h2>
+                    <ul>
+                        <li>ISO 17665 - Steam sterilization</li>
+                        <li>EN 285 - Large steam sterilizers</li>
+                        <li>ANSI/AAMI ST79 - Healthcare facilities</li>
+                    </ul>
                 </div>
             </div>
-            <div>
-                <link rel="preload" as="image" href="/static/hero/autoclave-hero.webp" imagesrcset="/static/hero/autoclave-hero.webp" />
-                <img src="/static/hero/autoclave-hero.webp" alt="Autoclave sterilizer with sterilization pouches and clean stainless finish" class="hero-image" width="1280" height="720" loading="eager" decoding="async">
-            </div>
-        </div>
-    </div>
-</section>
 
-<!-- Features Section -->
-<section class="section">
-    <div class="section-container">
-        <div class="section-header">
-            <h2>Autoclave Validation</h2>
-            <p class="section-subtitle">FDA-compliant sterilization validation for medical devices</p>
-        </div>
-        
-        <div class="grid-3">
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h2 class="h5 card-title">Key Parameters</h2>
+                    <dl class="row">
+                        <dt class="col-sm-4">Temperature</dt>
+                        <dd class="col-sm-8">121°C - 134°C</dd>
+                        
+                        <dt class="col-sm-4">Pressure</dt>
+                        <dd class="col-sm-8">15-30 psi (1-2 bar)</dd>
+                        
+                        <dt class="col-sm-4">Hold Time</dt>
+                        <dd class="col-sm-8">3-30 minutes</dd>
+                        
+                        <dt class="col-sm-4">F0 Value</dt>
+                        <dd class="col-sm-8">Minimum 12-15</dd>
+                    </dl>
                 </div>
-                <h3>FDA Compliant</h3>
-                <p>Meets FDA 21 CFR Part 11, ISO 11135, and USP sterilization validation requirements.</p>
             </div>
-            
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                    </svg>
-                </div>
-                <h3>Real-time Analysis</h3>
-                <p>Process temperature and pressure data instantly for immediate validation results.</p>
-            </div>
-            
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                    </svg>
-                </div>
-                <h3>Audit Ready</h3>
-                <p>Complete documentation trail for regulatory inspections and quality audits.</p>
-            </div>
-        </div>
-    </div>
-</section>
 
-<!-- Applications -->
-<section class="section" style="background: #f7fafc;">
-    <div class="section-container">
-        <div class="section-header">
-            <h2>Applications</h2>
-            <p class="section-subtitle">Critical sterilization validation across healthcare industries</p>
-        </div>
-        
-        <div class="grid-3">
             <div class="card">
-                <div style="font-size: 3rem; margin-bottom: 1rem;">🏥</div>
-                <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: #1a1a1a;">Medical Devices</h3>
-                <p style="color: #718096; line-height: 1.6;">Surgical instruments, implants, and disposable medical devices requiring sterile validation.</p>
+                <div class="card-body">
+                    <h2 class="h5 card-title">Example Specification</h2>
+                    <pre><code>{
+  "industry": "autoclave",
+  "parameters": {
+    "sterilization_temp": 121,
+    "sterilization_time_minutes": 15,
+    "min_pressure_bar": 2.0,
+    "min_f0": 12
+  }
+}</code></pre>
+                </div>
             </div>
-            
-            <div class="card">
-                <div style="font-size: 3rem; margin-bottom: 1rem;">💊</div>
-                <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: #1a1a1a;">Pharmaceutical</h3>
-                <p style="color: #718096; line-height: 1.6;">Injectable drugs, biologics, and sterile pharmaceutical manufacturing equipment.</p>
-            </div>
-            
-            <div class="card">
-                <div style="font-size: 3rem; margin-bottom: 1rem;">🧪</div>
-                <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: #1a1a1a;">Laboratory</h3>
-                <p style="color: #718096; line-height: 1.6;">Research equipment, culture media, and laboratory instruments requiring sterilization.</p>
-            </div>
-        </div>
-    </div>
-</section>
 
-<!-- CTA Section -->
-<section class="hero">
-    <div class="section-container" style="text-align: center;">
-        <h2 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; color: white;">Ready to validate your sterilization cycles?</h2>
-        <p style="font-size: 1.25rem; opacity: 0.9; margin-bottom: 2rem; color: white;">Upload your autoclave data and get FDA-compliant validation reports</p>
-        <a href="/app?industry=autoclave" class="btn" style="background: white; color: #667eea; font-size: 1.125rem; padding: 1rem 2rem;">
-            Start Validation →
-        </a>
+            <div class="mt-4">
+                <a href="/examples" class="btn btn-primary">View Examples</a>
+                <a href="/" class="btn btn-outline-secondary">Upload Data</a>
+            </div>
+        </div>
     </div>
-</section>
+</div>
 {% endblock %}

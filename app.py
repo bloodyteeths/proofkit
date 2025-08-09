@@ -427,6 +427,7 @@ def get_industry_presets() -> Dict[str, Dict[str, Any]]:
     # Available preset files
     preset_files = {
         "powder": "powder_coat_cure_spec_standard_180c_10min.json",  # Use existing example
+        "powder-coating": "powder_coat_cure_spec_standard_180c_10min.json",  # Same as powder
         "haccp": "haccp_v1.json",
         "autoclave": "autoclave_v1.json", 
         "sterile": "sterile_v1.json",
@@ -438,7 +439,7 @@ def get_industry_presets() -> Dict[str, Dict[str, Any]]:
     
     for industry, filename in preset_files.items():
         try:
-            if industry == "powder":
+            if industry in ["powder", "powder-coating"]:
                 # Use existing example file
                 preset_path = BASE_DIR / "examples" / filename
             else:
@@ -882,6 +883,29 @@ def process_csv_and_spec(csv_content: bytes, spec_data: Dict[str, Any],
         
         # Save decision JSON
         decision_dict = decision.model_dump(by_alias=True)
+        
+        # Add UTM tracking metadata (not included in PDF, for analytics only)
+        utm_metadata = {}
+        if utm_source:
+            utm_metadata['utm_source'] = utm_source
+        if utm_medium:
+            utm_metadata['utm_medium'] = utm_medium
+        if utm_campaign:
+            utm_metadata['utm_campaign'] = utm_campaign
+        if utm_term:
+            utm_metadata['utm_term'] = utm_term
+        if utm_content:
+            utm_metadata['utm_content'] = utm_content
+        if referrer:
+            utm_metadata['referrer'] = referrer
+        
+        # Add metadata section to decision if we have UTM data
+        if utm_metadata:
+            decision_dict['_metadata'] = {
+                'tracking': utm_metadata,
+                'captured_at': datetime.now(timezone.utc).isoformat()
+            }
+        
         decision_json_content = json.dumps(decision_dict, indent=2).encode('utf-8')
         decision_json_path = save_file_to_storage(decision_json_content, job_dir, "decision.json")
         
@@ -1253,7 +1277,13 @@ async def get_industry_preset(industry: str) -> JSONResponse:
 async def compile_csv_html(
     request: Request,
     csv_file: UploadFile = File(...),
-    spec_json: str = Form(...)
+    spec_json: str = Form(...),
+    utm_source: str = Form(""),
+    utm_medium: str = Form(""),
+    utm_campaign: str = Form(""),
+    utm_term: str = Form(""),
+    utm_content: str = Form(""),
+    referrer: str = Form("")
 ) -> HTMLResponse:
     """
     Process CSV file and specification JSON to generate proof PDF and evidence bundle.
@@ -1926,17 +1956,34 @@ async def download_file(
 @app.get("/examples", response_class=HTMLResponse, tags=["compile"])
 async def examples_page(request: Request) -> HTMLResponse:
     """
-    Examples showcase page with downloadable CSV files and JSON specifications.
+    Examples showcase page with live verification results and downloadable artifacts.
     
     Returns:
-        HTMLResponse: Examples page with PASS/FAIL scenarios and templates
+        HTMLResponse: Examples page with live PASS/FAIL scenarios and proof PDFs
         
     Example:
-        Browser GET /examples returns showcase page with all example files
+        Browser GET /examples returns showcase page with all live validated examples
     """
+    # Load live examples manifest
+    examples_manifest = None
+    manifest_path = static_dir / "examples" / "manifest.json"
+    
+    try:
+        if manifest_path.exists():
+            with open(manifest_path, 'r', encoding='utf-8') as f:
+                examples_manifest = json.load(f)
+                logger.info(f"Loaded examples manifest with {len(examples_manifest.get('examples', []))} examples")
+        else:
+            logger.warning(f"Examples manifest not found at {manifest_path}")
+    except Exception as e:
+        logger.error(f"Failed to load examples manifest: {e}")
+    
     return templates.TemplateResponse(
         "examples.html",
-        {"request": request}
+        {
+            "request": request,
+            "examples_manifest": examples_manifest
+        }
     )
 
 

@@ -1,0 +1,21 @@
+{
+  "pass_": true,
+  "status": "PASS",
+  "industry": "sterile",
+  "job_id": "audit_sterile_pass",
+  "target_temp_C": 55.0,
+  "conservative_threshold_C": 50.0,
+  "actual_hold_time_s": 160.0,
+  "required_hold_time_s": 120,
+  "max_temp_C": 55.0,
+  "min_temp_C": 24.8,
+  "reasons": [
+    "Temperature maintained in sterilization range (50-60\u00b0C) for 0.0h",
+    "Humidity maintained in acceptable range (45-85%RH)",
+    "EtO gas concentration adequately maintained during sterilization",
+    "EtO sterilization cycle phases completed successfully",
+    "EtO sterilization requirements met"
+  ],
+  "warnings": [],
+  "flags": {}
+}

@@ -19,10 +19,13 @@
         </div>
     {% endif %}
     
-    <!-- PASS/FAIL Banner -->
-    <div style="padding: 1.5rem; border-radius: 0.75rem; margin-bottom: 2rem; text-align: center; font-size: 1.25rem; font-weight: 700; {% if result.pass %}background: #d1fae5; color: #065f46; border: 2px solid #10b981;{% else %}background: #fef2f2; color: #dc2626; border: 2px solid #ef4444;{% endif %}">
-        {% if result.pass %}
+    <!-- Status Banner -->
+    {% set status = result.status if result.status is defined else ('PASS' if result.pass else 'FAIL') %}
+    <div style="padding: 1.5rem; border-radius: 0.75rem; margin-bottom: 2rem; text-align: center; font-size: 1.25rem; font-weight: 700; {% if status == 'PASS' %}background: #d1fae5; color: #065f46; border: 2px solid #10b981;{% elif status == 'INDETERMINATE' %}background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%); color: #9a3412; border: 2px solid #fdba74;{% else %}background: #fef2f2; color: #dc2626; border: 2px solid #ef4444;{% endif %}">
+        {% if status == 'PASS' %}
             ✓ PASS - Temperature Requirements Met
+        {% elif status == 'INDETERMINATE' %}
+            ⚠ INDETERMINATE — Required signals missing
         {% else %}
             ✗ FAIL - Temperature Requirements Not Met
         {% endif %}
@@ -85,17 +88,35 @@
         </div>
     </div>
     
-    <!-- Reasons for Pass/Fail -->
+    <!-- Reasons for Pass/Fail/Indeterminate -->
     {% if result.reasons %}
     <div class="card" style="margin-bottom: 2rem;">
-        <h4 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: {% if result.pass %}#065f46{% else %}#dc2626{% endif %}; display: flex; align-items: center; gap: 0.5rem;">
-            {% if result.pass %}✅ Validation Passed{% else %}❌ Validation Failed{% endif %}
+        <h4 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: {% if status == 'PASS' %}#065f46{% elif status == 'INDETERMINATE' %}#9a3412{% else %}#dc2626{% endif %}; display: flex; align-items: center; gap: 0.5rem;">
+            {% if status == 'PASS' %}✅ Validation Passed{% elif status == 'INDETERMINATE' %}⚠️ Validation Indeterminate{% else %}❌ Validation Failed{% endif %}
         </h4>
         <ul style="margin: 0; padding-left: 1.5rem; color: #374151; line-height: 1.6;">
             {% for reason in result.reasons %}
                 <li style="margin-bottom: 0.5rem;">{{ reason }}</li>
             {% endfor %}
         </ul>
+    </div>
+    {% endif %}
+    
+    <!-- Missing Required Sensors (for INDETERMINATE status) -->
+    {% if status == 'INDETERMINATE' and result.flags and result.flags.missing_required_sensors %}
+    <div class="card" style="margin-bottom: 2rem; border: 2px solid #fdba74; background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%);">
+        <h4 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: #9a3412; display: flex; align-items: center; gap: 0.5rem;">
+            🚫 Missing Required Sensors
+        </h4>
+        <p style="margin: 0 0 1rem 0; color: #9a3412;">The following required sensors are missing from your data:</p>
+        <ul style="margin: 0; padding-left: 1.5rem; color: #9a3412; line-height: 1.6;">
+            {% for sensor in result.flags.missing_required_sensors %}
+                <li style="margin-bottom: 0.5rem;"><strong>{{ sensor }}</strong></li>
+            {% endfor %}
+        </ul>
+        <p style="margin-top: 1rem; margin-bottom: 0; color: #92400e; font-style: italic;">
+            To get a definitive PASS/FAIL result, please ensure all required sensors are present in your CSV data.
+        </p>
     </div>
     {% endif %}
     

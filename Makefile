@@ -14,7 +14,7 @@ test:
 
 # Run tests with coverage
 test-cov:
-	pytest --cov=. --cov-report=xml --cov-report=html --cov-report=term-missing
+	pytest --cov=. --cov-report=xml --cov-report=html --cov-report=term-missing --cov-fail-under=92
 
 # Lint code
 lint:
@@ -139,7 +139,7 @@ security-check:
 
 # Coverage reporting with detailed breakdown
 coverage-report:
-	pytest --cov=. --cov-report=html --cov-report=term-missing --cov-report=xml
+	pytest --cov=. --cov-report=html --cov-report=term-missing --cov-report=xml --cov-fail-under=92
 	@echo "📊 Coverage report generated in htmlcov/"
 
 # Example validation
@@ -195,6 +195,50 @@ validate-examples:
 	    sys.exit(1)
 	"
 
+# Audit Framework targets
+audit:
+	python -m cli.audit_runner --all --verbose
+
+audit-industry:
+	@if [ -z "$(INDUSTRY)" ]; then echo "Usage: make audit-industry INDUSTRY=powder"; exit 1; fi
+	python -m cli.audit_runner --industry $(INDUSTRY) --verbose
+
+audit-benchmark:
+	python -m cli.audit_runner --all --benchmark --save-results audit-report.json
+
+audit-determinism:
+	python -m cli.audit_runner --all --determinism --verbose
+
+audit-validate:
+	python -m cli.audit_runner validate-fixtures
+
+audit-list:
+	python -m cli.audit_runner list-fixtures
+
+# Audit invariant testing
+test-invariants:
+	pytest tests/test_audit_invariants.py -v
+
+test-invariants-determinism:
+	pytest tests/test_audit_invariants.py::TestDeterminismInvariants -v -s
+
+test-invariants-all:
+	pytest tests/test_audit_invariants.py -v -s
+
+# Combined audit validation
+audit-full: audit test-invariants
+	@echo "✅ Complete audit framework validation passed"
+
+# Coverage quality gate
+coverage-gate:
+	@echo "🎯 Running coverage quality gate (≥92% required)..."
+	pytest --cov=. --cov-report=term-missing --cov-fail-under=92 --quiet
+	@echo "✅ Coverage gate passed"
+
+# CI/CD quality gates
+ci-gates: lint typecheck coverage-gate audit
+	@echo "✅ All CI/CD quality gates passed"
+
 # Help target
 help:
 	@echo "ProofKit Makefile Targets:"
@@ -206,8 +250,9 @@ help:
 	@echo ""
 	@echo "Testing:"
 	@echo "  test            Run tests"
-	@echo "  test-cov        Run tests with coverage"
+	@echo "  test-cov        Run tests with coverage (≥92%)"
 	@echo "  coverage-report Detailed coverage report"
+	@echo "  coverage-gate   Coverage quality gate (≥92%)"
 	@echo "  validate-examples Test example CSV/spec pairs"
 	@echo ""
 	@echo "Code Quality:"
@@ -216,6 +261,7 @@ help:
 	@echo "  format          Format code with black/isort"
 	@echo "  format-check    Check code formatting"
 	@echo "  security-check  Run security analysis"
+	@echo "  ci-gates        Run all CI/CD quality gates"
 	@echo ""
 	@echo "Release Validation:"
 	@echo "  release-check-dev    Development mode validation"
@@ -234,6 +280,16 @@ help:
 	@echo "Docker:"
 	@echo "  build           Build Docker image"
 	@echo "  run             Run Docker container"
+	@echo ""
+	@echo "Audit Framework:"
+	@echo "  audit           Run all audit tests across industries"
+	@echo "  audit-industry  Run audit for specific industry (INDUSTRY=name)"
+	@echo "  audit-benchmark Performance benchmark audit tests"
+	@echo "  audit-determinism Test for deterministic behavior"
+	@echo "  audit-validate  Validate audit fixture structure"
+	@echo "  audit-list      List all available audit fixtures"
+	@echo "  test-invariants Run property-based invariant tests"
+	@echo "  audit-full      Complete audit framework validation"
 	@echo ""
 	@echo "Maintenance:"
 	@echo "  clean           Clean temporary files"

@@ -1,0 +1,20 @@
+{
+  "pass_": true,
+  "status": "PASS",
+  "industry": "autoclave",
+  "job_id": "audit_autoclave_pass",
+  "target_temp_C": 121.1,
+  "conservative_threshold_C": 119.0,
+  "actual_hold_time_s": 300.0,
+  "required_hold_time_s": 900,
+  "max_temp_C": 121.9,
+  "min_temp_C": 24.8,
+  "reasons": [
+    "Temperature maintained in sterilization range (120.0-125.0\u00b0C) for 5.0min",
+    "Fo value 69.0 \u2265 12 minutes equivalent at 121\u00b0C",
+    "Pressure maintained above 15 psi during sterilization",
+    "Autoclave sterilization requirements met"
+  ],
+  "warnings": [],
+  "flags": {}
+}

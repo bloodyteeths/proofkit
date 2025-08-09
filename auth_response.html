@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-756618Z0XS"></script>
+    <script nonce="XTlQxFErszsamSkFdoHefg">
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      
+      // Check cookie consent before configuring GA4
+      const cookieConsent = localStorage.getItem('cookie_consent');
+      const analyticsConsent = cookieConsent === 'analytics' ? 'granted' : 'denied';
+      
+      // Set default consent state
+      gtag('consent', 'default', {
+        'analytics_storage': analyticsConsent,
+        'ad_storage': 'denied'
+      });
+
+      gtag('config', 'G-756618Z0XS');
+    </script>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication Successful - ProofKit</title>
+    <meta name="description" content="Successfully authenticated with ProofKit">
+    
+    
+    
+    <meta name="robots" content="noindex, nofollow">
+    
+    
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="ProofKit">
+    <meta property="og:title" content="Authentication Successful - ProofKit">
+    <meta property="og:description" content="Successfully authenticated with ProofKit">
+    <meta property="og:url" content="http://proofkit-prod.fly.dev/auth/verify?token=N-9y6DZqusw27b8Uf02CVAvpHijhNLQcJMa42y9gGiI">
+    <meta property="og:image" content="https://www.proofkit.net/static/brand/proofkit_logo_icon.png">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Authentication Successful - ProofKit">
+    <meta name="twitter:description" content="Successfully authenticated with ProofKit">
+    <meta name="twitter:image" content="https://www.proofkit.net/static/brand/proofkit_logo_icon.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" sizes="any" href="/static/brand/proofkit_favicon.svg?v=2">
+    <link rel="shortcut icon" type="image/svg+xml" href="/static/brand/proofkit_favicon.svg?v=2">
+    <link rel="mask-icon" href="/static/brand/proofkit_favicon.svg?v=2" color="#0050FF">
+    <link rel="apple-touch-icon" href="/static/brand/proofkit_logo_icon.svg">
+    
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Modern CSS -->
+    <link rel="stylesheet" href="/static/css/modern.css">
+    
+    <!-- Structured Data: Organization & Website -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "ProofKit",
+      "url": "https://www.proofkit.net/",
+      "logo": "https://www.proofkit.net/static/brand/proofkit_logo_icon.svg",
+      "sameAs": [
+        "https://www.linkedin.com/company/proofkit"
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "ProofKit",
+      "url": "https://www.proofkit.net/",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://www.proofkit.net/search?q={query}",
+        "query-input": "required name=query"
+      }
+    }
+    </script>
+
+    
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <!-- Logo -->
+            <a href="/" class="logo-link">
+                <img src="/static/brand/proofkit_logo_icon.svg" alt="ProofKit" width="32" height="32" style="height: 32px; width: auto;">
+                <span>ProofKit</span>
+            </a>
+            
+            <!-- Desktop Navigation -->
+            <div class="nav-menu">
+                <a href="/" class="nav-link">Home</a>
+                
+                <!-- Industries Dropdown -->
+                <div class="dropdown">
+                    <button class="dropdown-toggle">
+                        Industries
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div class="dropdown-menu">
+                        <a href="/industries/powder-coating" class="dropdown-item">🎨 Powder Coating</a>
+                        <a href="/industries/autoclave" class="dropdown-item">🏥 Autoclave</a>
+                        <a href="/industries/concrete" class="dropdown-item">🏗️ Concrete</a>
+                        <a href="/industries/cold-chain" class="dropdown-item">❄️ Cold Chain</a>
+                        <a href="/industries/eto" class="dropdown-item">🧪 ETO Sterilization</a>
+                        <a href="/industries/haccp" class="dropdown-item">🍖 HACCP</a>
+                    </div>
+                </div>
+                
+                <a href="/examples" class="nav-link">Examples</a>
+                <a href="/docs" class="nav-link">Docs</a>
+                <a href="/pricing" class="nav-link">Pricing</a>
+                <a href="/trust" class="nav-link">Trust</a>
+                
+                <!-- Authentication Links -->
+                
+                 <a href="/auth/get-started" class="nav-link">Get Started</a>
+                
+                
+                <a href="/app" class="btn btn-primary">Start Validating</a>
+            </div>
+            
+            <!-- Mobile Menu Button -->
+            <button id="mobile-menu-btn" class="mobile-menu-btn">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="mobile-menu hidden">
+            <a href="/" class="mobile-menu-link">Home</a>
+            <div class="mobile-menu-section">
+                <h4>Industries</h4>
+                <a href="/industries/powder-coating" class="mobile-menu-link">🎨 Powder Coating</a>
+                <a href="/industries/autoclave" class="mobile-menu-link">🏥 Autoclave</a>
+                <a href="/industries/concrete" class="mobile-menu-link">🏗️ Concrete</a>
+                <a href="/industries/cold-chain" class="mobile-menu-link">❄️ Cold Chain</a>
+                <a href="/industries/eto" class="mobile-menu-link">🧪 ETO Sterilization</a>
+                <a href="/industries/haccp" class="mobile-menu-link">🍖 HACCP</a>
+            </div>
+             <a href="/examples" class="mobile-menu-link">Examples</a>
+            <a href="/docs" class="mobile-menu-link">Docs</a>
+            <a href="/pricing" class="mobile-menu-link">Pricing</a>
+            <a href="/trust" class="mobile-menu-link">Trust</a>
+            <!-- Mobile Authentication Links -->
+            
+             <a href="/auth/get-started" class="mobile-menu-link">Get Started</a>
+            
+            <a href="/app" class="mobile-menu-link mobile-menu-cta">Start Validating</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        
+<div class="auth-page">
+    <div class="auth-container">
+        <!-- Success Header -->
+        <div class="auth-header success-header">
+            <div class="success-icon">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                    <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+            </div>
+            <h1>Welcome to ProofKit!</h1>
+            <p class="subtitle">You're successfully authenticated</p>
+        </div>
+        
+        <!-- User Info -->
+        <div class="auth-content">
+            <div class="success-info">
+                <div class="info-item">
+                    <span class="info-label">Email:</span>
+                    <span class="info-value">atanrikulu@e-listele.com</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Role:</span>
+                    <span class="info-value role-badge">OP</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Session:</span>
+                    <span class="info-value">Active for 24 hours</span>
+                </div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="action-buttons">
+                
+                <a href="/dashboard" class="btn btn-primary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                        <polyline points="9 22 9 12 15 12 15 22"/>
+                    </svg>
+                    Go to Dashboard
+                </a>
+                
+                <a href="/app" class="btn btn-secondary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                        <polyline points="10 9 9 9 8 9"/>
+                    </svg>
+                    Process Files
+                </a>
+            </div>
+            
+            <!-- Quick Access -->
+            <div class="quick-links">
+                <h3>Quick Access</h3>
+                <div class="links-grid">
+                    <a href="/examples" class="quick-link">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+                            <polyline points="13 2 13 9 20 9"/>
+                        </svg>
+                        <span>Examples</span>
+                    </a>
+                    <a href="/docs" class="quick-link">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                        </svg>
+                        <span>Documentation</span>
+                    </a>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.auth-page {
+    min-height: calc(100vh - 140px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.auth-container {
+    max-width: 560px;
+    width: 100%;
+    background: white;
+    border-radius: 1.5rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+}
+
+.success-header {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    text-align: center;
+    padding: 3rem 2rem;
+    color: white;
+}
+
+.success-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    margin-bottom: 1.5rem;
+}
+
+.success-icon svg {
+    width: 48px;
+    height: 48px;
+}
+
+.success-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+}
+
+.subtitle {
+    font-size: 1.125rem;
+    opacity: 0.95;
+    margin: 0;
+}
+
+.auth-content {
+    padding: 2.5rem 2rem;
+}
+
+.success-info {
+    background: #f9fafb;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #6b7280;
+}
+
+.info-value {
+    color: #374151;
+    font-weight: 500;
+}
+
+.role-badge {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.btn {
+    flex: 1;
+    padding: 0.875rem 1.5rem;
+    border-radius: 0.75rem;
+    text-decoration: none;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+}
+
+.btn-secondary {
+    background: white;
+    color: #667eea;
+    border: 2px solid #667eea;
+}
+
+.btn-secondary:hover {
+    background: #f3f4f6;
+}
+
+.quick-links {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.quick-links h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #6b7280;
+    margin: 0 0 1rem 0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.links-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+}
+
+.quick-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: #f9fafb;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    color: #374151;
+    transition: all 0.2s ease;
+}
+
+.quick-link:hover {
+    background: #f3f4f6;
+    transform: translateX(4px);
+}
+
+.quick-link svg {
+    color: #667eea;
+    flex-shrink: 0;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .auth-page {
+        padding: 1rem;
+    }
+    
+    .auth-container {
+        border-radius: 1rem;
+    }
+    
+    .success-header {
+        padding: 2rem 1.5rem;
+    }
+    
+    .success-header h1 {
+        font-size: 1.75rem;
+    }
+    
+    .auth-content {
+        padding: 1.5rem;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+}
+</style>
+
+<script>
+// Auto-redirect to dashboard after a few seconds
+setTimeout(() => {
+    window.location.href = '/dashboard';
+}, 5000);
+</script>
+
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-grid">
+                <div>
+                    <h3>ProofKit</h3>
+                    <p>Professional temperature validation for industrial compliance.</p>
+                </div>
+                <div>
+                    <h3>Product</h3>
+                    <ul class="footer-links">
+                        <li><a href="/app">Validator</a></li>
+                        <li><a href="/pricing">Pricing</a></li>
+                        <li><a href="/examples">Examples</a></li>
+                        <li><a href="/docs">Documentation</a></li>
+                        <li><a href="/blog">Blog</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>Industries</h3>
+                    <ul class="footer-links">
+                        <li><a href="/industries/powder-coating">Powder Coating</a></li>
+                        <li><a href="/industries/autoclave">Autoclave</a></li>
+                        <li><a href="/industries/concrete">Concrete</a></li>
+                        <li><a href="/industries/cold-chain">Cold Chain</a></li>
+                        <li><a href="/industries/eto">ETO Sterilization</a></li>
+                        <li><a href="/industries/haccp">HACCP</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>Account</h3>
+                    <ul class="footer-links">
+                        
+                        <li><a href="/auth/get-started">Get Started</a></li>
+                        
+                        <li><a href="/pricing">Pricing</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>Contact</h3>
+                    <ul class="footer-links">
+                        <li><a href="mailto:support@proofkit.net">support@proofkit.net</a></li>
+                        <li><a href="mailto:privacy@proofkit.net">Privacy</a></li>
+                        <li><a href="mailto:legal@proofkit.net">Legal</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2024 ProofKit. All rights reserved. Domain: proofkit.net</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Cookie Banner -->
+    <div id="cookie-banner" class="cookie-banner">
+        <div class="cookie-content">
+            <p class="cookie-text">
+                We use cookies to enhance your experience. By continuing, you agree to our use of cookies.
+            </p>
+            <div class="cookie-actions">
+                <button id="accept-cookies-btn" class="btn btn-primary">
+                    Accept All
+                </button>
+                <button id="decline-cookies-btn" class="btn btn-secondary">
+                    Necessary Only
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script nonce="XTlQxFErszsamSkFdoHefg">
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-btn').addEventListener('click', function() {
+            const menu = document.getElementById('mobile-menu');
+            if (menu) {
+                menu.classList.toggle('hidden');
+            }
+        });
+
+        // Cookie banner
+        window.addEventListener('load', function() {
+            if (!localStorage.getItem('cookiesAccepted')) {
+                setTimeout(() => {
+                    const banner = document.getElementById('cookie-banner');
+                    if (banner) {
+                        banner.classList.add('show');
+                    }
+                }, 1000);
+            }
+        });
+
+        function acceptCookies() {
+            localStorage.setItem('cookie_consent', 'analytics');
+            localStorage.setItem('cookiesAccepted', 'all');
+            const banner = document.getElementById('cookie-banner');
+            if (banner) {
+                banner.classList.remove('show');
+            }
+            
+            // Enable GA4 tracking if available
+            if (window.gtag) {
+                gtag('consent', 'update', {
+                    'analytics_storage': 'granted',
+                    'ad_storage': 'denied'
+                });
+            }
+            
+            // Trigger analytics consent update if function exists
+            if (typeof updateAnalyticsConsent === 'function') {
+                updateAnalyticsConsent(true);
+            }
+        }
+
+        function declineCookies() {
+            localStorage.setItem('cookie_consent', 'essential');
+            localStorage.setItem('cookiesAccepted', 'necessary');
+            const banner = document.getElementById('cookie-banner');
+            if (banner) {
+                banner.classList.remove('show');
+            }
+            
+            // Disable GA4 tracking if available
+            if (window.gtag) {
+                gtag('consent', 'update', {
+                    'analytics_storage': 'denied',
+                    'ad_storage': 'denied'
+                });
+            }
+            
+            // Trigger analytics consent update if function exists
+            if (typeof updateAnalyticsConsent === 'function') {
+                updateAnalyticsConsent(false);
+            }
+        }
+        
+        // Add event listeners for cookie buttons
+        var acceptBtn = document.getElementById('accept-cookies-btn');
+        if (acceptBtn) {
+            acceptBtn.addEventListener('click', function() {
+                acceptCookies();
+            });
+        }
+        
+        var declineBtn = document.getElementById('decline-cookies-btn');
+        if (declineBtn) {
+            declineBtn.addEventListener('click', function() {
+                declineCookies();
+            });
+        }
+    </script>
+
+    <!-- HTMX -->
+    <script src="/static/js/htmx.min.js"></script>
+    
+    <!-- Main JavaScript -->
+    <script src="/static/js/app.js"></script>
+    
+    
+</body>
+</html>

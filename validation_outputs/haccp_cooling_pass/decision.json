@@ -1,0 +1,19 @@
+{
+  "pass_": false,
+  "status": "FAIL",
+  "industry": "haccp",
+  "job_id": "audit_haccp_pass",
+  "target_temp_C": 5.0,
+  "conservative_threshold_C": 5.0,
+  "actual_hold_time_s": 0.0,
+  "required_hold_time_s": 7200,
+  "max_temp_C": 62.37776402835298,
+  "min_temp_C": 24.978589811533283,
+  "reasons": [
+    "Starting temperature 77.0\u00b0F < 135\u00b0F requirement",
+    "Temperature never reached 70\u00b0F (Phase 1 target not achieved)",
+    "Temperature never reached 41\u00b0F (Phase 2 target not achieved)"
+  ],
+  "warnings": [],
+  "flags": {}
+}

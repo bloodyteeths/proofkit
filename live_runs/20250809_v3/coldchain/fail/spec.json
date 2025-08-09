@@ -1,0 +1,8 @@
+{
+  "industry": "coldchain",
+  "parameters": {
+    "min_temp": 2,
+    "max_temp": 8,
+    "compliance_percentage": 95
+  }
+}

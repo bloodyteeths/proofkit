@@ -69,11 +69,11 @@ PLANS: Dict[str, Dict[str, Any]] = {
     "pro": {
         "name": "Pro",
         "price_usd": 79,
-        "jobs_month": 75,
+        "jobs_month": 50,
         "overage_price_usd": 2,
         "single_cert_price_usd": 5,
         "features": [
-            "75 certificates/month",
+            "50 certificates/month",
             "Custom logo template",
             "Priority support",
             "$2 overage per certificate"
@@ -344,3 +344,31 @@ STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")
 
 # Test mode detection
 STRIPE_TEST_MODE = bool(STRIPE_SECRET_KEY and STRIPE_SECRET_KEY.startswith('sk_test_'))
+
+# Premium single certificate configuration for one-off purchases
+PREMIUM_CERT_CONFIG = {
+    "name": "Premium Certificate",
+    "price_usd": 12,
+    "description": "One-off premium certificate purchase with enhanced features",
+    "features": [
+        "Premium PDF template",
+        "Custom branding options",
+        "Priority processing",
+        "Extended support"
+    ],
+    "stripe_price_id": os.environ.get("STRIPE_PREMIUM_CERT_PRICE", "price_premium_cert")
+}
+
+
+def get_premium_cert_config() -> Dict[str, Any]:
+    """
+    Get premium certificate configuration for one-off purchases.
+    
+    Returns:
+        Premium certificate configuration dictionary
+        
+    Example:
+        >>> config = get_premium_cert_config()
+        >>> price = config['price_usd']
+    """
+    return PREMIUM_CERT_CONFIG.copy()

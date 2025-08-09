@@ -1,0 +1,29 @@
+User-agent: *
+Allow: /
+
+# Block debug endpoints
+Disallow: /debug/
+Disallow: /debug/compile
+Disallow: /debug/result
+
+# Block API endpoints
+Disallow: /api/
+Disallow: /compile
+Disallow: /verify/*/raw
+
+# Block temporary and test paths
+Disallow: /tmp/
+Disallow: /test/
+Disallow: /output/
+
+# Allow important pages
+Allow: /
+Allow: /examples
+Allow: /campaign
+Allow: /auth/get-started
+Allow: /industries/
+Allow: /pricing
+Allow: /trust
+
+# Sitemap
+Sitemap: https://proofkit.net/sitemap.xml

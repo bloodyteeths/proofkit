@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container" style="max-width: 1400px; margin: 2rem auto; padding: 0 1rem;">
+    <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; color: #1a1a1a;">Debug Compile</h1>
+    <p style="color: #666; margin-bottom: 2rem;">Upload CSV and choose spec for detailed 4-tab analysis</p>
+    
+    <!-- Upload Form -->
+    <div class="card" style="margin-bottom: 2rem;">
+        <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; color: #1a1a1a;">Upload & Configure</h2>
+        
+        <form 
+            hx-post="/debug/compile" 
+            hx-target="#debug-results" 
+            hx-indicator="#loading-indicator"
+            enctype="multipart/form-data"
+            style="display: grid; gap: 1.5rem;"
+        >
+            <!-- CSV Upload -->
+            <div>
+                <label for="csv_file" style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #374151;">CSV File</label>
+                <input 
+                    type="file" 
+                    id="csv_file" 
+                    name="csv_file" 
+                    accept=".csv"
+                    required
+                    style="display: block; width: 100%; padding: 0.75rem; border: 2px solid #e5e7eb; border-radius: 0.5rem; background: white;"
+                >
+                <small style="color: #6b7280; margin-top: 0.25rem; display: block;">Temperature log CSV file (max 10MB)</small>
+            </div>
+            
+            <!-- Spec Selection -->
+            <div>
+                <label for="spec_preset" style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #374151;">Specification Preset</label>
+                <select 
+                    id="spec_preset" 
+                    onchange="loadPreset()"
+                    style="display: block; width: 100%; padding: 0.75rem; border: 2px solid #e5e7eb; border-radius: 0.5rem; background: white;"
+                >
+                    <option value="">Select a preset...</option>
+                    {% for industry, preset in presets.items() %}
+                    <option value="{{ industry }}">{{ industry.title() }} Coating</option>
+                    {% endfor %}
+                </select>
+                <small style="color: #6b7280; margin-top: 0.25rem; display: block;">Choose industry preset or customize JSON below</small>
+            </div>
+            
+            <!-- Spec JSON -->
+            <div>
+                <label for="spec_json" style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #374151;">Specification JSON</label>
+                <textarea 
+                    id="spec_json" 
+                    name="spec_json" 
+                    rows="12"
+                    required
+                    style="display: block; width: 100%; padding: 0.75rem; border: 2px solid #e5e7eb; border-radius: 0.5rem; font-family: 'Courier New', monospace; font-size: 0.875rem; background: white; resize: vertical;"
+                    placeholder="Paste or select preset specification JSON..."
+                ></textarea>
+                <small style="color: #6b7280; margin-top: 0.25rem; display: block;">JSON specification defining validation requirements</small>
+            </div>
+            
+            <!-- Submit Button -->
+            <button 
+                type="submit"
+                style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.2s; max-width: 200px;"
+                onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(59, 130, 246, 0.4)'"
+                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'"
+            >
+                Analyze & Debug
+            </button>
+        </form>
+        
+        <!-- Loading Indicator -->
+        <div id="loading-indicator" class="htmx-indicator" style="margin-top: 1rem; padding: 1rem; background: #f0f9ff; border: 1px solid #bfdbfe; border-radius: 0.5rem; color: #1e40af;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <div style="width: 20px; height: 20px; border: 2px solid #3b82f6; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                Processing your data...
+            </div>
+        </div>
+    </div>
+    
+    <!-- Results Container -->
+    <div id="debug-results"></div>
+</div>
+
+<!-- Preset Loading Script -->
+<script nonce="{{ get_nonce(request) }}">
+const presets = {{ presets | tojson }};
+
+function loadPreset() {
+    const select = document.getElementById('spec_preset');
+    const textarea = document.getElementById('spec_json');
+    
+    if (select.value && presets[select.value]) {
+        textarea.value = JSON.stringify(presets[select.value], null, 2);
+    }
+}
+
+// Loading spinner animation
+const style = document.createElement('style');
+style.textContent = `
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

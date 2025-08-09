@@ -1,0 +1,32 @@
+{
+  "confusion_matrix": {
+    "PASS": {
+      "PASS": 0,
+      "FAIL": 0,
+      "ERROR": 11,
+      "INDETERMINATE": 0
+    },
+    "FAIL": {
+      "PASS": 0,
+      "FAIL": 0,
+      "ERROR": 7,
+      "INDETERMINATE": 0
+    },
+    "ERROR": {
+      "PASS": 0,
+      "FAIL": 0,
+      "ERROR": 4,
+      "INDETERMINATE": 0
+    },
+    "INDETERMINATE": {
+      "PASS": 0,
+      "FAIL": 0,
+      "ERROR": 2,
+      "INDETERMINATE": 0
+    }
+  },
+  "total_cases": 24,
+  "correct_predictions": 4,
+  "accuracy": 0.16666666666666666,
+  "timestamp": "2025-08-09T04:33:11.287030"
+}

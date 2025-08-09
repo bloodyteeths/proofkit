@@ -1,0 +1,25 @@
+{
+  "id": "245e88f31f",
+  "pass": false,
+  "status": "FAIL",
+  "metrics": {
+    "target_temp_C": 180.0,
+    "conservative_threshold_C": 182.0,
+    "actual_hold_time_s": 150.0,
+    "required_hold_time_s": 600,
+    "max_temp_C": 183.8,
+    "min_temp_C": 24.5
+  },
+  "reasons": [
+    "Ramp rate too high: 34.6\u00b0C/min > 15.0\u00b0C/min",
+    "Insufficient continuous hold time: 150s < 600s"
+  ],
+  "warnings": [],
+  "flags": {},
+  "urls": {
+    "pdf": "/download/245e88f31f/pdf",
+    "zip": "/download/245e88f31f/zip",
+    "verify": "/verify/245e88f31f"
+  },
+  "verification_hash": "ceaebed0479a4599f6598d32712b60df87f7749fc97a755d0f5c5e923971ab24"
+}

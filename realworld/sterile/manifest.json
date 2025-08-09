@@ -1,0 +1,72 @@
+{
+  "dataset_collection": "sterile_processing",
+  "created": "2024-08-08T00:00:00Z",
+  "description": "Steam sterilization temperature monitoring per ISO 17665",
+  "standards": [
+    "ISO 17665:2024",
+    "ISO 11138",
+    "ISO 14161"
+  ],
+  "files": [
+    {
+      "filename": "raw/iso_17665_steam_sterilization.csv",
+      "description": "Pre-vacuum steam sterilization cycle with complete phase monitoring",
+      "format": "CSV",
+      "size_bytes": 1810,
+      "sha256": "de04218f9b83dbfb3148a37bac33a69c99e2921fabc93ef08cc3d5d074e208ee",
+      "rows": 30,
+      "columns": 6,
+      "temperature_range": "25.2-121.3°C",
+      "duration_minutes": 80,
+      "validated": true,
+      "source_type": "representative_data",
+      "compliance_standards": ["ISO 17665:2024"]
+    }
+  ],
+  "metadata": {
+    "industry": "healthcare",
+    "process_type": "steam_sterilization",
+    "critical_parameters": [
+      "temperature",
+      "pressure",
+      "steam_quality",
+      "cycle_phase"
+    ],
+    "validation_requirements": {
+      "temperature_accuracy": "±0.5°C",
+      "pressure_accuracy": "±2 kPa",
+      "logging_interval": "1 minute",
+      "calibration_frequency": "monthly"
+    }
+  },
+  "sterilization_requirements": {
+    "standard_cycle": {
+      "temperature": "121°C ± 1°C",
+      "hold_time": "15 minutes minimum",
+      "pressure": "147-149 kPa absolute"
+    },
+    "alternative_cycles": {
+      "flash_sterilization": "134°C for 3 minutes",
+      "low_temperature": "115°C extended time"
+    },
+    "steam_quality": {
+      "dryness_minimum": "90%",
+      "superheating_maximum": "25°C above saturation"
+    }
+  },
+  "cycle_phases": [
+    "preconditioning",
+    "air_removal", 
+    "heating",
+    "sterilization",
+    "cooling",
+    "drying",
+    "complete"
+  ],
+  "quality_assurance": {
+    "data_integrity": "SHA256 verified",
+    "format_validation": "CSV structure confirmed",
+    "content_validation": "Temperature and pressure within ISO specifications",
+    "completeness": "Full sterilization cycle with all phases captured"
+  }
+}

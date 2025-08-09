@@ -164,11 +164,16 @@ def create_header_section(spec: SpecV1) -> list:
 
 def create_status_badge(decision: DecisionResult) -> Table:
     """Create centered PASS/FAIL/INDETERMINATE status badge."""
-    status = getattr(decision, 'status', 'PASS') or ("PASS" if decision.pass_ else "FAIL")
+    # Use decision.status as the primary source of truth
+    status = getattr(decision, 'status', 'PASS' if decision.pass_ else 'FAIL')
+    
+    # Set color based on status
     if status == 'INDETERMINATE':
         status_color = colors.orange
-    else:
-        status_color = COLOR_EMERALD if (status == 'PASS' and decision.pass_) else COLOR_CRIMSON
+    elif status == 'PASS':
+        status_color = COLOR_EMERALD
+    else:  # FAIL
+        status_color = COLOR_CRIMSON
     
     # Create badge table with rounded appearance
     badge_data = [[status]]
@@ -260,9 +265,16 @@ def create_results_column(decision: DecisionResult) -> Table:
                   ParagraphStyle('Header', fontSize=10, textColor=COLOR_NAVY))],
     ]
     
-    # Status with color coding
-    status = getattr(decision, 'status', 'PASS') or ('PASS' if decision.pass_ else 'FAIL')
-    status_color = COLOR_EMERALD if status == 'PASS' else (colors.orange if status == 'INDETERMINATE' else COLOR_CRIMSON)
+    # Status with color coding - use decision.status as source of truth
+    status = getattr(decision, 'status', 'PASS' if decision.pass_ else 'FAIL')
+    
+    # Set color based on status
+    if status == 'INDETERMINATE':
+        status_color = colors.orange
+    elif status == 'PASS':
+        status_color = COLOR_EMERALD
+    else:  # FAIL
+        status_color = COLOR_CRIMSON
     status_text = '<font color="%s"><b>%s</b></font>' % (status_color.hexval(), status)
     
     details = [
@@ -295,7 +307,20 @@ def create_results_column(decision: DecisionResult) -> Table:
         if getattr(decision, 'flags', {}).get('fallback_used'):
             results_data.append([
                 Paragraph('Note', ParagraphStyle('Field', fontSize=9, textColor=COLOR_SLATE, leftIndent=5*mm)),
-                Paragraph('Auto-detected sensors used', ParagraphStyle('Value', fontSize=9, textColor=COLOR_NAVY, alignment=TA_RIGHT))
+                Paragraph('Auto-detected sensors', ParagraphStyle('Value', fontSize=9, textColor=COLOR_NAVY, alignment=TA_RIGHT))
+            ])
+    except Exception:
+        pass
+    
+    # Show required vs present sensors for safety-critical processes
+    try:
+        flags = getattr(decision, 'flags', {})
+        if flags.get('required_sensors') and flags.get('present_sensors'):
+            required_sensors = flags['required_sensors']
+            present_sensors = flags['present_sensors']
+            results_data.append([
+                Paragraph('Required Sensors', ParagraphStyle('Field', fontSize=9, textColor=COLOR_SLATE, leftIndent=5*mm)),
+                Paragraph(f"{len(present_sensors)}/{len(required_sensors)}", ParagraphStyle('Value', fontSize=9, textColor=COLOR_NAVY, alignment=TA_RIGHT))
             ])
     except Exception:
         pass

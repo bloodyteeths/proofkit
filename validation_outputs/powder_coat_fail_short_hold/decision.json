@@ -1,0 +1,18 @@
+{
+  "pass_": false,
+  "status": "FAIL",
+  "industry": "powder",
+  "job_id": "audit_powder_fail",
+  "target_temp_C": 180.0,
+  "conservative_threshold_C": 182.0,
+  "actual_hold_time_s": 0.0,
+  "required_hold_time_s": 600,
+  "max_temp_C": 180.0,
+  "min_temp_C": 25.1,
+  "reasons": [
+    "Temperature never reached conservative threshold of 182.0\u00b0C",
+    "Maximum temperature recorded: 180.0\u00b0C"
+  ],
+  "warnings": [],
+  "flags": {}
+}

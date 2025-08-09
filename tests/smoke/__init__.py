@@ -1,0 +1,1 @@
+# Live smoke tests for production environment validation

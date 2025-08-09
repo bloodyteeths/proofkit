@@ -1,0 +1,19 @@
+{
+  "pass_": false,
+  "status": "INDETERMINATE",
+  "industry": "powder",
+  "job_id": "audit_powder_missing_required",
+  "target_temp_C": 180.0,
+  "conservative_threshold_C": 182.0,
+  "actual_hold_time_s": 0.0,
+  "required_hold_time_s": 600,
+  "max_temp_C": 0.0,
+  "min_temp_C": 0.0,
+  "reasons": [
+    "Required signals missing: 1 additional temperature sensors"
+  ],
+  "warnings": [
+    "Available signals: temperature_1"
+  ],
+  "flags": {}
+}

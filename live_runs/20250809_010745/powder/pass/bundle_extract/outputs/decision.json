@@ -1,0 +1,17 @@
+{
+  "pass": false,
+  "status": "FAIL",
+  "job_id": "e386178fa2",
+  "target_temp_C": 180.0,
+  "conservative_threshold_C": 182.0,
+  "actual_hold_time_s": 450.0,
+  "required_hold_time_s": 600,
+  "max_temp_C": 182.8,
+  "min_temp_C": 25.1,
+  "reasons": [
+    "Ramp rate too high: 34.4\u00b0C/min > 15.0\u00b0C/min",
+    "Insufficient continuous hold time: 450s < 600s"
+  ],
+  "warnings": [],
+  "flags": {}
+}

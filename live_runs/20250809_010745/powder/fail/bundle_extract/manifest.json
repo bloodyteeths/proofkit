@@ -1,0 +1,44 @@
+{
+  "created_at": "2025-08-08T22:21:27.210990+00:00",
+  "files": {
+    "inputs/raw_data.csv": {
+      "sha256": "42d6561ed9f0485cb52c0efbb4e6d770dc17b218ca1107632078321aa5000ab0",
+      "size_bytes": 1341,
+      "source_name": "raw_data.csv"
+    },
+    "inputs/specification.json": {
+      "sha256": "bfd0cafbeb4c06de4109f311ae45ed2e9d86f0e2a3b998d50f96e7f8cc3c2c93",
+      "size_bytes": 675,
+      "source_name": "specification.json"
+    },
+    "outputs/decision.json": {
+      "sha256": "fcb35a04ef6f7be4c288d4c9fbfccc3e596981c8a57f2c1ccc38f36b8c7613f9",
+      "size_bytes": 402,
+      "source_name": "decision.json"
+    },
+    "outputs/normalized_data.csv": {
+      "sha256": "7b67c50b133f587cbece83ba0015c871a709fcf18f2bf4569bee3966a4fb8c8c",
+      "size_bytes": 1164,
+      "source_name": "normalized_data.csv"
+    },
+    "outputs/plot.png": {
+      "sha256": "1cbe03f8532dca3318c1e91e0aea63acf153792ba0f1570d24167fe2a09d728b",
+      "size_bytes": 77770,
+      "source_name": "plot.png"
+    },
+    "outputs/proof.pdf": {
+      "sha256": "f85844507c5cc9f459ff268083b7eeaa85bf8e1f0669170bb05ed43bd080d1e5",
+      "size_bytes": 10528,
+      "source_name": "proof.pdf"
+    }
+  },
+  "metadata": {
+    "bundle_type": "evidence",
+    "created_by": "ProofKit Evidence Packer",
+    "file_count": 6,
+    "job_id": "245e88f31f",
+    "proofkit_version": "0.1.0"
+  },
+  "root_hash": "2e8fff39272329cd1c81ffd5b340d23312575ea5fb3d0d4132566588971bd7cb",
+  "version": "1.0"
+}

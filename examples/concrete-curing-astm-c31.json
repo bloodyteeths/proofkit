@@ -1,0 +1,38 @@
+{
+  "version": "1.0",
+  "industry": "concrete",
+  "job": {
+    "job_id": "audit_concrete_pass"
+  },
+  "spec": {
+    "method": "AMBIENT_CURE",
+    "target_temp_C": 18.0,
+    "hold_time_s": 172800,
+    "temp_band_C": {
+      "min": 5.0,
+      "max": 35.0
+    },
+    "sensor_uncertainty_C": 1.0
+  },
+  "data_requirements": {
+    "max_sample_period_s": 1800.0,
+    "allowed_gaps_s": 7200.0
+  },
+  "sensor_selection": {
+    "mode": "mean",
+    "require_at_least": 2
+  },
+  "logic": {
+    "continuous": true,
+    "max_total_dips_s": 3600
+  },
+  "preconditions": {
+    "max_ramp_rate_C_per_min": 1.0,
+    "max_time_to_threshold_s": 3600
+  },
+  "reporting": {
+    "units": "C",
+    "language": "en",
+    "timezone": "UTC"
+  }
+}

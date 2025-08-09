@@ -4,12 +4,40 @@ This document provides production-ready monitoring configurations for ProofKit d
 
 ## Overview
 
-ProofKit monitoring covers:
+ProofKit monitoring focuses on **three critical metrics that matter**:
+
+1. **P95 compile time > 5s for 10m** - Core performance monitoring
+2. **5xx error rate > 1% for 5m** - Service reliability monitoring  
+3. **Bundle verify error > 0.5% for 10m** - Data integrity monitoring
+
+Additional monitoring includes:
 - **Application health** via `/health` endpoint
 - **Service availability** via BetterUptime probes
 - **System metrics** via Grafana and OTLP
 - **Alert management** via automated rules
 - **Smoke testing** via GitHub Actions
+
+## Critical Metrics Implementation
+
+### Metrics Emission
+
+Use `scripts/emit_metrics.py` to collect and emit the three critical metrics:
+
+```bash
+# Emit metrics in Prometheus format (default)
+python scripts/emit_metrics.py
+
+# Emit metrics in JSON format
+python scripts/emit_metrics.py --format json
+
+# Check current status
+python scripts/emit_metrics.py --status
+```
+
+The script collects:
+- **Compile times** from application logs (looking for compilation duration entries)
+- **Request counts and 5xx errors** from HTTP access logs
+- **Bundle verification stats** from verification logs and storage analysis
 
 ## BetterUptime Configuration
 
@@ -396,18 +424,29 @@ ProofKit provides several endpoints for monitoring:
 
 ### Alert Thresholds
 
-1. **Error Rate**: Alert when > 5% for 2+ minutes
-2. **Response Time**: Alert when 95th percentile > 5 seconds for 3+ minutes
-3. **Service Availability**: Alert immediately when service is down
-4. **Memory Usage**: Alert when > 400MB for 5+ minutes
-5. **Disk Space**: Alert when > 85% full
+**Primary Alerts (Critical):**
+1. **P95 Compile Time**: Alert when > 5 seconds for 10+ minutes
+2. **5xx Error Rate**: Alert when > 1% for 5+ minutes
+3. **Bundle Verify Error**: Alert when > 0.5% for 10+ minutes
+
+**Secondary Alerts (Warning):**
+4. **Service Availability**: Alert immediately when service is down
+5. **Memory Usage**: Alert when > 400MB for 5+ minutes
+6. **Disk Space**: Alert when > 85% full
+7. **Overall Response Time**: Alert when 95th percentile > 15 seconds for 3+ minutes
 
 ### Escalation Policy
 
+**Critical Alerts (P95 compile, 5xx rate, bundle verify):**
+1. **Immediate**: Email + SMS to on-call engineer
+2. **5 minutes**: Call to on-call engineer
+3. **15 minutes**: Escalate to engineering manager
+4. **30 minutes**: Escalate to VP Engineering
+
+**Warning Alerts:**
 1. **Immediate**: Email to ops team
-2. **5 minutes**: SMS to on-call engineer
-3. **15 minutes**: Call to primary engineer
-4. **30 minutes**: Call to engineering manager
+2. **10 minutes**: SMS to on-call engineer
+3. **30 minutes**: Call to primary engineer
 
 ### Monitoring Intervals
 

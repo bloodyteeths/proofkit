@@ -1,0 +1,75 @@
+{
+  "base_url": "https://proofkit-prod.fly.dev",
+  "timestamp": "20250809_012242",
+  "homepage": {
+    "url": "https://proofkit-prod.fly.dev/",
+    "status_code": 200,
+    "hero_found": true,
+    "copy_found": true,
+    "passed": true
+  },
+  "industries": {
+    "powder-coating": {
+      "url": "https://proofkit-prod.fly.dev/industries/powder-coating",
+      "status_code": 200,
+      "badge_found": true,
+      "industry_name_found": true,
+      "passed": true
+    },
+    "autoclave": {
+      "url": "https://proofkit-prod.fly.dev/industries/autoclave",
+      "status_code": 500,
+      "badge_found": false,
+      "industry_name_found": false,
+      "passed": false
+    },
+    "cold-chain": {
+      "url": "https://proofkit-prod.fly.dev/industries/cold-chain",
+      "status_code": 200,
+      "badge_found": true,
+      "industry_name_found": true,
+      "passed": true
+    },
+    "haccp": {
+      "url": "https://proofkit-prod.fly.dev/industries/haccp",
+      "status_code": 200,
+      "badge_found": true,
+      "industry_name_found": true,
+      "passed": true
+    },
+    "concrete": {
+      "url": "https://proofkit-prod.fly.dev/industries/concrete",
+      "status_code": 200,
+      "badge_found": true,
+      "industry_name_found": true,
+      "passed": true
+    },
+    "eto": {
+      "url": "https://proofkit-prod.fly.dev/industries/eto",
+      "status_code": 200,
+      "badge_found": true,
+      "industry_name_found": true,
+      "passed": true
+    }
+  },
+  "examples": {
+    "url": "https://proofkit-prod.fly.dev/examples",
+    "status_code": 200,
+    "industries_found": [
+      "powder",
+      "autoclave",
+      "cold",
+      "haccp",
+      "concrete",
+      "eto"
+    ],
+    "card_count": 2,
+    "passed": true
+  },
+  "verify_pages": {},
+  "summary": {
+    "total_checks": 8,
+    "passed_checks": 7,
+    "pass_rate": 87.5
+  }
+}

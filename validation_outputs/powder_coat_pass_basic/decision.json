@@ -1,0 +1,18 @@
+{
+  "pass_": false,
+  "status": "FAIL",
+  "industry": "powder",
+  "job_id": "audit_powder_pass",
+  "target_temp_C": 180.0,
+  "conservative_threshold_C": 182.0,
+  "actual_hold_time_s": 480.0,
+  "required_hold_time_s": 600,
+  "max_temp_C": 184.0,
+  "min_temp_C": 25.1,
+  "reasons": [
+    "Insufficient continuous hold time: 480s < 600s",
+    "Ramp rate too high: 81.0\u00b0C/min > 10.0\u00b0C/min"
+  ],
+  "warnings": [],
+  "flags": {}
+}

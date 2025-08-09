@@ -1,0 +1,26 @@
+{
+  "pass_": true,
+  "status": "PASS",
+  "industry": "concrete",
+  "job_id": "audit_concrete_pass",
+  "target_temp_C": 21.5,
+  "conservative_threshold_C": 16.0,
+  "actual_hold_time_s": 1500.0,
+  "required_hold_time_s": 172800,
+  "max_temp_C": 22.833333333333332,
+  "min_temp_C": 22.133333333333336,
+  "reasons": [
+    "24h window compliance: 100.0% of samples meet temp \u2208 [16,27]\u00b0C",
+    "Temperature maintained in curing range (16-27\u00b0C) for 100.0% of monitoring period",
+    "Critical first 24h temperature compliance: 100.0%",
+    "Critical curing period (\u226524 hours) requirements met",
+    "Concrete curing requirements met"
+  ],
+  "warnings": [
+    "No humidity sensors detected - validation will proceed without humidity monitoring",
+    "Monitoring period (0.0 days) shorter than recommended 24h minimum"
+  ],
+  "flags": {
+    "fallback_used": true
+  }
+}

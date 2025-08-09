@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live QA Audit Dashboard - ProofKit</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        .header p {
+            opacity: 0.9;
+        }
+        .timestamp {
+            padding: 1rem 2rem;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
+        .results {
+            padding: 2rem;
+        }
+        .industry-grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+        .industry-card {
+            border: 1px solid #e9ecef;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        .industry-header {
+            background: #f8f9fa;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .industry-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+        .industry-body {
+            padding: 1.5rem;
+        }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .metric {
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 0.375rem;
+            text-align: center;
+        }
+        .metric-label {
+            font-size: 0.75rem;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+        .metric-value {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .badge-pass {
+            background: #d4edda;
+            color: #155724;
+        }
+        .badge-fail {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .badge-indeterminate {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .badge-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .checks-table {
+            width: 100%;
+            margin-top: 1rem;
+        }
+        .checks-table th,
+        .checks-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .checks-table th {
+            font-weight: 500;
+            color: #495057;
+            background: #f8f9fa;
+        }
+        .check-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 50%;
+            font-weight: bold;
+        }
+        .check-pass {
+            background: #28a745;
+            color: white;
+        }
+        .check-fail {
+            background: #dc3545;
+            color: white;
+        }
+        .check-warn {
+            background: #ffc107;
+            color: white;
+        }
+        .artifacts-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .artifact-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            transition: background 0.2s;
+        }
+        .artifact-link:hover {
+            background: #0056b3;
+        }
+        .summary-box {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1.5rem;
+            text-align: center;
+        }
+        .summary-stat {
+            padding: 1rem;
+            background: white;
+            border-radius: 0.375rem;
+        }
+        .summary-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #495057;
+        }
+        .summary-label {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Live QA Audit Dashboard</h1>
+            <p>Production PDF Generation & Validation Results</p>
+        </div>
+        
+        <div class="timestamp">
+            <strong>Run Time:</strong> {{ run_timestamp }}
+            <span style="margin-left: 2rem;"><strong>Environment:</strong> {{ base_url }}</span>
+            <span style="margin-left: 2rem;"><strong>Tag:</strong> {{ job_tag }}</span>
+        </div>
+        
+        <div class="results">
+            <!-- Matrix Table -->
+            {% if matrix_results %}
+            <div style="margin-bottom: 2rem;">
+                <h2 style="margin-bottom: 1.5rem;">Industry × {PASS, FAIL} Matrix</h2>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th style="padding: 1rem; background: #f8f9fa; border: 1px solid #dee2e6; text-align: left;">Industry</th>
+                            <th style="padding: 1rem; background: #d4edda; border: 1px solid #dee2e6; text-align: center;">PASS Variant</th>
+                            <th style="padding: 1rem; background: #f8d7da; border: 1px solid #dee2e6; text-align: center;">FAIL Variant</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for industry, variants in matrix_results.items() %}
+                        <tr>
+                            <td style="padding: 1rem; border: 1px solid #dee2e6; font-weight: 600; text-transform: capitalize;">{{ industry }}</td>
+                            <td style="padding: 1rem; border: 1px solid #dee2e6; text-align: center;">
+                                {% if variants.pass %}
+                                    {% if variants.pass.error %}
+                                    <span class="status-badge badge-error">ERROR</span>
+                                    {% elif variants.pass.api_status == 'PASS' %}
+                                    <span class="status-badge badge-pass">✓ PASS</span>
+                                    {% else %}
+                                    <span class="status-badge badge-fail">✗ Expected PASS, got {{ variants.pass.api_status }}</span>
+                                    {% endif %}
+                                    {% if variants.pass.job_id %}
+                                    <div style="margin-top: 0.5rem; font-size: 0.75rem;">
+                                        <a href="/verify/{{ variants.pass.job_id }}" style="color: #007bff;">{{ variants.pass.job_id[:8] }}...</a>
+                                    </div>
+                                    {% endif %}
+                                {% else %}
+                                    <span style="color: #6c757d;">—</span>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 1rem; border: 1px solid #dee2e6; text-align: center;">
+                                {% if variants.fail %}
+                                    {% if variants.fail.error %}
+                                    <span class="status-badge badge-error">ERROR</span>
+                                    {% elif variants.fail.api_status == 'FAIL' %}
+                                    <span class="status-badge badge-fail">✓ FAIL</span>
+                                    {% else %}
+                                    <span class="status-badge badge-pass">✗ Expected FAIL, got {{ variants.fail.api_status }}</span>
+                                    {% endif %}
+                                    {% if variants.fail.job_id %}
+                                    <div style="margin-top: 0.5rem; font-size: 0.75rem;">
+                                        <a href="/verify/{{ variants.fail.job_id }}" style="color: #007bff;">{{ variants.fail.job_id[:8] }}...</a>
+                                    </div>
+                                    {% endif %}
+                                {% else %}
+                                    <span style="color: #6c757d;">—</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+            
+            <!-- Legacy Single Industry Cards (if no matrix) -->
+            {% if not matrix_results %}
+            <div class="industry-grid">
+                {% for industry, result in audit_results.items() %}
+                <div class="industry-card">
+                    <div class="industry-header">
+                        <span class="industry-name">{{ industry }}</span>
+                        {% if result.error %}
+                        <span class="status-badge badge-error">ERROR</span>
+                        {% else %}
+                        <span class="status-badge badge-{{ result.decision|lower }}">{{ result.decision }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="industry-body">
+                        {% if result.error %}
+                        <div style="color: #dc3545; padding: 1rem; background: #f8d7da; border-radius: 0.375rem;">
+                            <strong>Error:</strong> {{ result.error }}
+                        </div>
+                        {% else %}
+                        <div class="metrics-grid">
+                            <div class="metric">
+                                <div class="metric-label">API Decision</div>
+                                <div class="metric-value">{{ result.api_decision }}</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-label">PDF Banner</div>
+                                <div class="metric-value">{{ result.pdf_banner|default('—', true) }}</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-label">Bundle Verify</div>
+                                <div class="metric-value">{{ result.bundle_decision|default('—', true) }}</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-label">Job ID</div>
+                                <div class="metric-value" style="font-size: 0.875rem;">{{ result.job_id[:8] }}...</div>
+                            </div>
+                        </div>
+                        
+                        <table class="checks-table">
+                            <thead>
+                                <tr>
+                                    <th>Check</th>
+                                    <th>Status</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>PDF Generated</td>
+                                    <td>
+                                        {% if result.artifacts.pdf %}
+                                        <span class="check-icon check-pass">✓</span>
+                                        {% else %}
+                                        <span class="check-icon check-fail">✗</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ result.pdf_size|filesizeformat if result.pdf_size else 'Not generated' }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Evidence Bundle</td>
+                                    <td>
+                                        {% if result.artifacts.bundle %}
+                                        <span class="check-icon check-pass">✓</span>
+                                        {% else %}
+                                        <span class="check-icon check-fail">✗</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ result.bundle_files|length if result.bundle_files else 0 }} files</td>
+                                </tr>
+                                <tr>
+                                    <td>Hash Verification</td>
+                                    <td>
+                                        {% if result.hashes_match %}
+                                        <span class="check-icon check-pass">✓</span>
+                                        {% elif result.hashes_match == false %}
+                                        <span class="check-icon check-fail">✗</span>
+                                        {% else %}
+                                        <span class="check-icon check-warn">?</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ result.root_hash[:16] }}... if result.root_hash else 'Not verified' }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Decision Match</td>
+                                    <td>
+                                        {% if result.decisions_match %}
+                                        <span class="check-icon check-pass">✓</span>
+                                        {% elif result.decisions_match == false %}
+                                        <span class="check-icon check-fail">✗</span>
+                                        {% else %}
+                                        <span class="check-icon check-warn">?</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>API vs Bundle vs PDF</td>
+                                </tr>
+                                <tr>
+                                    <td>Example Truth</td>
+                                    <td>
+                                        {% if result.example_valid %}
+                                        <span class="check-icon check-pass">✓</span>
+                                        {% elif result.example_valid == false %}
+                                        <span class="check-icon check-fail">✗</span>
+                                        {% else %}
+                                        <span class="check-icon check-warn">?</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ 'Spec expectations met' if result.example_valid else result.truth_issue|default('Not checked', true) }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <div class="artifacts-links">
+                            {% if result.job_id %}
+                            <a href="/output/{{ result.job_id }}/proof.pdf" class="artifact-link">
+                                📄 PDF
+                            </a>
+                            <a href="/output/{{ result.job_id }}/evidence.zip" class="artifact-link">
+                                📦 Bundle
+                            </a>
+                            <a href="/verify/{{ result.job_id }}" class="artifact-link">
+                                🔍 Verify
+                            </a>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <div class="summary-box">
+                <h2 style="margin-bottom: 1.5rem; text-align: center;">Summary</h2>
+                <div class="summary-grid">
+                    <div class="summary-stat">
+                        <div class="summary-number">{{ total_tested }}</div>
+                        <div class="summary-label">Industries Tested</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="summary-number">{{ total_pass }}</div>
+                        <div class="summary-label">PASS Variants</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="summary-number">{{ total_fail }}</div>
+                        <div class="summary-label">FAIL Variants</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="summary-number">{{ total_errors }}</div>
+                        <div class="summary-label">Errors</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="summary-number">{{ match_rate }}%</div>
+                        <div class="summary-label">Correct Outcomes</div>
+                    </div>
+                </div>
+                {% if ui_smoke_results %}
+                <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #dee2e6;">
+                    <h3 style="margin-bottom: 1rem;">UI Smoke Tests</h3>
+                    <div class="summary-grid">
+                        <div class="summary-stat">
+                            <div class="summary-number">{{ ui_smoke_results.summary.pass_rate }}%</div>
+                            <div class="summary-label">UI Pass Rate</div>
+                        </div>
+                        <div class="summary-stat">
+                            <div class="summary-number">{{ ui_smoke_results.summary.passed_checks }}/{{ ui_smoke_results.summary.total_checks }}</div>
+                            <div class="summary-label">UI Checks</div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

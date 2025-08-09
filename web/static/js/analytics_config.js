@@ -264,6 +264,97 @@ document.addEventListener('DOMContentLoaded', function() {
     window.ProofKitAnalytics.validate();
 });
 
+// Enhanced tracking functions
+window.trackConversion = function(eventName, value, additionalParams = {}) {
+  const cookieConsent = localStorage.getItem('cookie_consent');
+  if (cookieConsent === 'analytics' && window.gtag) {
+    const eventData = {
+      'send_to': 'G-756618Z0XS',
+      'event_category': 'Certificate',
+      'event_label': eventName,
+      'value': value || 1,
+      ...additionalParams
+    };
+    
+    gtag('event', 'conversion', eventData);
+    
+    // Google Ads conversion tracking (uncomment when ads ID is available)
+    // gtag('event', 'conversion', {
+    //   'send_to': 'AW-XXXXXXXXXX/CONVERSION_LABEL',
+    //   'value': value || 1,
+    //   'currency': 'USD'
+    // });
+    
+    if (window.ProofKitAnalytics.debug.logEvents) {
+      console.log('Conversion tracked:', eventName, eventData);
+    }
+  }
+};
+
+// Enhanced ecommerce for certificate generation
+window.trackCertificateGeneration = function(jobId, industry, result, additionalData = {}) {
+  const cookieConsent = localStorage.getItem('cookie_consent');
+  if (cookieConsent === 'analytics' && window.gtag) {
+    const eventData = {
+      'job_id': jobId,
+      'industry': industry,
+      'result': result,
+      'event_category': 'Certificate',
+      'event_label': industry + '_' + result,
+      ...additionalData
+    };
+    
+    gtag('event', 'certificate_generated', eventData);
+    
+    // Track as conversion for successful certificates
+    if (result === 'PASS') {
+      window.trackConversion('certificate_pass', 1, {
+        'job_id': jobId,
+        'industry': industry
+      });
+    }
+    
+    if (window.ProofKitAnalytics.debug.logEvents) {
+      console.log('Certificate generation tracked:', eventData);
+    }
+  }
+};
+
+// Track form submissions
+window.trackFormSubmission = function(formType, additionalData = {}) {
+  const cookieConsent = localStorage.getItem('cookie_consent');
+  if (cookieConsent === 'analytics' && window.gtag) {
+    gtag('event', 'form_submit', {
+      'event_category': 'Form',
+      'event_label': formType,
+      'form_type': formType,
+      ...additionalData
+    });
+    
+    if (window.ProofKitAnalytics.debug.logEvents) {
+      console.log('Form submission tracked:', formType, additionalData);
+    }
+  }
+};
+
+// Track file uploads
+window.trackFileUpload = function(fileName, fileSize, fileType = 'csv') {
+  const cookieConsent = localStorage.getItem('cookie_consent');
+  if (cookieConsent === 'analytics' && window.gtag) {
+    gtag('event', 'file_upload', {
+      'event_category': 'Upload',
+      'event_label': fileType,
+      'file_name': fileName,
+      'file_size': fileSize,
+      'file_type': fileType
+    });
+    
+    if (window.ProofKitAnalytics.debug.logEvents) {
+      console.log('File upload tracked:', fileName, fileSize);
+    }
+  }
+};
+
 // Export for module systems (if needed)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = window.ProofKitAnalytics;

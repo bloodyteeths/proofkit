@@ -1,0 +1,18 @@
+{
+  "pass_": false,
+  "status": "FAIL",
+  "industry": "autoclave",
+  "job_id": "audit_autoclave_fail",
+  "target_temp_C": 121.1,
+  "conservative_threshold_C": 119.0,
+  "actual_hold_time_s": 0.0,
+  "required_hold_time_s": 900,
+  "max_temp_C": 119.7,
+  "min_temp_C": 24.8,
+  "reasons": [
+    "Temperature never reached sterilization range (120.0-125.0\u00b0C)",
+    "Pressure below 15.0 psi for 5.4% of cycle"
+  ],
+  "warnings": [],
+  "flags": {}
+}

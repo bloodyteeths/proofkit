@@ -1,0 +1,6 @@
+Company,Contact_Email,Contact_Name,Phone,Website,Primary_Products,Target_Industries,Partnership_Priority,Notes
+Atlas Cold Storage (example placeholder),,Team,,https://www.atlascold.com,"Cold storage, logistics","Food, pharma",Medium,"Skip if no direct email"
+Pluss Advanced Technologies US,[email protected],Team,,https://pluss.us.com/,"PCM solutions","Life sciences",High,"Already verified, but skip if sent"
+Astell Scientific,[email protected],Sales,+44 20 8309 2031,https://astell.com,"Autoclaves, AstellBio EDS","Hospitals, labs",High,"Direct published email"
+VeriCor,[email protected],Team,608-526-6901,https://www.vericormed.com,"Cool Cube PCM coolers, vaccination kits","Public health, hospitals",Medium,"Direct published email"
+TempGenius,info@tempgenius.com,Team,800-810-4000,https://www.tempgenius.com,"Wireless EMS, compliance","Hospitals, labs, foodservice",High,"Direct published email"

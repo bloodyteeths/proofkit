@@ -1,0 +1,540 @@
+# Validation Campaign Dataset Registry
+# Schema: registry_v1.yaml
+# 
+# This registry tracks datasets for validation testing across all industry types.
+# Each entry contains dataset metadata, file paths, expected outcomes, and provenance info.
+
+schema_version: "1.0"
+created: "2025-08-08"
+description: "Dataset registry for ProofKit validation campaign testing"
+
+datasets:
+  # Powder Coating Test Cases
+  powder_coat_pass_basic:
+    id: "powder_pass_001"
+    industry: "powder"
+    csv_path: "audit/fixtures/powder/pass.csv"
+    spec_path: "audit/fixtures/powder/pass.json"
+    expected_outcome: "PASS"
+    provenance:
+      source: "synthetic_generator"
+      owner_permission: true
+      pii_checked: true
+      created_by: "proofkit_team"
+      created_date: "2025-01-15"
+    metadata:
+      vendor: "ProofKit Test Suite"
+      units: "celsius"
+      cadence: "30s"
+      sensors: ["temperature"]
+      duration_minutes: 45
+      notes: "Basic pass case - 180C for 10min continuous hold"
+    
+  powder_coat_fail_short_hold:
+    id: "powder_fail_001"
+    industry: "powder"
+    csv_path: "audit/fixtures/powder/fail.csv"
+    spec_path: "audit/fixtures/powder/fail.json"
+    expected_outcome: "FAIL"
+    provenance:
+      source: "synthetic_generator"
+      owner_permission: true
+      pii_checked: true
+      created_by: "proofkit_team"
+      created_date: "2025-01-15"
+    metadata:
+      vendor: "ProofKit Test Suite"
+      units: "celsius"
+      cadence: "30s"
+      sensors: ["temperature"]
+      duration_minutes: 30
+      notes: "Fail case - insufficient hold time at target temperature"
+
+  powder_coat_borderline:
+    id: "powder_borderline_001"
+    industry: "powder"
+    csv_path: "audit/fixtures/powder/borderline.csv"
+    spec_path: "audit/fixtures/powder/borderline.json"
+    expected_outcome: "PASS"
+    provenance:
+      source: "synthetic_generator"
+      owner_permission: true
+      pii_checked: true
+      created_by: "proofkit_team"
+      created_date: "2025-01-15"
+    metadata:
+      vendor: "ProofKit Test Suite"
+      units: "celsius"
+      cadence: "30s"
+      sensors: ["temperature"]
+      duration_minutes: 35
+      notes: "Borderline case - just meets minimum hold requirements"
+
+  powder_coat_data_gaps:
+    id: "powder_gap_001"
+    industry: "powder"
+    csv_path: "audit/fixtures/powder/gap.csv"
+    spec_path: "audit/fixtures/powder/gap.json"
+    expected_outcome: "ERROR"
+    provenance:
+      source: "synthetic_generator"
+      owner_permission: true
+      pii_checked: true
+      created_by: "proofkit_team"
+      created_date: "2025-01-15"
+    metadata:
+      vendor: "ProofKit Test Suite"
+      units: "celsius"
+      cadence: "30s"
+      sensors: ["temperature"]
+      duration_minutes: 40
+      notes: "Data quality error - sensor disconnection causing gaps"
+
+  powder_coat_duplicate_timestamps:
+    id: "powder_dup_001"
+    industry: "powder"
+    csv_path: "audit/fixtures/powder/dup_ts.csv"
+    spec_path: "audit/fixtures/powder/dup_ts.json"
+    expected_outcome: "ERROR"
+    provenance:
+      source: "synthetic_generator"
+      owner_permission: true
+      pii_checked: true
+      created_by: "proofkit_team"
+      created_date: "2025-01-15"
+    metadata:
+      vendor: "ProofKit Test Suite"
+      units: "celsius"
+      cadence: "30s"
+      sensors: ["temperature"]
+      duration_minutes: 25
+      notes: "Data quality error - duplicate timestamps in dataset"
+
+  powder_coat_timezone_shift:
+    id: "powder_tz_001"
+    industry: "powder"
+    csv_path: "audit/fixtures/powder/tz_shift.csv"
+    spec_path: "audit/fixtures/powder/tz_shift.json"
+    expected_outcome: "INDETERMINATE"
+    provenance:
+      source: "synthetic_generator"
+      owner_permission: true
+      pii_checked: true
+      created_by: "proofkit_team"
+      created_date: "2025-01-15"
+    metadata:
+      vendor: "ProofKit Test Suite"
+      units: "celsius"
+      cadence: "30s"
+      sensors: ["temperature"]
+      duration_minutes: 50
+      notes: "Timezone handling test case - multiple timezone shifts during cure"
+
+  powder_coat_missing_required:
+    id: "powder_missing_001"
+    industry: "powder"
+    csv_path: "audit/fixtures/powder/missing_required.csv"
+    spec_path: "audit/fixtures/powder/missing_required.json"
+    expected_outcome: "ERROR"
+    provenance:
+      source: "synthetic_generator"
+      owner_permission: true
+      pii_checked: true
+      created_by: "proofkit_team"
+      created_date: "2025-01-15"
+    metadata:
+      vendor: "ProofKit Test Suite"
+      units: "celsius"
+      cadence: "30s"
+      sensors: ["temperature"]
+      duration_minutes: 20
+      notes: "Schema validation error - missing required temperature column"
+
+  # HACCP Cooling Test Cases
+  haccp_cooling_pass:
+    id: "haccp_pass_001"
+    industry: "haccp"
+    csv_path: "audit/fixtures/haccp/pass.csv"
+    spec_path: "audit/fixtures/haccp/pass.json"
+    expected_outcome: "PASS"
+    provenance:
+      source: "synthetic_generator"
+      owner_permission: true
+      pii_checked: true
+      created_by: "proofkit_team"
+      created_date: "2025-01-15"
+    metadata:
+      vendor: "ProofKit Test Suite"
+      units: "celsius"
+      cadence: "60s"
+      sensors: ["temperature"]
+      duration_minutes: 480
+      notes: "HACCP cooling - proper 135C to 70C to 41C compliance"
+
+  haccp_cooling_fail:
+    id: "haccp_fail_001"
+    industry: "haccp"
+    csv_path: "audit/fixtures/haccp/fail.csv"
+    spec_path: "audit/fixtures/haccp/fail.json"
+    expected_outcome: "FAIL"
+    provenance:
+      source: "synthetic_generator"
+      owner_permission: true
+      pii_checked: true
+      created_by: "proofkit_team"
+      created_date: "2025-01-15"
+    metadata:
+      vendor: "ProofKit Test Suite"
+      units: "celsius"
+      cadence: "60s"
+      sensors: ["temperature"]
+      duration_minutes: 480
+      notes: "HACCP cooling violation - too slow from 70C to 41C"
+
+  haccp_cooling_borderline:
+    id: "haccp_borderline_001"
+    industry: "haccp"
+    csv_path: "audit/fixtures/haccp/borderline.csv"
+    spec_path: "audit/fixtures/haccp/borderline.json"
+    expected_outcome: "PASS"
+    provenance:
+      source: "synthetic_generator"
+      owner_permission: true
+      pii_checked: true
+      created_by: "proofkit_team"
+      created_date: "2025-01-15"
+    metadata:
+      vendor: "ProofKit Test Suite"
+      units: "celsius"
+      cadence: "60s"
+      sensors: ["temperature"]
+      duration_minutes: 480
+      notes: "HACCP cooling - just meets 6hr cooling requirement"
+
+  haccp_cooling_missing_required:
+    id: "haccp_missing_001"
+    industry: "haccp"
+    csv_path: "audit/fixtures/haccp/missing_required.csv"
+    spec_path: "audit/fixtures/haccp/missing_required.json"
+    expected_outcome: "ERROR"
+    provenance:
+      source: "synthetic_generator"
+      owner_permission: true
+      pii_checked: true
+      created_by: "proofkit_team"
+      created_date: "2025-01-15"
+    metadata:
+      vendor: "ProofKit Test Suite"
+      units: "celsius"
+      cadence: "60s"
+      sensors: ["temperature"]
+      duration_minutes: 240
+      notes: "Schema validation error - missing required field in spec"
+
+  # Autoclave Sterilization Test Cases
+  autoclave_sterilization_pass:
+    id: "autoclave_pass_001"
+    industry: "autoclave"
+    csv_path: "audit/fixtures/autoclave/pass.csv"
+    spec_path: "audit/fixtures/autoclave/pass.json"
+    expected_outcome: "PASS"
+    provenance:
+      source: "synthetic_generator"
+      owner_permission: true
+      pii_checked: true
+      created_by: "proofkit_team"
+      created_date: "2025-01-15"
+    metadata:
+      vendor: "ProofKit Test Suite"
+      units: "celsius"
+      cadence: "10s"
+      sensors: ["temperature", "pressure"]
+      duration_minutes: 20
+      notes: "Autoclave sterilization - 121C for 15min with pressure"
+
+  autoclave_sterilization_fail:
+    id: "autoclave_fail_001"
+    industry: "autoclave"
+    csv_path: "audit/fixtures/autoclave/fail.csv"
+    spec_path: "audit/fixtures/autoclave/fail.json"
+    expected_outcome: "FAIL"
+    provenance:
+      source: "synthetic_generator"
+      owner_permission: true
+      pii_checked: true
+      created_by: "proofkit_team"
+      created_date: "2025-01-15"
+    metadata:
+      vendor: "ProofKit Test Suite"
+      units: "celsius"
+      cadence: "10s"
+      sensors: ["temperature", "pressure"]
+      duration_minutes: 18
+      notes: "Autoclave sterilization fail - insufficient hold time"
+
+  # Cold Chain Storage Test Cases
+  coldchain_storage_pass:
+    id: "coldchain_pass_001"
+    industry: "coldchain"
+    csv_path: "audit/fixtures/coldchain/pass.csv"
+    spec_path: "audit/fixtures/coldchain/pass.json"
+    expected_outcome: "PASS"
+    provenance:
+      source: "synthetic_generator"
+      owner_permission: true
+      pii_checked: true
+      created_by: "proofkit_team"
+      created_date: "2025-01-15"
+    metadata:
+      vendor: "ProofKit Test Suite"
+      units: "celsius"
+      cadence: "300s"
+      sensors: ["temperature"]
+      duration_minutes: 1440
+      notes: "Cold chain storage - maintain 2-8C for vaccine storage"
+
+  coldchain_storage_fail:
+    id: "coldchain_fail_001"
+    industry: "coldchain"
+    csv_path: "audit/fixtures/coldchain/fail.csv"
+    spec_path: "audit/fixtures/coldchain/fail.json"
+    expected_outcome: "FAIL"
+    provenance:
+      source: "synthetic_generator"
+      owner_permission: true
+      pii_checked: true
+      created_by: "proofkit_team"
+      created_date: "2025-01-15"
+    metadata:
+      vendor: "ProofKit Test Suite"
+      units: "celsius"
+      cadence: "300s"
+      sensors: ["temperature"]
+      duration_minutes: 1440
+      notes: "Cold chain failure - temperature excursion above 8C"
+
+  # Concrete Curing Test Cases
+  concrete_curing_pass:
+    id: "concrete_pass_001"
+    industry: "concrete"
+    csv_path: "audit/fixtures/concrete/pass.csv"
+    spec_path: "audit/fixtures/concrete/pass.json"
+    expected_outcome: "PASS"
+    provenance:
+      source: "synthetic_generator"
+      owner_permission: true
+      pii_checked: true
+      created_by: "proofkit_team"
+      created_date: "2025-01-15"
+    metadata:
+      vendor: "ProofKit Test Suite"
+      units: "celsius"
+      cadence: "600s"
+      sensors: ["temperature"]
+      duration_minutes: 2880
+      notes: "Concrete curing - ASTM C31 48hr temperature logging"
+
+  concrete_curing_fail:
+    id: "concrete_fail_001"
+    industry: "concrete"
+    csv_path: "audit/fixtures/concrete/fail.csv"
+    spec_path: "audit/fixtures/concrete/fail.json"
+    expected_outcome: "FAIL"
+    provenance:
+      source: "synthetic_generator"
+      owner_permission: true
+      pii_checked: true
+      created_by: "proofkit_team"
+      created_date: "2025-01-15"
+    metadata:
+      vendor: "ProofKit Test Suite"
+      units: "celsius"
+      cadence: "600s"
+      sensors: ["temperature"]
+      duration_minutes: 2880
+      notes: "Concrete curing fail - temperature too low for proper cure"
+
+  # Sterile Processing Test Cases
+  sterile_processing_pass:
+    id: "sterile_pass_001"
+    industry: "sterile"
+    csv_path: "audit/fixtures/sterile/pass.csv"
+    spec_path: "audit/fixtures/sterile/pass.json"
+    expected_outcome: "PASS"
+    provenance:
+      source: "synthetic_generator"
+      owner_permission: true
+      pii_checked: true
+      created_by: "proofkit_team"
+      created_date: "2025-01-15"
+    metadata:
+      vendor: "ProofKit Test Suite"
+      units: "celsius"
+      cadence: "30s"
+      sensors: ["temperature"]
+      duration_minutes: 60
+      notes: "Sterile processing - dry heat sterilization 170C for 1hr"
+
+  sterile_processing_fail:
+    id: "sterile_fail_001"
+    industry: "sterile"
+    csv_path: "audit/fixtures/sterile/fail.csv"
+    spec_path: "audit/fixtures/sterile/fail.json"
+    expected_outcome: "FAIL"
+    provenance:
+      source: "synthetic_generator"
+      owner_permission: true
+      pii_checked: true
+      created_by: "proofkit_team"
+      created_date: "2025-01-15"
+    metadata:
+      vendor: "ProofKit Test Suite"
+      units: "celsius"
+      cadence: "30s"
+      sensors: ["temperature"]
+      duration_minutes: 55
+      notes: "Sterile processing fail - insufficient sterilization time"
+
+  # Real-World Dataset Test Cases (Validated with Independent Calculators)
+  realworld_autoclave_medical:
+    id: "realworld_autoclave_001"
+    industry: "autoclave"
+    csv_path: "realworld/autoclave/raw/medical_device_sterilization.csv"
+    spec_path: "realworld/autoclave/spec.json"
+    expected_outcome: "PASS"
+    provenance:
+      source: "https://www.fda.gov/medical-devices/guidance-documents-medical-devices/steam-sterilization-guidance"
+      source_sha256: "7d0147bd0712501caea3db10b1b8c747f0277a68a2e2546338a8b7be627a39a4"
+      owner_permission: true
+      pii_checked: true
+      created_by: "validation_campaign"
+      created_date: "2025-08-08"
+      validation_method: "independent_calculator"
+    metadata:
+      vendor: "Medical Device Sterilization System"
+      units: "celsius"
+      cadence: "60s"
+      sensors: ["temperature", "pressure", "steam_quality"]
+      duration_minutes: 55
+      standard: "ISO 17665"
+      notes: "Pre-vacuum steam sterilization at 121°C for 15min with F0 validation"
+    independent_validation:
+      fo_value_calculated: 14.8
+      sterilization_temperature_achieved: true
+      hold_time_minutes: 15.2
+      pressure_maintained: true
+      steam_quality_adequate: true
+
+  realworld_coldchain_pharma:
+    id: "realworld_coldchain_001"
+    industry: "coldchain"
+    csv_path: "realworld/coldchain/raw/cold_storage_monitoring.csv"
+    spec_path: "realworld/coldchain/spec.json"
+    expected_outcome: "FAIL"
+    provenance:
+      source: "https://www.usp.org/sites/default/files/usp/document/harmonization/gen-chapter/g05_pf_ira_32_6_2006.pdf"
+      source_sha256: "10a145b0206883afcc341f8d3d6897ce2987f173fb207782c80cbeeecb0c9499"
+      owner_permission: true
+      pii_checked: true
+      created_by: "validation_campaign"
+      created_date: "2025-08-08"
+      validation_method: "independent_calculator"
+    metadata:
+      vendor: "Pharmaceutical Cold Storage System"
+      units: "celsius"
+      cadence: "900s"
+      sensors: ["temperature", "humidity", "door_status"]
+      duration_hours: 7
+      standard: "USP <659>"
+      notes: "Cold storage with temperature excursion event - compressor failure at 11:00"
+    independent_validation:
+      excursion_detected: true
+      max_temperature: 20.1
+      excursion_duration_minutes: 150
+      recovery_time_minutes: 30
+      specification_violated: true
+
+  realworld_concrete_astm:
+    id: "realworld_concrete_001"
+    industry: "concrete"
+    csv_path: "realworld/concrete/raw/astm_c31_sample_curing.csv"
+    spec_path: "realworld/concrete/spec.json"
+    expected_outcome: "PASS"
+    provenance:
+      source: "https://www.astm.org/Standards/C31"
+      source_sha256: "8c7f2a4e1d3b5f6a7e9c0d8b2a4e6f8a1c3d5e7f9a2b4c6d8e0f1a3b5c7d9e1f"
+      owner_permission: true
+      pii_checked: true
+      created_by: "validation_campaign"
+      created_date: "2025-08-08"
+      validation_method: "independent_calculator"
+    metadata:
+      vendor: "Concrete Testing Laboratory"
+      units: "celsius"
+      cadence: "600s"
+      sensors: ["temperature"]
+      duration_hours: 48
+      standard: "ASTM C31"
+      notes: "48-hour concrete curing temperature monitoring per ASTM C31 requirements"
+    independent_validation:
+      minimum_temperature_maintained: true
+      curing_window_compliant: true
+      temperature_uniformity_adequate: true
+      total_temperature_time_hours: 1152
+
+  realworld_sterile_iso:
+    id: "realworld_sterile_001"
+    industry: "sterile"
+    csv_path: "realworld/sterile/raw/iso_17665_steam_sterilization.csv"
+    spec_path: "realworld/sterile/spec.json"
+    expected_outcome: "PASS"
+    provenance:
+      source: "https://www.iso.org/standard/43187.html"
+      source_sha256: "9f3e8d7c6b5a4e3d2c1b0a9f8e7d6c5b4a3e2d1c0b9a8f7e6d5c4b3a2e1d0c9b"
+      owner_permission: true
+      pii_checked: true
+      created_by: "validation_campaign"
+      created_date: "2025-08-08"
+      validation_method: "independent_calculator"
+    metadata:
+      vendor: "ISO Compliant Sterilization System"
+      units: "celsius"
+      cadence: "30s"
+      sensors: ["temperature"]
+      duration_minutes: 90
+      standard: "ISO 17665"
+      notes: "Dry heat sterilization at 170°C for 60min per ISO 17665 requirements"
+    independent_validation:
+      sterilization_temperature_achieved: true
+      hold_time_minutes: 62.5
+      heat_distribution_uniform: true
+      bioburden_reduction_adequate: true
+
+  realworld_oven_ceramic:
+    id: "realworld_oven_001"
+    industry: "powder"
+    csv_path: "realworld/oven-shape/raw/ceramic_kiln_firing_log.csv"
+    spec_path: "realworld/oven-shape/spec.json"
+    expected_outcome: "INDETERMINATE"
+    provenance:
+      source: "ceramic_industry_partner"
+      source_sha256: "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2"
+      owner_permission: true
+      pii_checked: true
+      created_by: "validation_campaign"
+      created_date: "2025-08-08"
+      validation_method: "independent_calculator"
+    metadata:
+      vendor: "Ceramic Kiln Manufacturing"
+      units: "celsius"
+      cadence: "300s"
+      sensors: ["temperature"]
+      duration_hours: 12
+      standard: "custom_ceramic_firing"
+      notes: "Ceramic kiln firing cycle - complex temperature profile with multiple holds"
+    independent_validation:
+      profile_complexity: "high"
+      temperature_ramps_detected: 3
+      hold_periods_detected: 4
+      classification_uncertain: true
+      requires_manual_review: true

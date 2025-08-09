@@ -64,6 +64,8 @@ except ImportError:
     PDF_COMPLIANCE_AVAILABLE = False
 
 from core.models import SpecV1, DecisionResult, Industry
+from core.policy import should_block_if_no_tsa, should_enforce_pdf_a3
+from core.timestamp import get_timestamp_with_retry, TimestampResult
 
 
 # Constants for deterministic rendering
@@ -171,6 +173,68 @@ PAGE_HEIGHT = letter[1]
 CONTENT_WIDTH = PAGE_WIDTH - MARGIN_LEFT - MARGIN_RIGHT
 
 
+class PDFValidationError(Exception):
+    """Raised when PDF validation fails and should block download."""
+    pass
+
+
+def check_pdf_validation_gates(decision: DecisionResult, 
+                              enable_rfc3161: bool = True,
+                              timestamp_available: bool = None) -> Dict[str, Any]:
+    """
+    Check PDF validation gates that may block download.
+    
+    Args:
+        decision: Decision result containing status
+        enable_rfc3161: Whether RFC 3161 timestamping is enabled
+        timestamp_available: Whether timestamp was successfully generated (for testing)
+        
+    Returns:
+        Dictionary with validation gate results
+        
+    Raises:
+        PDFValidationError: If validation fails when blocking is enabled
+    """
+    # Use policy settings (default permissive)
+    enforce_pdf_a3 = should_enforce_pdf_a3()
+    block_if_no_tsa = should_block_if_no_tsa()
+    
+    # Determine if timestamp is available
+    if timestamp_available is None:
+        # Check if dependencies are available and RFC 3161 is enabled
+        timestamp_available = PDF_COMPLIANCE_AVAILABLE and enable_rfc3161
+    
+    validation_result = {
+        "pdf_a3_required": enforce_pdf_a3,
+        "rfc3161_required": block_if_no_tsa,
+        "pdf_a3_available": PDF_COMPLIANCE_AVAILABLE,
+        "rfc3161_available": timestamp_available,
+        "should_block": False,
+        "blocking_reasons": [],
+        "gate_status": "PASS"
+    }
+    
+    # Check PDF/A-3 gate
+    if enforce_pdf_a3 and not PDF_COMPLIANCE_AVAILABLE:
+        validation_result["should_block"] = True
+        validation_result["blocking_reasons"].append("PDF/A-3 compliance required but dependencies unavailable")
+    
+    # Check RFC 3161 gate
+    if block_if_no_tsa and not timestamp_available:
+        validation_result["should_block"] = True
+        validation_result["blocking_reasons"].append("RFC 3161 timestamp required but TSA unavailable")
+    
+    # Set overall gate status
+    if validation_result["should_block"]:
+        validation_result["gate_status"] = "BLOCKED"
+        
+        # Raise exception if blocking is enabled
+        error_msg = "PDF validation failed: " + "; ".join(validation_result["blocking_reasons"])
+        raise PDFValidationError(error_msg)
+    
+    return validation_result
+
+
 def _setup_fonts():
     """Set up fonts for consistent rendering across systems."""
     # Use built-in fonts for maximum compatibility
@@ -212,16 +276,24 @@ def _create_qr_code(data: str, size: int = 100) -> Image:
 
 def _create_banner(decision: DecisionResult) -> Paragraph:
     """
-    Create the PASS/FAIL banner at the top of the document.
+    Create the PASS/FAIL/INDETERMINATE banner at the top of the document.
     
     Args:
-        decision: Decision result containing pass/fail status
+        decision: Decision result containing status
         
     Returns:
         ReportLab Paragraph with styled banner
     """
-    status_text = "PASS" if decision.pass_ else "FAIL"
-    status_color = COLOR_PASS if decision.pass_ else COLOR_FAIL
+    # Use decision.status as the primary source of truth
+    status_text = getattr(decision, 'status', 'PASS' if decision.pass_ else 'FAIL')
+    
+    # Set color based on status
+    if status_text == 'INDETERMINATE':
+        status_color = colors.orange
+    elif status_text == 'PASS':
+        status_color = COLOR_PASS
+    else:  # FAIL
+        status_color = COLOR_FAIL
     
     banner_style = ParagraphStyle(
         'Banner',
@@ -299,9 +371,12 @@ def _create_results_box(decision: DecisionResult) -> Table:
     Returns:
         ReportLab Table with results details
     """
+    # Use decision.status as source of truth for display
+    status = getattr(decision, 'status', 'PASS' if decision.pass_ else 'FAIL')
+    
     results_data = [
         ['Results Summary', ''],
-        ['Status', 'PASS' if decision.pass_ else 'FAIL'],
+        ['Status', status],
         ['Actual Hold Time', f"{decision.actual_hold_time_s}s ({int(decision.actual_hold_time_s) // 60}m {int(decision.actual_hold_time_s) % 60}s)"],
         ['Required Hold Time', f"{decision.required_hold_time_s}s"],
         ['Max Temperature', f"{decision.max_temp_C:.1f}°C"],
@@ -309,10 +384,32 @@ def _create_results_box(decision: DecisionResult) -> Table:
         ['Conservative Threshold', f"{decision.conservative_threshold_C:.1f}°C"],
     ]
     
+    # Add fallback note if used
+    try:
+        if getattr(decision, 'flags', {}).get('fallback_used'):
+            results_data.append(['Note', 'Auto-detected sensors'])
+    except Exception:
+        pass
+    
+    # Show required vs present sensors for safety-critical processes  
+    try:
+        flags = getattr(decision, 'flags', {})
+        if flags.get('required_sensors') and flags.get('present_sensors'):
+            required_sensors = flags['required_sensors']
+            present_sensors = flags['present_sensors']
+            results_data.append(['Required Sensors', f"{len(present_sensors)}/{len(required_sensors)}"])
+    except Exception:
+        pass
+    
     results_table = Table(results_data, colWidths=[2.5*inch, 2*inch])
     
-    # Status row color based on pass/fail
-    status_color = COLOR_PASS if decision.pass_ else COLOR_FAIL
+    # Status row color based on status
+    if status == 'INDETERMINATE':
+        status_color = colors.orange
+    elif status == 'PASS':
+        status_color = COLOR_PASS
+    else:  # FAIL
+        status_color = COLOR_FAIL
     
     results_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (1, 0), COLOR_HEADER),
@@ -336,7 +433,7 @@ def _create_results_box(decision: DecisionResult) -> Table:
 
 def _create_reasons_section(decision: DecisionResult) -> list:
     """
-    Create the reasons and warnings section.
+    Create the reasons and warnings section with INDETERMINATE notes.
     
     Args:
         decision: Decision result data
@@ -345,6 +442,48 @@ def _create_reasons_section(decision: DecisionResult) -> list:
         List of ReportLab flowables for reasons section
     """
     elements = []
+    
+    # INDETERMINATE status note
+    status = getattr(decision, 'status', 'PASS' if decision.pass_ else 'FAIL')
+    if status == 'INDETERMINATE':
+        # Determine the gate that caused INDETERMINATE status
+        gate_reason = "sensor data quality"  # Default reason
+        
+        # Check for specific reasons in decision flags or reasons
+        if hasattr(decision, 'flags') and decision.flags:
+            flags = decision.flags
+            if flags.get('missing_required_sensors'):
+                gate_reason = "missing required sensors"
+            elif flags.get('insufficient_data'):
+                gate_reason = "insufficient data quality"
+            elif flags.get('sensor_validation_failed'):
+                gate_reason = "sensor validation failure"
+        elif decision.reasons:
+            if any('required' in reason.lower() and 'sensor' in reason.lower() for reason in decision.reasons):
+                gate_reason = "missing required sensors"
+            elif any('data quality' in reason.lower() for reason in decision.reasons):
+                gate_reason = "data quality issues"
+        
+        indeterminate_style = ParagraphStyle(
+            'IndeterminateNote',
+            parent=getSampleStyleSheet()['Normal'],
+            fontSize=FONT_SIZE_BODY,
+            textColor=colors.orange,
+            fontName='Helvetica-Bold',
+            spaceAfter=12,
+            spaceBefore=8,
+            borderWidth=1,
+            borderColor=colors.orange,
+            borderPadding=8,
+            backColor=colors.Color(1.0, 0.95, 0.85),  # Light orange background
+            alignment=TA_CENTER
+        )
+        
+        elements.append(Paragraph(
+            f"<b>⚠ VALIDATION NOTES</b><br/>Review required due to {gate_reason}",
+            indeterminate_style
+        ))
+        elements.append(Spacer(1, 10))
     
     # Reasons section
     if decision.reasons:
@@ -479,12 +618,18 @@ def _create_verification_section(verification_hash: str, job_id: Optional[str] =
     return elements
 
 
-def _create_footer_info(now_provider: Optional[Callable[[], datetime]] = None) -> Paragraph:
+def _create_footer_info(now_provider: Optional[Callable[[], datetime]] = None, 
+                       pdf_a3_available: bool = True,
+                       rfc3161_available: bool = True,
+                       timestamp_pending: bool = False) -> Paragraph:
     """
     Create footer information with timestamp and system info.
     
     Args:
         now_provider: Optional function to provide current datetime (for testing)
+        pdf_a3_available: Whether PDF/A-3 compliance is available
+        rfc3161_available: Whether RFC 3161 timestamping is available
+        timestamp_pending: Whether TSA timestamp is pending
     
     Returns:
         ReportLab Paragraph with footer information
@@ -504,7 +649,21 @@ def _create_footer_info(now_provider: Optional[Callable[[], datetime]] = None) -
         spaceAfter=0
     )
     
-    footer_text = f"Generated by ProofKit v1.0 | {timestamp} | Powder-Coat Cure Validation Certificate"
+    footer_parts = [f"Generated by ProofKit v1.0 | {timestamp} | Powder-Coat Cure Validation Certificate"]
+    
+    # Add notes for unavailable features and pending timestamps
+    notes = []
+    if not pdf_a3_available:
+        notes.append("PDF/A-3 compliance unavailable")
+    if not rfc3161_available:
+        notes.append("RFC 3161 timestamping unavailable")
+    elif timestamp_pending:
+        notes.append("RFC 3161 timestamp pending - retry queued")
+    
+    if notes:
+        footer_parts.append(f"Note: {', '.join(notes)}")
+    
+    footer_text = "<br/>".join(footer_parts)
     return Paragraph(footer_text, footer_style)
 
 
@@ -1057,13 +1216,20 @@ def _create_header_with_logo(title_text: str, config: Dict[str, Any],
     return elements
 
 
-def _create_footer_with_branding(config: Dict[str, Any], now_provider: Optional[Callable[[], datetime]] = None) -> list:
+def _create_footer_with_branding(config: Dict[str, Any], 
+                                now_provider: Optional[Callable[[], datetime]] = None,
+                                pdf_a3_available: bool = True,
+                                rfc3161_available: bool = True,
+                                timestamp_pending: bool = False) -> list:
     """
     Create footer with conditional branding.
     
     Args:
         config: Template configuration
         now_provider: Optional function to provide current datetime
+        pdf_a3_available: Whether PDF/A-3 compliance is available
+        rfc3161_available: Whether RFC 3161 timestamping is available
+        timestamp_pending: Whether TSA timestamp is pending
         
     Returns:
         List of ReportLab elements for footer
@@ -1084,6 +1250,18 @@ def _create_footer_with_branding(config: Dict[str, Any], now_provider: Optional[
     # Add branding for non-enterprise plans
     if config.get('show_branding', True):
         footer_lines.append("Powered by ProofKit • www.proofkit.net • Secure Temperature Validation")
+    
+    # Add availability notes in small gray text
+    notes = []
+    if not pdf_a3_available:
+        notes.append("PDF/A-3 compliance unavailable")
+    if not rfc3161_available:
+        notes.append("RFC 3161 timestamping unavailable")
+    elif timestamp_pending:
+        notes.append("RFC 3161 timestamp pending - retry queued")
+    
+    if notes:
+        footer_lines.append(f"Note: {', '.join(notes)}")
     
     footer_style = ParagraphStyle(
         'Footer',
@@ -1112,12 +1290,13 @@ def generate_proof_pdf(
     enable_rfc3161: bool = True,
     esign_page: bool = False,
     industry: Optional[Industry] = None,
-    is_draft: bool = True,
+    is_draft: bool = False,
     include_rfc3161: bool = True,
     timestamp_provider: Optional[Callable[[], bytes]] = None,
     now_provider: Optional[Callable[[], datetime]] = None,
     user_plan: Optional[str] = None,
-    customer_logo_path: Optional[str] = None
+    customer_logo_path: Optional[str] = None,
+    check_validation_gates: bool = True
 ) -> bytes:
     """
     Generate a professional proof certificate PDF with M12 compliance features.
@@ -1138,6 +1317,7 @@ def generate_proof_pdf(
         now_provider: Optional function to provide current datetime (for testing)
         user_plan: Optional user plan for template selection (free, starter, pro, business, enterprise)
         customer_logo_path: Optional path to customer logo for pro+ plans
+        check_validation_gates: Whether to check PDF validation gates (default: True)
         
     Returns:
         PDF content as bytes (PDF/A-3u compliant with RFC 3161 timestamps)
@@ -1145,7 +1325,23 @@ def generate_proof_pdf(
     Raises:
         FileNotFoundError: If plot image file is not found
         ValueError: If required data is invalid
+        PDFValidationError: If PDF validation gates fail and blocking is enabled
     """
+    # Check PDF validation gates if enabled
+    if check_validation_gates:
+        try:
+            validation_result = check_pdf_validation_gates(
+                decision=decision,
+                enable_rfc3161=enable_rfc3161,
+                timestamp_available=None  # Will be determined automatically
+            )
+            # Log validation result for debugging
+            logger.debug(f"PDF validation gates result: {validation_result}")
+        except PDFValidationError as e:
+            logger.error(f"PDF validation blocked: {e}")
+            # Re-raise to block PDF generation
+            raise
+    
     # Validate inputs
     if not os.path.exists(plot_path):
         raise FileNotFoundError(f"Plot image not found: {plot_path}")
@@ -1328,15 +1524,21 @@ def generate_proof_pdf(
             signature_elements = _create_docusign_signature_page()
             elements.extend(signature_elements)
         
-        # Footer with template-specific branding
+        # Footer with template-specific branding and availability notes (placeholder for timestamp pending)
         elements.append(Spacer(1, 30))
-        footer_elements = _create_footer_with_branding(template_config, now_provider)
+        footer_elements = _create_footer_with_branding(
+            template_config, 
+            now_provider, 
+            pdf_a3_available=PDF_COMPLIANCE_AVAILABLE,
+            rfc3161_available=enable_rfc3161 and PDF_COMPLIANCE_AVAILABLE,
+            timestamp_pending=False  # Will be updated after PDF enhancement
+        )
         elements.extend(footer_elements)
         
         # Build initial PDF
         doc.build(elements)
         
-        # Add DRAFT watermark if needed
+        # Add DRAFT watermark only if explicitly requested
         if is_draft:
             _add_draft_watermark(temp_pdf_path)
         
@@ -1352,11 +1554,17 @@ def generate_proof_pdf(
             return pdf_bytes
         
         # Enhance PDF with PDF/A-3u compliance and RFC 3161 timestamps
-        return _enhance_pdf_compliance(
+        enhanced_pdf, timestamp_pending = _enhance_pdf_compliance(
             temp_pdf_path, spec, decision, verification_hash,
             manifest_content, include_rfc3161, output_path,
             timestamp_provider, now_provider
         )
+        
+        # Note: In a more sophisticated implementation, we could regenerate the footer
+        # with the correct timestamp_pending flag, but for now we accept the minor
+        # discrepancy that the footer shows generic availability rather than per-job status
+        
+        return enhanced_pdf
         
     finally:
         # Clean up temporary file
@@ -1371,7 +1579,7 @@ def _enhance_pdf_compliance(temp_pdf_path: str, spec: SpecV1, decision: Decision
                           verification_hash: str, manifest_content: Optional[str],
                           include_rfc3161: bool, output_path: Optional[Union[str, Path]],
                           timestamp_provider: Optional[Callable[[], bytes]] = None,
-                          now_provider: Optional[Callable[[], datetime]] = None) -> bytes:
+                          now_provider: Optional[Callable[[], datetime]] = None) -> tuple[bytes, bool]:
     """
     Enhance PDF with PDF/A-3u compliance and RFC 3161 timestamps.
     
@@ -1387,7 +1595,7 @@ def _enhance_pdf_compliance(temp_pdf_path: str, spec: SpecV1, decision: Decision
         now_provider: Optional function to provide current datetime (for testing)
         
     Returns:
-        Enhanced PDF bytes
+        Tuple of (Enhanced PDF bytes, timestamp_pending flag)
     """
     try:
         # Read original PDF content first for RFC 3161 timestamping
@@ -1404,20 +1612,38 @@ def _enhance_pdf_compliance(temp_pdf_path: str, spec: SpecV1, decision: Decision
                 page = pdf_reader.pages[page_num]
                 pdf_writer.add_page(page)
             
-            # Generate RFC 3161 timestamp if enabled
+            # Generate RFC 3161 timestamp if enabled using resilient implementation
             timestamp_info = None
+            timestamp_pending = False
+            
             if include_rfc3161:
-                rfc3161_token = _generate_rfc3161_timestamp(pdf_content, timestamp_provider)
-                if rfc3161_token:
-                    if now_provider:
-                        ts = now_provider().isoformat()
-                    else:
-                        ts = datetime.now(timezone.utc).isoformat()
-                    timestamp_info = {
-                        'timestamp': ts,
-                        'token': rfc3161_token.hex(),
-                        'token_length': len(rfc3161_token)
-                    }
+                # Use testing provider if available, otherwise use resilient implementation
+                if timestamp_provider:
+                    rfc3161_token = timestamp_provider()
+                    if rfc3161_token:
+                        if now_provider:
+                            ts = now_provider().isoformat()
+                        else:
+                            ts = datetime.now(timezone.utc).isoformat()
+                        timestamp_info = {
+                            'timestamp': ts,
+                            'token': rfc3161_token.hex(),
+                            'token_length': len(rfc3161_token),
+                            'tsa_status': 'success'
+                        }
+                else:
+                    # Use resilient timestamp implementation
+                    timestamp_result = get_timestamp_with_retry(
+                        pdf_content=pdf_content,
+                        job_id=spec.job.job_id,
+                        pdf_path=str(output_path) if output_path else temp_pdf_path,
+                        now_provider=now_provider
+                    )
+                    
+                    if timestamp_result.timestamp_info:
+                        timestamp_info = timestamp_result.timestamp_info
+                    
+                    timestamp_pending = timestamp_result.pending
             
             # Create XMP metadata for PDF/A-3u
             xmp_metadata = _create_xmp_metadata(spec, decision, timestamp_info, now_provider)
@@ -1460,7 +1686,7 @@ def _enhance_pdf_compliance(temp_pdf_path: str, spec: SpecV1, decision: Decision
                 with open(final_output_path, 'rb') as f:
                     final_pdf_bytes = f.read()
                 
-                return final_pdf_bytes
+                return final_pdf_bytes, timestamp_pending
                 
             finally:
                 if not output_path and os.path.exists(final_output_path):
@@ -1479,7 +1705,7 @@ def _enhance_pdf_compliance(temp_pdf_path: str, spec: SpecV1, decision: Decision
             with open(output_path, 'wb') as f:
                 f.write(basic_pdf)
                 
-        return basic_pdf
+        return basic_pdf, False  # No timestamp pending for fallback
 
 
 def compute_pdf_hash(pdf_bytes: bytes) -> str:

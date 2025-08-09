@@ -63,6 +63,14 @@
             <input type="hidden" id="max_time_to_threshold" name="max_time_to_threshold" value="900">
             <input type="hidden" name="hold_logic" value="continuous" checked>
             <input type="hidden" name="sensor_mode" value="min_of_set" checked>
+            
+            <!-- Hidden fields for UTM tracking -->
+            <input type="hidden" id="utm_source" name="utm_source" value="">
+            <input type="hidden" id="utm_medium" name="utm_medium" value="">
+            <input type="hidden" id="utm_campaign" name="utm_campaign" value="">
+            <input type="hidden" id="utm_term" name="utm_term" value="">
+            <input type="hidden" id="utm_content" name="utm_content" value="">
+            <input type="hidden" id="referrer" name="referrer" value="">
               
             <!-- File Upload Area -->
             <div class="card" style="margin-bottom: 2rem; padding: 3rem; text-align: center; border: 2px dashed #cbd5e0; background: #f7fafc;">
@@ -325,6 +333,43 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 {% endif %}
+
+// UTM Parameter Capture
+document.addEventListener('DOMContentLoaded', function() {
+    // Capture UTM parameters from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const utmFields = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'];
+    
+    // Populate UTM fields from URL parameters
+    utmFields.forEach(field => {
+        const value = urlParams.get(field);
+        const input = document.getElementById(field);
+        if (value && input) {
+            input.value = value;
+        }
+    });
+    
+    // Capture referrer
+    const referrerInput = document.getElementById('referrer');
+    if (referrerInput && document.referrer) {
+        referrerInput.value = document.referrer;
+    }
+    
+    // Store UTMs in session storage for persistence across pages
+    utmFields.forEach(field => {
+        const value = urlParams.get(field);
+        if (value) {
+            sessionStorage.setItem(field, value);
+        } else {
+            // Try to get from session storage if not in URL
+            const stored = sessionStorage.getItem(field);
+            const input = document.getElementById(field);
+            if (stored && input && !input.value) {
+                input.value = stored;
+            }
+        }
+    });
+});
 </script>
 {% endblock %}
 {% endblock %}

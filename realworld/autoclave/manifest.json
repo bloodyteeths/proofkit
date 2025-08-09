@@ -1,0 +1,48 @@
+{
+  "dataset_collection": "autoclave_sterilization",
+  "created": "2024-08-08T00:00:00Z",
+  "description": "Medical device steam sterilization temperature monitoring datasets",
+  "standards": [
+    "ISO 17665:2024",
+    "FDA CFR 21 Part 11",
+    "ANSI/AAMI ST8"
+  ],
+  "files": [
+    {
+      "filename": "raw/medical_device_sterilization.csv",
+      "description": "Pre-vacuum steam sterilization cycle at 121°C for 15 minutes",
+      "format": "CSV",
+      "size_bytes": 2156,
+      "sha256": "7d0147bd0712501caea3db10b1b8c747f0277a68a2e2546338a8b7be627a39a4",
+      "rows": 40,
+      "columns": 7,
+      "temperature_range": "22.5-121.3°C",
+      "duration_minutes": 55,
+      "validated": true,
+      "source_type": "representative_data",
+      "compliance_standards": ["ISO 17665", "FDA CFR 21 Part 11"]
+    }
+  ],
+  "metadata": {
+    "industry": "medical_devices",
+    "process_type": "steam_sterilization",
+    "critical_parameters": [
+      "temperature",
+      "pressure",
+      "steam_quality",
+      "fo_value"
+    ],
+    "validation_requirements": {
+      "temperature_accuracy": "±0.5°C",
+      "pressure_accuracy": "±0.5 PSI",
+      "logging_interval": "1 minute",
+      "calibration_frequency": "monthly"
+    }
+  },
+  "quality_assurance": {
+    "data_integrity": "SHA256 verified",
+    "format_validation": "CSV structure confirmed",
+    "content_validation": "Temperature ranges within specification",
+    "completeness": "Full sterilization cycle captured"
+  }
+}
