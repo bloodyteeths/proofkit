@@ -3,24 +3,24 @@
 from typing import Dict, Any, Callable, Optional
 from core.decide import make_decision
 from core.metrics_powder import validate_powder_coating_cure
-from core.metrics_autoclave import analyze_autoclave
-from core.metrics_coldchain import analyze_coldchain
-from core.metrics_haccp import analyze_haccp
-from core.metrics_concrete import analyze_concrete
-from core.metrics_sterile import analyze_sterile
+from core.metrics_autoclave import validate_autoclave_sterilization
+from core.metrics_coldchain import validate_coldchain_storage
+from core.metrics_haccp import validate_haccp_cooling
+from core.metrics_concrete import validate_concrete_curing
+from core.metrics_sterile import validate_sterile_environment
 
 def select_engine(industry: str) -> Callable:
     """Select appropriate analysis engine for industry."""
     engines = {
         "powder": validate_powder_coating_cure,
         "powder-coating": validate_powder_coating_cure,  # Alias for powder
-        "autoclave": analyze_autoclave,
-        "coldchain": analyze_coldchain,
-        "cold-chain": analyze_coldchain,
-        "haccp": analyze_haccp,
-        "concrete": analyze_concrete,
-        "sterile": analyze_sterile,
-        "eto": analyze_sterile,
+        "autoclave": validate_autoclave_sterilization,
+        "coldchain": validate_coldchain_storage,
+        "cold-chain": validate_coldchain_storage,
+        "haccp": validate_haccp_cooling,
+        "concrete": validate_concrete_curing,
+        "sterile": validate_sterile_environment,
+        "eto": validate_sterile_environment,
     }
     
     industry_lower = industry.lower().strip()
@@ -121,10 +121,5 @@ def route_to_engine(industry: str, df: Any, spec: Dict[str, Any]) -> Dict[str, A
     engine = select_engine(industry)
     adapted_spec = adapt_spec(industry, spec)
     
-    # Call the appropriate metrics function
-    if industry.lower() in ["powder", "powder-coating"]:
-        from core.metrics_powder import validate_powder_coating_cure
-        return validate_powder_coating_cure(df, adapted_spec)
-    else:
-        # Use generic decision engine for others
-        return make_decision(df, adapted_spec)
+    # Call the appropriate metrics function directly
+    return engine(df, adapted_spec)
