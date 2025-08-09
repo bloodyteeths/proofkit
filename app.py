@@ -762,7 +762,10 @@ def save_file_to_storage(content: bytes, job_dir: Path, filename: str) -> Path:
 
 
 def process_csv_and_spec(csv_content: bytes, spec_data: Dict[str, Any], 
-                         job_dir: Path, job_id: str, creator=None) -> Dict[str, Any]:
+                         job_dir: Path, job_id: str, creator=None,
+                         utm_source: str = "", utm_medium: str = "", 
+                         utm_campaign: str = "", utm_term: str = "",
+                         utm_content: str = "", referrer: str = "") -> Dict[str, Any]:
     """
     Process CSV and specification through the complete ProofKit pipeline.
     
@@ -771,6 +774,13 @@ def process_csv_and_spec(csv_content: bytes, spec_data: Dict[str, Any],
         spec_data: Specification dictionary
         job_dir: Job storage directory
         job_id: Job identifier
+        creator: User object if authenticated
+        utm_source: UTM source parameter
+        utm_medium: UTM medium parameter
+        utm_campaign: UTM campaign parameter
+        utm_term: UTM term parameter
+        utm_content: UTM content parameter
+        referrer: Referrer URL
         
     Returns:
         Result dictionary with processing outcomes
@@ -1664,7 +1674,11 @@ async def compile_csv_json(
         
         # Process through complete pipeline
         try:
-            result = process_csv_and_spec(csv_content, spec_data, job_dir, job_id, creator=current_user)
+            result = process_csv_and_spec(csv_content, spec_data, job_dir, job_id, 
+                                         creator=current_user,
+                                         utm_source=utm_source, utm_medium=utm_medium,
+                                         utm_campaign=utm_campaign, utm_term=utm_term,
+                                         utm_content=utm_content, referrer=referrer)
             logger.info(f"[{request_id}] Processing completed: {'PASS' if result['pass'] else 'FAIL'}")
             # Record usage after successful processing
             try:
