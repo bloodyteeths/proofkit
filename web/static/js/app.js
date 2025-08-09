@@ -204,7 +204,7 @@ function initializeSpecFormToJSON() {
 }
 
 /**
- * Convert form values to JSON specification
+ * Convert form values to v2 JSON specification format
  */
 function updateSpecJSONFromForm() {
     // Determine selected industry from URL param if present
@@ -219,6 +219,9 @@ function updateSpecJSONFromForm() {
         return null;
     }
 
+    const industry = (getSelectedIndustry() || 'powder').toLowerCase();
+
+    // Get form values - these will be mapped to industry-specific parameters
     const jobId = document.getElementById('job_id')?.value || 'batch_001';
     const targetTemp = parseFloat(document.getElementById('target_temp')?.value) || 180.0;
     const holdTime = parseInt(document.getElementById('hold_time')?.value) || 600;
@@ -229,93 +232,73 @@ function updateSpecJSONFromForm() {
     // Get selected radio button values
     const holdLogic = document.querySelector('input[name="hold_logic"]:checked')?.value || 'continuous';
     const sensorMode = document.querySelector('input[name="sensor_mode"]:checked')?.value || 'min_of_set';
-    
-    // Start from server-provided default spec if available for the page
-    let spec = null;
-    try {
-        if (window.defaultSpec && typeof window.defaultSpec === 'string' && window.defaultSpec.trim().startsWith('{')) {
-            spec = JSON.parse(window.defaultSpec);
-        }
-    } catch (e) {
-        // ignore parse error; will fall back below
-    }
 
-    const industry = (spec?.industry || getSelectedIndustry() || 'powder').toLowerCase();
+    // Create v2 format specification with industry-specific parameters
+    let spec = {
+        industry: industry,
+        parameters: {}
+    };
 
-    // Fallback base spec if server did not provide one
-    if (!spec || typeof spec !== 'object') {
-        spec = {
-            version: '1.0',
-            industry,
-            job: { job_id: jobId },
-            spec: {
-                method: (industry === 'powder' || industry === 'powder-coating') ? 'PMT' : 'OVEN_AIR',
-                target_temp_C: targetTemp,
-                hold_time_s: holdTime,
-                sensor_uncertainty_C: sensorUncertainty,
-            },
-            data_requirements: {
-                max_sample_period_s: industry === 'autoclave' ? 10.0 : 30.0,
-                allowed_gaps_s: industry === 'autoclave' ? 30.0 : 60.0,
-            },
-            sensor_selection: {
-                mode: sensorMode,
-                // Do NOT include fixed sensor names; allow backend auto-detection
-                require_at_least: industry === 'autoclave' ? 2 : 1,
-            },
-            logic: {
-                continuous: holdLogic === 'continuous',
-                max_total_dips_s: holdLogic === 'cumulative' ? 60 : 0,
-            },
-            preconditions: {
-                max_ramp_rate_C_per_min: maxRampRate,
-                max_time_to_threshold_s: maxTimeToThreshold,
-            },
-            reporting: {
-                units: 'C',
-                language: 'en',
-                timezone: 'UTC',
-            },
+    // Map form values to industry-specific parameters based on industry_router.py
+    if (industry === 'powder' || industry === 'powder-coating') {
+        spec.parameters = {
+            target_temp: targetTemp,
+            hold_duration_minutes: holdTime / 60, // Convert seconds to minutes
+            sensor_uncertainty: sensorUncertainty,
+            hysteresis: 2, // Default hysteresis
+            max_ramp_rate: maxRampRate
+        };
+    } else if (industry === 'autoclave') {
+        spec.parameters = {
+            sterilization_temp: targetTemp,
+            sterilization_time_minutes: holdTime / 60, // Convert seconds to minutes
+            min_pressure_bar: 2.0, // Default pressure
+            z_value: 10, // Default Z-value
+            min_f0: 12 // Default minimum F0
+        };
+    } else if (industry === 'coldchain' || industry === 'cold-chain') {
+        spec.parameters = {
+            min_temp: 2, // Default cold chain min
+            max_temp: 8, // Default cold chain max
+            compliance_percentage: 95,
+            max_excursion_minutes: 30
+        };
+    } else if (industry === 'haccp') {
+        spec.parameters = {
+            temp_1: 135,
+            temp_2: 70,
+            temp_3: 41,
+            time_1_to_2_hours: 2,
+            time_2_to_3_hours: 4
+        };
+    } else if (industry === 'concrete') {
+        spec.parameters = {
+            min_temp: 10,
+            max_temp: 30,
+            min_humidity: 80,
+            time_window_hours: 24,
+            compliance_percentage: 95
+        };
+    } else if (industry === 'sterile' || industry === 'eto') {
+        spec.parameters = {
+            min_temp: 55,
+            exposure_hours: 12,
+            min_humidity: 50,
+            max_temp: 60
+        };
+    } else {
+        // Fallback for unknown industries - use powder format
+        spec.parameters = {
+            target_temp: targetTemp,
+            hold_duration_minutes: holdTime / 60,
+            sensor_uncertainty: sensorUncertainty,
+            hysteresis: 2,
+            max_ramp_rate: maxRampRate
         };
     }
 
-    // Ensure required fields and override with current form selections
-    spec.version = '1.0';
-    spec.industry = industry;
-    spec.job = spec.job || {};
-    spec.job.job_id = jobId;
-    spec.spec = spec.spec || {};
-    // Enforce correct method per industry
-    spec.spec.method = (industry === 'powder' || industry === 'powder-coating') ? 'PMT' : 'OVEN_AIR';
-    spec.spec.target_temp_C = targetTemp;
-    spec.spec.hold_time_s = holdTime;
-    spec.spec.sensor_uncertainty_C = sensorUncertainty;
-    spec.data_requirements = spec.data_requirements || {};
-    if (typeof spec.data_requirements.max_sample_period_s !== 'number') {
-        spec.data_requirements.max_sample_period_s = industry === 'autoclave' ? 10.0 : 30.0;
-    }
-    if (typeof spec.data_requirements.allowed_gaps_s !== 'number') {
-        spec.data_requirements.allowed_gaps_s = industry === 'autoclave' ? 30.0 : 60.0;
-    }
-    spec.sensor_selection = spec.sensor_selection || {};
-    spec.sensor_selection.mode = sensorMode;
-    // Remove any fixed sensors to allow backend auto-detection
-    if (spec.sensor_selection && spec.sensor_selection.sensors) {
-        delete spec.sensor_selection.sensors;
-    }
-    if (typeof spec.sensor_selection.require_at_least !== 'number') {
-        spec.sensor_selection.require_at_least = industry === 'autoclave' ? 2 : 1;
-    }
-    spec.logic = spec.logic || {};
-    spec.logic.continuous = (holdLogic === 'continuous');
-    spec.logic.max_total_dips_s = (holdLogic === 'cumulative') ? 60 : 0;
-    spec.preconditions = spec.preconditions || {};
-    spec.preconditions.max_ramp_rate_C_per_min = maxRampRate;
-    spec.preconditions.max_time_to_threshold_s = maxTimeToThreshold;
-    spec.reporting = spec.reporting || {};
-    spec.reporting.units = spec.reporting.units || 'C';
-    spec.reporting.language = spec.reporting.language || 'en';
-    spec.reporting.timezone = spec.reporting.timezone || 'UTC';
+    // Add job information - this gets passed through by the backend
+    spec.job_id = jobId;
     
     const specJsonField = document.getElementById('spec_json');
     if (specJsonField) {

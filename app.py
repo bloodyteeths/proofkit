@@ -1395,18 +1395,13 @@ async def compile_csv_html(
         logger.info(f"[{request_id}] API_V2_ENABLED: {api_v2_enabled}, ACCEPT_LEGACY_SPEC: {accept_legacy_spec}")
         
         # Detect spec format and route accordingly
-        if accept_legacy_spec and "spec" in spec_data:
-            # Legacy format - use existing flow
-            logger.info(f"[{request_id}] Using legacy spec format")
-            # Generate deterministic job ID
-            job_id = generate_job_id(spec_data, csv_content)
-            logger.info(f"[{request_id}] Generated job ID: {job_id}")
-        elif api_v2_enabled and ("industry" in spec_data or industry):
-            # New v2 format - use industry router
+        # Priority: v2 with industry field, then v1 legacy spec, then error
+        if api_v2_enabled and "industry" in spec_data:
+            # New v2 format - use industry router (highest priority)
             from core.industry_router import adapt_spec, route_to_engine
             from core.errors import validation_error_response
             
-            detected_industry = industry or spec_data.get("industry", "powder")
+            detected_industry = spec_data.get("industry", "powder")
             logger.info(f"[{request_id}] Using v2 with industry: {detected_industry}")
             
             try:
@@ -1424,6 +1419,13 @@ async def compile_csv_html(
             # Generate deterministic job ID
             job_id = generate_job_id(spec_data, csv_content)
             logger.info(f"[{request_id}] Generated job ID: {job_id}")
+        elif accept_legacy_spec and "spec" in spec_data:
+            # Legacy format - use existing flow
+            logger.info(f"[{request_id}] legacy_spec_consumed")
+            logger.info(f"[{request_id}] Using legacy spec format")
+            # Generate deterministic job ID
+            job_id = generate_job_id(spec_data, csv_content)
+            logger.info(f"[{request_id}] Generated job ID: {job_id}")
         else:
             # No valid format detected
             logger.warning(f"[{request_id}] No valid format detected. Has 'spec': {'spec' in spec_data}, Has 'industry': {'industry' in spec_data}")
@@ -1431,8 +1433,9 @@ async def compile_csv_html(
             return validation_error_response(
                 ["Invalid specification format"],
                 hints=[
-                    "Use legacy format with 'spec' field or v2 format with 'industry' field",
-                    "Check API_V2_ENABLED flag for v2 support",
+                    "For v2 format: include 'industry' field (e.g., {\"industry\": \"powder\", \"target_temperature\": 180})",
+                    "For legacy v1 format: include 'spec' field (e.g., {\"spec\": {\"target_temperature\": 180}})",
+                    "Check API_V2_ENABLED and ACCEPT_LEGACY_SPEC environment variables",
                     "See /examples for working configurations"
                 ]
             )
@@ -1605,14 +1608,9 @@ async def compile_csv_json(
         accept_legacy_spec = os.getenv("ACCEPT_LEGACY_SPEC", "true").lower() == "true"
         
         # Detect spec format and route accordingly
-        if accept_legacy_spec and "spec" in spec_data:
-            # Legacy format - use existing flow
-            logger.info(f"[{request_id}] Using legacy spec format")
-            # Generate deterministic job ID
-            job_id = generate_job_id(spec_data, csv_content)
-            logger.info(f"[{request_id}] Generated job ID: {job_id}")
-        elif api_v2_enabled and ("industry" in spec_data or industry):
-            # New v2 format - use industry router
+        # Priority: v2 with industry field, then v1 legacy spec, then error
+        if api_v2_enabled and ("industry" in spec_data or industry):
+            # New v2 format - use industry router (highest priority)
             from core.industry_router import adapt_spec, route_to_engine
             from core.errors import validation_error_response
             
@@ -1634,6 +1632,13 @@ async def compile_csv_json(
             # Generate deterministic job ID
             job_id = generate_job_id(spec_data, csv_content)
             logger.info(f"[{request_id}] Generated job ID: {job_id}")
+        elif accept_legacy_spec and "spec" in spec_data:
+            # Legacy format - use existing flow
+            logger.info(f"[{request_id}] legacy_spec_consumed")
+            logger.info(f"[{request_id}] Using legacy spec format")
+            # Generate deterministic job ID
+            job_id = generate_job_id(spec_data, csv_content)
+            logger.info(f"[{request_id}] Generated job ID: {job_id}")
         else:
             # No valid format detected
             logger.warning(f"[{request_id}] No valid format detected. Has 'spec': {'spec' in spec_data}, Has 'industry': {'industry' in spec_data}")
@@ -1641,8 +1646,9 @@ async def compile_csv_json(
             return validation_error_response(
                 ["Invalid specification format"],
                 hints=[
-                    "Use legacy format with 'spec' field or v2 format with 'industry' field",
-                    "Check API_V2_ENABLED flag for v2 support",
+                    "For v2 format: include 'industry' field (e.g., {\"industry\": \"powder\", \"target_temperature\": 180})",
+                    "For legacy v1 format: include 'spec' field (e.g., {\"spec\": {\"target_temperature\": 180}})",
+                    "Check API_V2_ENABLED and ACCEPT_LEGACY_SPEC environment variables",
                     "See /examples for working configurations"
                 ]
             )
