@@ -30,6 +30,7 @@ Example usage:
 """
 
 import hashlib
+import logging
 import os
 import tempfile
 import uuid
@@ -67,6 +68,8 @@ from core.models import SpecV1, DecisionResult, Industry
 from core.policy import should_block_if_no_tsa, should_enforce_pdf_a3
 from core.timestamp import get_timestamp_with_retry, TimestampResult
 
+# Initialize logger
+logger = logging.getLogger(__name__)
 
 # Constants for deterministic rendering
 FONT_SIZE_TITLE = 18
