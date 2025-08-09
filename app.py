@@ -1357,17 +1357,24 @@ async def compile_csv_html(
                 # Get usage details for better UX
                 usage_summary = get_user_usage_summary(current_user.email)
                 
-                # Handle HTMX requests with proper redirect headers
-                if request.headers.get('HX-Request'):
-                    response = Response(status_code=303)
-                    response.headers['HX-Redirect'] = '/upgrade-required'
-                    return response
-                else:
-                    # Regular redirect for non-HTMX requests
-                    return RedirectResponse(
-                        url="/upgrade-required",
-                        status_code=303
-                    )
+                # Return a user-friendly error template for HTMX requests
+                return templates.TemplateResponse(
+                    "error.html",
+                    {
+                        "request": request,
+                        "error": {
+                            "title": "Monthly Quota Exceeded",
+                            "message": f"You've used {usage_summary.get('certificates_compiled', 0)} of your {usage_summary.get('monthly_limit', 10)} monthly validations.",
+                            "suggestions": [
+                                '<a href="/pricing" class="btn btn-primary" style="display: inline-block; margin-top: 1rem;">Upgrade Your Plan</a>',
+                                "Upgrade to Pro for 50 monthly validations",
+                                "Or choose Enterprise for unlimited validations",
+                                f"Your quota will reset at the start of next month"
+                            ]
+                        }
+                    },
+                    status_code=402  # Payment Required
+                )
         
         # Feature flags
         api_v2_enabled = os.getenv("API_V2_ENABLED", "true").lower() == "true"
@@ -1555,10 +1562,24 @@ async def compile_csv_json(
         
         # Check quota before processing
         try:
-            from middleware.quota import check_compilation_quota, record_usage
+            from middleware.quota import check_compilation_quota, record_usage, get_user_usage_summary
             can_compile, quota_error = check_compilation_quota(current_user)
             if not can_compile:
-                return JSONResponse(status_code=402, content=quota_error)
+                # Get usage details for better error message
+                usage_summary = get_user_usage_summary(current_user.email)
+                return JSONResponse(
+                    status_code=402,
+                    content={
+                        "error": "Monthly quota exceeded",
+                        "message": f"You've used {usage_summary.get('certificates_compiled', 0)} of your {usage_summary.get('monthly_limit', 10)} monthly validations",
+                        "details": {
+                            "usage": usage_summary.get('certificates_compiled', 0),
+                            "limit": usage_summary.get('monthly_limit', 10),
+                            "plan": usage_summary.get('plan', 'free'),
+                            "upgrade_url": "/pricing"
+                        }
+                    }
+                )
         except Exception as e:
             logger.warning(f"[{request_id}] Quota check failed: {e}")
 
