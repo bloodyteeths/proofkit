@@ -1411,15 +1411,16 @@ async def compile_csv_html(
         # Detect spec format and route accordingly
         # Priority: v2 with industry field, then v1 legacy spec, then error
         if api_v2_enabled and "industry" in spec_data:
-            # New v2 format - use industry router (highest priority)
-            from core.industry_router import route_to_engine
+            # New v2 format - adapt to v1 format for processing
+            from core.industry_router import adapt_spec_v2
             from core.errors import validation_error_response
             
             detected_industry = spec_data.get("industry", "powder")
             logger.info(f"[{request_id}] Using v2 with industry: {detected_industry}")
             
-            # route_to_engine now handles adaptation internally
-            logger.info(f"[{request_id}] Using industry router for: {detected_industry}")
+            # Adapt v2 spec to v1 format
+            spec_data = adapt_spec_v2(detected_industry, spec_data)
+            logger.info(f"[{request_id}] Adapted v2 spec to v1 format for: {detected_industry}")
             
             # Generate deterministic job ID
             job_id = generate_job_id(spec_data, csv_content)
@@ -1615,15 +1616,16 @@ async def compile_csv_json(
         # Detect spec format and route accordingly
         # Priority: v2 with industry field, then v1 legacy spec, then error
         if api_v2_enabled and ("industry" in spec_data or industry):
-            # New v2 format - use industry router (highest priority)
-            from core.industry_router import route_to_engine
+            # New v2 format - adapt to v1 format for processing
+            from core.industry_router import adapt_spec_v2
             from core.errors import validation_error_response
             
             detected_industry = industry or spec_data.get("industry", "powder")
             logger.info(f"[{request_id}] Using v2 with industry: {detected_industry}")
             
-            # route_to_engine now handles adaptation internally
-            logger.info(f"[{request_id}] Using industry router for: {detected_industry}")
+            # Adapt v2 spec to v1 format
+            spec_data = adapt_spec_v2(detected_industry, spec_data)
+            logger.info(f"[{request_id}] Adapted v2 spec to v1 format for: {detected_industry}")
             
             # Generate deterministic job ID
             job_id = generate_job_id(spec_data, csv_content)
