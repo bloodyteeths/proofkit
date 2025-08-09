@@ -119,7 +119,7 @@
         </p>
     </div>
     
-    <form id="upload-form" hx-post="/api/compile" hx-encoding="multipart/form-data" hx-target="#results" hx-indicator="#progress">
+    <form id="upload-form" hx-post="/api/compile" hx-encoding="multipart/form-data" enctype="multipart/form-data" hx-target="#results" hx-indicator="#progress">
         <!-- CSV File Upload -->
         <div class="upload-area" id="upload-area">
             <label for="csv_file">

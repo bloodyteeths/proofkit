@@ -404,9 +404,30 @@ function initializeProgressIndicator() {
         let errorMessage = 'An error occurred while processing your request.';
         
         try {
-            const response = JSON.parse(e.detail.xhr.responseText);
-            if (response.detail) {
-                errorMessage = response.detail;
+            const xhr = e.detail && e.detail.xhr;
+            if (xhr) {
+                const contentType = xhr.getResponseHeader && xhr.getResponseHeader('Content-Type');
+                const body = xhr.responseText || '';
+                if (contentType && contentType.indexOf('application/json') !== -1) {
+                    try {
+                        const response = JSON.parse(body);
+                        if (response.detail) {
+                            errorMessage = response.detail;
+                        } else if (response.message) {
+                            errorMessage = response.message;
+                        }
+                    } catch (_) {
+                        // fall through to default
+                    }
+                } else if (contentType && contentType.indexOf('text/html') !== -1) {
+                    // Extract the main error message from our error.html partial if possible
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = body;
+                    const strong = tempDiv.querySelector('#error-section strong');
+                    if (strong && strong.textContent) {
+                        errorMessage = strong.textContent;
+                    }
+                }
             }
         } catch (err) {
             // Use default error message

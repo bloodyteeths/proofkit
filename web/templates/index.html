@@ -53,7 +53,7 @@
 <section class="section">
     <div class="section-container">
         <form id="upload-form" role="form" aria-label="Temperature log validation form" 
-              hx-post="/api/compile" hx-encoding="multipart/form-data" hx-target="#results" hx-indicator="#progress">
+              hx-post="/api/compile" hx-encoding="multipart/form-data" enctype="multipart/form-data" hx-target="#results" hx-indicator="#progress">
               
             <!-- Hidden field for JSON specification -->
             <input type="hidden" id="spec_json" name="spec_json" value="">

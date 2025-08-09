@@ -548,6 +548,9 @@ def validate_file_upload(file: UploadFile, request: Optional[Request] = None) ->
     
     # Read file to check actual size
     file_content = file.file.read()
+    # Explicitly reject empty uploads to avoid downstream 400s with vague messages
+    if not file_content:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty")
     file_size = len(file_content)
     
     if file_size > MAX_UPLOAD_SIZE:
@@ -1385,6 +1388,11 @@ async def compile_csv_html(
         api_v2_enabled = os.getenv("API_V2_ENABLED", "true").lower() == "true"
         accept_legacy_spec = os.getenv("ACCEPT_LEGACY_SPEC", "true").lower() == "true"
         
+        # Log spec for debugging
+        logger.info(f"[{request_id}] Received spec_data keys: {list(spec_data.keys())}")
+        logger.info(f"[{request_id}] Industry in spec: {spec_data.get('industry', 'NOT_FOUND')}")
+        logger.info(f"[{request_id}] API_V2_ENABLED: {api_v2_enabled}, ACCEPT_LEGACY_SPEC: {accept_legacy_spec}")
+        
         # Detect spec format and route accordingly
         if accept_legacy_spec and "spec" in spec_data:
             # Legacy format - use existing flow
@@ -1403,7 +1411,9 @@ async def compile_csv_html(
             try:
                 adapted_spec = adapt_spec(detected_industry, spec_data)
                 spec_data = adapted_spec  # Use adapted spec for processing
+                logger.info(f"[{request_id}] Successfully adapted spec for industry: {detected_industry}")
             except ValueError as e:
+                logger.error(f"[{request_id}] Failed to adapt spec: {e}")
                 return validation_error_response(
                     [str(e)],
                     industry=detected_industry,
@@ -1415,6 +1425,7 @@ async def compile_csv_html(
             logger.info(f"[{request_id}] Generated job ID: {job_id}")
         else:
             # No valid format detected
+            logger.warning(f"[{request_id}] No valid format detected. Has 'spec': {'spec' in spec_data}, Has 'industry': {'industry' in spec_data}")
             from core.errors import validation_error_response
             return validation_error_response(
                 ["Invalid specification format"],
@@ -1610,7 +1621,9 @@ async def compile_csv_json(
             try:
                 adapted_spec = adapt_spec(detected_industry, spec_data)
                 spec_data = adapted_spec  # Use adapted spec for processing
+                logger.info(f"[{request_id}] Successfully adapted spec for industry: {detected_industry}")
             except ValueError as e:
+                logger.error(f"[{request_id}] Failed to adapt spec: {e}")
                 return validation_error_response(
                     [str(e)],
                     industry=detected_industry,
@@ -1622,6 +1635,7 @@ async def compile_csv_json(
             logger.info(f"[{request_id}] Generated job ID: {job_id}")
         else:
             # No valid format detected
+            logger.warning(f"[{request_id}] No valid format detected. Has 'spec': {'spec' in spec_data}, Has 'industry': {'industry' in spec_data}")
             from core.errors import validation_error_response
             return validation_error_response(
                 ["Invalid specification format"],
