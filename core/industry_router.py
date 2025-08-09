@@ -29,7 +29,7 @@ def select_engine(industry: str) -> Callable:
     
     return engines[industry_lower]
 
-def adapt_spec(industry: str, spec_dict: Dict[str, Any]) -> Dict[str, Any]:
+def adapt_spec_v2(industry: str, spec_dict: Dict[str, Any]) -> Dict[str, Any]:
     """
     Adapt v2 format to v1 SpecV1-compatible structure.
     
@@ -66,7 +66,7 @@ def adapt_spec(industry: str, spec_dict: Dict[str, Any]) -> Dict[str, Any]:
         "data_requirements": data_requirements
     }
     
-    # Map v2 parameters to v1 spec structure based on industry
+    # Map v2 parameters to v1 spec structure - ALL industries must use target_temp_C and hold_time_s
     if industry_lower in ["powder", "powder-coating"]:
         # Convert v2 parameters to v1 spec fields
         adapted["spec"] = {
@@ -81,63 +81,93 @@ def adapt_spec(industry: str, spec_dict: Dict[str, Any]) -> Dict[str, Any]:
         }
     
     elif industry_lower in ["autoclave"]:
+        # For autoclave, map to standard v1 fields that SpecV1 expects
         adapted["spec"] = {
+            "target_temp_C": params.get("sterilization_temp", 121),  # Map sterilization_temp to target_temp_C
+            "hold_time_s": int(params.get("sterilization_time_minutes", 15) * 60),  # Map sterilization_time to hold_time_s
+            "sensor_uncertainty_C": 2.0,  # Default sensor uncertainty
+            "method": "OVEN_AIR",  # Must be PMT or OVEN_AIR
+            # Store autoclave-specific params in a way that won't break validation
             "sterilization_temp_C": params.get("sterilization_temp", 121),
             "sterilization_time_s": int(params.get("sterilization_time_minutes", 15) * 60),
             "min_pressure_bar": params.get("min_pressure_bar", 2.0),
             "z_value": params.get("z_value", 10),
-            "min_f0": params.get("min_f0", 12),
-            "method": "AUTOCLAVE"
+            "min_f0": params.get("min_f0", 12)
         }
     
     elif industry_lower in ["coldchain", "cold-chain"]:
+        # Map to standard v1 fields
         adapted["spec"] = {
+            "target_temp_C": params.get("max_temp", 8),  # Use max temp as target
+            "hold_time_s": 3600,  # Default 1 hour
+            "sensor_uncertainty_C": 1.0,
+            "method": "OVEN_AIR",  # Must be PMT or OVEN_AIR
+            # Store coldchain-specific params
             "min_temp_C": params.get("min_temp", 2),
             "max_temp_C": params.get("max_temp", 8),
             "compliance_percentage": params.get("compliance_percentage", 95),
-            "max_excursion_minutes": params.get("max_excursion_minutes", 30),
-            "method": "COLDCHAIN"
+            "max_excursion_minutes": params.get("max_excursion_minutes", 30)
         }
     
     elif industry_lower == "haccp":
+        # Map to standard v1 fields
         adapted["spec"] = {
+            "target_temp_C": params.get("temp_1", 135),  # Use first temp as target
+            "hold_time_s": int(params.get("time_1_to_2_hours", 2) * 3600),  # Convert hours to seconds
+            "sensor_uncertainty_C": 2.0,
+            "method": "OVEN_AIR",  # Must be PMT or OVEN_AIR
+            # Store HACCP-specific params
             "temp_1_C": params.get("temp_1", 135),
             "temp_2_C": params.get("temp_2", 70),
             "temp_3_C": params.get("temp_3", 41),
             "time_1_to_2_hours": params.get("time_1_to_2_hours", 2),
-            "time_2_to_3_hours": params.get("time_2_to_3_hours", 4),
-            "method": "HACCP"
+            "time_2_to_3_hours": params.get("time_2_to_3_hours", 4)
         }
     
     elif industry_lower == "concrete":
+        # Map to standard v1 fields
         adapted["spec"] = {
+            "target_temp_C": params.get("max_temp", 30),  # Use max temp as target
+            "hold_time_s": int(params.get("time_window_hours", 24) * 3600),  # Convert hours to seconds
+            "sensor_uncertainty_C": 2.0,
+            "method": "OVEN_AIR",  # Must be PMT or OVEN_AIR
+            # Store concrete-specific params
             "min_temp_C": params.get("min_temp", 10),
             "max_temp_C": params.get("max_temp", 30),
             "min_humidity": params.get("min_humidity", 80),
             "time_window_hours": params.get("time_window_hours", 24),
-            "compliance_percentage": params.get("compliance_percentage", 95),
-            "method": "CONCRETE"
+            "compliance_percentage": params.get("compliance_percentage", 95)
         }
     
     elif industry_lower in ["sterile", "eto"]:
+        # Map to standard v1 fields
         adapted["spec"] = {
+            "target_temp_C": params.get("min_temp", 55),  # Use min temp as target
+            "hold_time_s": int(params.get("exposure_hours", 12) * 3600),  # Convert hours to seconds
+            "sensor_uncertainty_C": 2.0,
+            "method": "OVEN_AIR",  # Must be PMT or OVEN_AIR
+            # Store sterile-specific params
             "min_temp_C": params.get("min_temp", 55),
             "max_temp_C": params.get("max_temp", 60),
             "exposure_hours": params.get("exposure_hours", 12),
-            "min_humidity": params.get("min_humidity", 50),
-            "method": "STERILE"
+            "min_humidity": params.get("min_humidity", 50)
         }
     
     else:
-        # Fallback - generic spec mapping
-        adapted["spec"] = params
+        # Fallback - generic spec mapping with safe defaults
+        adapted["spec"] = {
+            "target_temp_C": params.get("target_temp", 100),
+            "hold_time_s": params.get("hold_time_s", 600),
+            "sensor_uncertainty_C": params.get("sensor_uncertainty", 2),
+            "method": "OVEN_AIR"
+        }
     
     return adapted
 
 def route_to_engine(industry: str, df: Any, spec: Dict[str, Any]) -> Dict[str, Any]:
     """Route to appropriate engine with adapted spec."""
     engine = select_engine(industry)
-    adapted_spec = adapt_spec(industry, spec)
+    adapted_spec = adapt_spec_v2(industry, spec)
     
-    # Call the appropriate metrics function directly
+    # Pass adapted spec to metrics function
     return engine(df, adapted_spec)

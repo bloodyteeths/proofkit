@@ -25,13 +25,48 @@ from typing import List, Tuple, Dict, Any, Optional
 from datetime import datetime, timezone
 import logging
 
-from core.models import SpecV1, DecisionResult, SensorMode
+from core.models import DecisionResult, SensorMode
 from core.sensor_utils import combine_sensor_readings
 from core.temperature_utils import detect_temperature_columns, DecisionError
 from core.normalize import DataQualityError
 from core.errors import RequiredSignalMissingError
 
 logger = logging.getLogger(__name__)
+
+
+def _extract_powder_params(spec: Dict[str, Any]) -> Dict[str, Any]:
+    """Extract powder coating parameters from v2 spec format."""
+    if "parameters" in spec:
+        # v2 format
+        params = spec["parameters"]
+        return {
+            "target_temp_C": params.get("target_temp", 180),
+            "hold_time_s": int(params.get("hold_duration_minutes", 10) * 60),
+            "sensor_uncertainty_C": params.get("sensor_uncertainty", 2),
+            "hysteresis_C": params.get("hysteresis", 2),
+            "max_ramp_rate_C_per_min": params.get("max_ramp_rate", 50),
+            "job_id": spec.get("job_id", "default_job")
+        }
+    elif hasattr(spec, 'spec'):
+        # v1 SpecV1 object (for backward compatibility)
+        return {
+            "target_temp_C": spec.spec.target_temp_C,
+            "hold_time_s": spec.spec.hold_time_s,
+            "sensor_uncertainty_C": spec.spec.sensor_uncertainty_C,
+            "hysteresis_C": getattr(spec.spec, 'hysteresis_C', 2),
+            "max_ramp_rate_C_per_min": getattr(spec.spec, 'max_ramp_rate_C_per_min', 50),
+            "job_id": spec.job.job_id if hasattr(spec, 'job') else "default_job"
+        }
+    else:
+        # Direct parameters dict
+        return {
+            "target_temp_C": spec.get("target_temp_C", 180),
+            "hold_time_s": spec.get("hold_time_s", 600),
+            "sensor_uncertainty_C": spec.get("sensor_uncertainty_C", 2),
+            "hysteresis_C": spec.get("hysteresis_C", 2),
+            "max_ramp_rate_C_per_min": spec.get("max_ramp_rate_C_per_min", 50),
+            "job_id": spec.get("job_id", "default_job")
+        }
 
 
 def calculate_conservative_threshold(target_temp_C: float, sensor_uncertainty_C: float) -> float:
@@ -226,13 +261,13 @@ def calculate_cumulative_hold_time(temperature_series: pd.Series, time_series: p
     return total_above_time, intervals_above
 
 
-def validate_powder_coating_cure(normalized_df: pd.DataFrame, spec: SpecV1) -> DecisionResult:
+def validate_powder_coating_cure(normalized_df: pd.DataFrame, spec: Dict[str, Any]) -> DecisionResult:
     """
     Validate powder coating cure process based on normalized data and specification.
     
     Args:
         normalized_df: Normalized temperature data from core.normalize.py
-        spec: Powder coating industry specification
+        spec: Powder coating industry specification (v2 format dict)
         
     Returns:
         DecisionResult with powder coating-specific pass/fail status and detailed metrics
@@ -240,6 +275,9 @@ def validate_powder_coating_cure(normalized_df: pd.DataFrame, spec: SpecV1) -> D
     Raises:
         DecisionError: If validation cannot be performed due to data issues
     """
+    # Extract parameters from v2 spec
+    params = _extract_powder_params(spec)
+    
     try:
         # Initialize result tracking
         reasons = []
@@ -252,8 +290,8 @@ def validate_powder_coating_cure(normalized_df: pd.DataFrame, spec: SpecV1) -> D
         if len(normalized_df) < 2:
             raise DecisionError("Insufficient data points for powder coating cure analysis")
             
-        if spec.industry not in ["powder", "powder-coating"]:
-            raise DecisionError(f"Invalid industry '{spec.industry}' for powder coating validation")
+        if spec.get("industry") not in ["powder", "powder-coating"]:
+            raise DecisionError(f"Invalid industry '{spec.get('industry')}' for powder coating validation")
         
         # Detect timestamp column
         timestamp_col = None
@@ -291,7 +329,7 @@ def validate_powder_coating_cure(normalized_df: pd.DataFrame, spec: SpecV1) -> D
                 )
         
         # Check for minimum data points needed for reliable decision
-        required_hold_time_s = spec.spec.hold_time_s
+        required_hold_time_s = params["hold_time_s"]
         sample_period_s = 30.0  # Assume 30s intervals for normalized data
         min_points_needed = max(5, int(required_hold_time_s / sample_period_s) + 2)
         
