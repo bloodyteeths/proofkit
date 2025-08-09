@@ -26,9 +26,34 @@ Example usage:
 """
 
 from enum import Enum
-from typing import Optional, List, Literal
-from pydantic import BaseModel, Field, field_validator, model_validator
+from typing import Optional, List, Literal, Dict, Any
+from pydantic import BaseModel, Field, field_validator, model_validator, BeforeValidator
+from typing_extensions import Annotated
 import re
+
+
+def _coerce_cure_method(v):
+    """Coerce legacy cure method aliases to current values."""
+    if isinstance(v, str):
+        alias_map = {
+            "REFRIGERATION": "OVEN_AIR",  # Coldchain monitoring uses OVEN_AIR
+            "AMBIENT_CURE": "OVEN_AIR",   # Concrete ambient monitoring uses OVEN_AIR
+            "ETO_STERILIZATION": "OVEN_AIR"  # Sterile EtO monitoring uses OVEN_AIR
+        }
+        return alias_map.get(v, v)
+    return v
+
+
+def _coerce_sensor_mode(v):
+    """Coerce legacy sensor mode aliases to current values."""
+    if isinstance(v, str):
+        alias_map = {
+            "mean": "mean_of_set",
+            "min": "min_of_set",
+            "majority": "majority_over_threshold"
+        }
+        return alias_map.get(v, v)
+    return v
 
 
 class CureMethod(str, Enum):
@@ -53,6 +78,7 @@ class TemperatureUnits(str, Enum):
 class Industry(str, Enum):
     """Enumeration of supported industries."""
     POWDER = "powder"
+    POWDER_COATING = "powder-coating"  # Alternative form for powder coating
     HACCP = "haccp"
     AUTOCLAVE = "autoclave"
     STERILE = "sterile"
@@ -86,7 +112,7 @@ class TemperatureBand(BaseModel):
 
 class CureSpec(BaseModel):
     """Core cure process specification."""
-    method: CureMethod = Field(..., description="Cure method - PMT or OVEN_AIR")
+    method: Annotated[CureMethod, BeforeValidator(_coerce_cure_method)] = Field(..., description="Cure method - PMT or OVEN_AIR")
     target_temp_C: float = Field(
         ...,
         gt=0,
@@ -129,7 +155,7 @@ class DataRequirements(BaseModel):
 
 class SensorSelection(BaseModel):
     """Sensor selection and combination logic."""
-    mode: SensorMode = Field(
+    mode: Annotated[SensorMode, BeforeValidator(_coerce_sensor_mode)] = Field(
         SensorMode.MIN_OF_SET,
         description="Method for combining multiple sensor readings"
     )
@@ -208,7 +234,7 @@ class SpecV1(BaseModel):
     required for ProofKit to validate a cure process.
     """
     version: Literal["1.0"] = Field("1.0", description="Specification version identifier")
-    industry: Literal["powder", "haccp", "autoclave", "sterile", "concrete", "coldchain"] = Field(
+    industry: Literal["powder", "powder-coating", "haccp", "autoclave", "sterile", "concrete", "coldchain"] = Field(
         "powder", 
         description="Industry specification type"
     )
@@ -266,7 +292,7 @@ class SpecV1(BaseModel):
             raise ValueError(f"Unsupported version '{self.version}' for industry '{self.industry}'")
             
         # Industry-specific validation
-        if self.industry == "powder":
+        if self.industry in ["powder", "powder-coating"]:
             # Powder coat specifications typically use PMT or OVEN_AIR methods
             if self.spec.method not in ["PMT", "OVEN_AIR"]:
                 raise ValueError(f"Invalid method '{self.spec.method}' for powder coating industry")
@@ -323,6 +349,21 @@ class SpecV1(BaseModel):
     }
 
 
+class SpecV2(BaseModel):
+    """
+    Unified specification format v2.0 for all industries.
+    
+    This simplified format uses "industry" to determine the analysis engine
+    and "parameters" for industry-specific settings.
+    """
+    industry: Industry = Field(..., description="Industry specification type")
+    parameters: Dict[str, Any] = Field(..., description="Industry-specific parameters")
+    data_requirements: Optional[Dict[str, Any]] = Field(
+        default_factory=dict,
+        description="Data quality requirements (from v1 compatibility)"
+    )
+
+
 class DecisionResult(BaseModel):
     """
     Decision result structure for cure process validation.
@@ -335,6 +376,7 @@ class DecisionResult(BaseModel):
         default="PASS",
         description="Decision status: PASS, FAIL, or INDETERMINATE"
     )
+    industry: Optional[str] = Field(default=None, description="Industry type from specification")
     job_id: str = Field(..., description="Job identifier from the specification")
     target_temp_C: float = Field(..., description="Target temperature from specification")
     conservative_threshold_C: float = Field(..., description="Calculated threshold (target + uncertainty)")
@@ -345,6 +387,21 @@ class DecisionResult(BaseModel):
     reasons: List[str] = Field(default_factory=list, description="List of reasons for pass/fail decision")
     warnings: List[str] = Field(default_factory=list, description="List of warnings about data quality")
     flags: Dict[str, Any] = Field(default_factory=dict, description="Additional decision flags (e.g., fallback_used)")
+    
+    @model_validator(mode='after')
+    def validate_decision_consistency(self):
+        """Validate consistency between pass_ field and status."""
+        if self.industry is None:
+            self.industry = "powder"  # Default industry
+        
+        # Ensure status is consistent with pass_ field
+        if self.status == "PASS" and not self.pass_:
+            self.status = "FAIL"
+        elif self.status == "FAIL" and self.pass_:
+            self.status = "PASS"
+        # INDETERMINATE status can have any pass_ value since validation cannot be completed
+        
+        return self
     
     model_config = {
         "extra": "forbid",

@@ -31,7 +31,7 @@ import mimetypes
 from datetime import datetime, timezone
 from io import StringIO
 
-from fastapi import FastAPI, Request, Form, File, UploadFile, HTTPException, Depends, Response, Query
+from fastapi import FastAPI, Request, Form, File, UploadFile, HTTPException, Depends, Query
 from fastapi.responses import JSONResponse, HTMLResponse, FileResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -51,8 +51,9 @@ matplotlib.use('Agg')
 # Import core modules
 from core.models import SpecV1, DecisionResult
 from core.scheduler import start_background_tasks, stop_background_tasks
-from core.normalize import normalize_temperature_data, load_csv_with_metadata, NormalizationError
+from core.normalize import normalize_temperature_data, load_csv_with_metadata, NormalizationError, DataQualityError
 from core.decide import make_decision, DecisionError
+from core.metrics_powder import RequiredSignalMissingError
 from core.plot import generate_proof_plot, PlotError
 from core.render_pdf import generate_proof_pdf
 from core.pack import create_evidence_bundle, PackingError
@@ -64,6 +65,7 @@ from core.upsell import enqueue_upsell
 # Import auth modules
 from auth.magic import auth_handler, AuthMiddleware, get_current_user, require_auth, require_qa, require_qa_redirect
 from auth.models import UserRole
+from core.policy import is_human_qa_required
 
 # Import middleware
 from middleware.quota import get_user_usage_summary
@@ -335,7 +337,7 @@ def create_app() -> FastAPI:
             "description": "System health and status endpoints"
         }
     ]
-    
+        
     # Fail fast on insecure JWT secret in production
     try:
         _jwt_secret = os.environ.get("JWT_SECRET", "")
@@ -344,14 +346,14 @@ def create_app() -> FastAPI:
     except Exception as e:
         # Re-raise to prevent starting with insecure configuration
         raise
-
+    
     app = FastAPI(
-        title="ProofKit",
-        description="Generate inspector-ready proof PDFs from CSV temperature logs",
-        version="0.1.0",
-        docs_url="/api-docs",
-        redoc_url="/redoc",
-        openapi_tags=tags_metadata
+    title="ProofKit",
+    description="Generate inspector-ready proof PDFs from CSV temperature logs",
+    version="0.1.0",
+    docs_url="/api-docs",
+    redoc_url="/redoc",
+    openapi_tags=tags_metadata
     )
     
     # Optionally enforce HTTPS redirects (enabled by default outside development)
@@ -366,12 +368,12 @@ def create_app() -> FastAPI:
     # With credentials, browsers require explicit origins (not *)
     _allow_origins = CORS_ORIGINS if CORS_ORIGINS != ["*"] else ["https://www.proofkit.net"]
     app.add_middleware(
-        CORSMiddleware,
-        allow_origins=_allow_origins,
-        allow_credentials=True,
-        allow_methods=["GET", "POST", "OPTIONS"],
-        allow_headers=["*"],
-        max_age=3600,
+    CORSMiddleware,
+    allow_origins=_allow_origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["*"],
+    max_age=3600,
     )
     
     # Add request logging middleware
@@ -387,18 +389,18 @@ def create_app() -> FastAPI:
     # Include API routers
     app.include_router(payment_router)
     app.include_router(auth_api_router, prefix="/api")
-
+    
     # Mount static files
     app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
-
+    
     # Serve marketing resources (PDFs, assets). Missing files will correctly 404 instead of 500.
     if resources_dir.exists():
         app.mount("/resources", StaticFiles(directory=str(resources_dir)), name="resources")
-
+    
     # Initialize storage directory
     STORAGE_DIR.mkdir(exist_ok=True)
     logger.info(f"Storage directory initialized: {STORAGE_DIR}")
-
+    
     # Schedule background cleanup
     try:
         retention_days = int(os.environ.get("RETENTION_DAYS", "30"))
@@ -409,7 +411,7 @@ def create_app() -> FastAPI:
             logger.warning("Failed to schedule background cleanup")
     except Exception as e:
         logger.error(f"Error scheduling cleanup: {e}")
-
+    
     return app
 
 
@@ -811,7 +813,8 @@ def process_csv_and_spec(csv_content: bytes, spec_data: Dict[str, Any],
                 df,
                 target_step_s=30.0,
                 allowed_gaps_s=spec.data_requirements.allowed_gaps_s,
-                max_sample_period_s=spec.data_requirements.max_sample_period_s
+                max_sample_period_s=spec.data_requirements.max_sample_period_s,
+                industry=spec.industry
             )
             
             # Save normalized CSV
@@ -822,6 +825,11 @@ def process_csv_and_spec(csv_content: bytes, spec_data: Dict[str, Any],
             # Clean up temporary file
             os.unlink(tmp_csv_path)
             
+    except DataQualityError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Data quality check failed: {str(e)}"
+        )
     except NormalizationError as e:
         raise HTTPException(
             status_code=400,
@@ -837,11 +845,51 @@ def process_csv_and_spec(csv_content: bytes, spec_data: Dict[str, Any],
     try:
         decision = make_decision(normalized_df, spec)
         
+        # Shadow runs: Run differential verification if enabled
+        require_diff_agreement = os.getenv("REQUIRE_DIFF_AGREEMENT", "0").lower() in ["1", "true", "yes"]
+        
+        if require_diff_agreement:
+            logger.info(f"Running shadow comparison for job {job_id}")
+            from core.shadow_compare import ShadowComparator, ShadowStatus, create_indeterminate_result
+            
+            try:
+                comparator = ShadowComparator()
+                shadow_result = comparator.run_shadow_comparison(normalized_df, spec)
+                
+                logger.info(f"Shadow comparison status: {shadow_result.status.value}")
+                
+                if shadow_result.status == ShadowStatus.TOLERANCE_VIOLATION:
+                    # Override decision with INDETERMINATE result
+                    logger.warning(f"Shadow tolerance violation: {shadow_result.reason}")
+                    decision = create_indeterminate_result(shadow_result, decision)
+                    
+                elif shadow_result.status in [ShadowStatus.ENGINE_ERROR, ShadowStatus.INDEPENDENT_ERROR]:
+                    # Log errors but continue with original decision 
+                    logger.warning(f"Shadow comparison error: {shadow_result.reason}")
+                    
+                elif shadow_result.status == ShadowStatus.AGREEMENT:
+                    logger.info("Shadow comparison successful - engine and independent agree")
+                    
+                # Save shadow comparison results for debugging/audit
+                if shadow_result.status != ShadowStatus.DISABLED:
+                    shadow_dict = shadow_result.to_dict()
+                    shadow_json_content = json.dumps(shadow_dict, indent=2, default=str).encode('utf-8')
+                    save_file_to_storage(shadow_json_content, job_dir, "shadow_comparison.json")
+                    
+            except Exception as e:
+                logger.error(f"Shadow comparison failed: {e}")
+                # Continue with original decision rather than failing completely
+        
         # Save decision JSON
         decision_dict = decision.model_dump(by_alias=True)
         decision_json_content = json.dumps(decision_dict, indent=2).encode('utf-8')
         decision_json_path = save_file_to_storage(decision_json_content, job_dir, "decision.json")
         
+    except RequiredSignalMissingError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Required signals missing: {str(e)}"
+        )
     except DecisionError as e:
         raise HTTPException(
             status_code=400,
@@ -957,10 +1005,17 @@ def process_csv_and_spec(csv_content: bytes, spec_data: Dict[str, Any],
         logger.error(f"Failed to enqueue upsell for job {job_id}: {e}")
     
     # Return results (preserve legacy fields and include status/flags)
+    # Include industry field from specification for decision envelope compatibility
+    industry = spec_data.get('industry', 'powder') if isinstance(spec_data, dict) else 'powder'
+    
     return {
         "id": job_id,
+        "industry": industry,
         "pass": decision.pass_,
         "status": getattr(decision, 'status', 'PASS' if decision.pass_ else 'FAIL'),
+        # Legacy field mappings for backward compatibility
+        "decision": getattr(decision, 'status', 'PASS' if decision.pass_ else 'FAIL'),
+        "pass_": decision.pass_,
         "metrics": {
             "target_temp_C": decision.target_temp_C,
             "conservative_threshold_C": decision.conservative_threshold_C,
@@ -1284,9 +1339,49 @@ async def compile_csv_html(
                         status_code=303
                     )
         
-        # Generate deterministic job ID
-        job_id = generate_job_id(spec_data, csv_content)
-        logger.info(f"[{request_id}] Generated job ID: {job_id}")
+        # Feature flags
+        api_v2_enabled = os.getenv("API_V2_ENABLED", "true").lower() == "true"
+        accept_legacy_spec = os.getenv("ACCEPT_LEGACY_SPEC", "true").lower() == "true"
+        
+        # Detect spec format and route accordingly
+        if accept_legacy_spec and "spec" in spec_data:
+            # Legacy format - use existing flow
+            logger.info(f"[{request_id}] Using legacy spec format")
+            # Generate deterministic job ID
+            job_id = generate_job_id(spec_data, csv_content)
+            logger.info(f"[{request_id}] Generated job ID: {job_id}")
+        elif api_v2_enabled and ("industry" in spec_data or industry):
+            # New v2 format - use industry router
+            from core.industry_router import adapt_spec, route_to_engine
+            from core.errors import validation_error_response
+            
+            detected_industry = industry or spec_data.get("industry", "powder")
+            logger.info(f"[{request_id}] Using v2 with industry: {detected_industry}")
+            
+            try:
+                adapted_spec = adapt_spec(detected_industry, spec_data)
+                spec_data = adapted_spec  # Use adapted spec for processing
+            except ValueError as e:
+                return validation_error_response(
+                    [str(e)],
+                    industry=detected_industry,
+                    hints=["Check industry spelling", "See /industries/{} for parameters".format(detected_industry)]
+                )
+            
+            # Generate deterministic job ID
+            job_id = generate_job_id(spec_data, csv_content)
+            logger.info(f"[{request_id}] Generated job ID: {job_id}")
+        else:
+            # No valid format detected
+            from core.errors import validation_error_response
+            return validation_error_response(
+                ["Invalid specification format"],
+                hints=[
+                    "Use legacy format with 'spec' field or v2 format with 'industry' field",
+                    "Check API_V2_ENABLED flag for v2 support",
+                    "See /examples for working configurations"
+                ]
+            )
         
         # Thread-safe storage operations
         with storage_lock:
@@ -1302,9 +1397,9 @@ async def compile_csv_html(
                 record_usage(current_user, 'certificate_compiled')
             logger.info(f"[{request_id}] Processing completed: {'PASS' if result['pass'] else 'FAIL'}")
             
-            # Check approval status
+            # Check approval status (bypassed if policy allows)
             meta_path = job_dir / "meta.json"
-            approved = False
+            approved = not is_human_qa_required()  # Auto-approve if QA not required
             if meta_path.exists():
                 with open(meta_path, 'r') as f:
                     job_meta = json.load(f)
@@ -1372,7 +1467,8 @@ async def compile_csv_html(
 async def compile_csv_json(
     request: Request,
     csv_file: UploadFile = File(...),
-    spec_json: str = Form(...)
+    spec_json: str = Form(...),
+    industry: Optional[str] = Form(None)
 ) -> JSONResponse:
     """
     Process CSV file and specification JSON to generate proof PDF and evidence bundle.
@@ -1436,9 +1532,49 @@ async def compile_csv_json(
         except Exception as e:
             logger.warning(f"[{request_id}] Quota check failed: {e}")
 
-        # Generate deterministic job ID
-        job_id = generate_job_id(spec_data, csv_content)
-        logger.info(f"[{request_id}] Generated job ID: {job_id}")
+        # Feature flags
+        api_v2_enabled = os.getenv("API_V2_ENABLED", "true").lower() == "true"
+        accept_legacy_spec = os.getenv("ACCEPT_LEGACY_SPEC", "true").lower() == "true"
+        
+        # Detect spec format and route accordingly
+        if accept_legacy_spec and "spec" in spec_data:
+            # Legacy format - use existing flow
+            logger.info(f"[{request_id}] Using legacy spec format")
+            # Generate deterministic job ID
+            job_id = generate_job_id(spec_data, csv_content)
+            logger.info(f"[{request_id}] Generated job ID: {job_id}")
+        elif api_v2_enabled and ("industry" in spec_data or industry):
+            # New v2 format - use industry router
+            from core.industry_router import adapt_spec, route_to_engine
+            from core.errors import validation_error_response
+            
+            detected_industry = industry or spec_data.get("industry", "powder")
+            logger.info(f"[{request_id}] Using v2 with industry: {detected_industry}")
+            
+            try:
+                adapted_spec = adapt_spec(detected_industry, spec_data)
+                spec_data = adapted_spec  # Use adapted spec for processing
+            except ValueError as e:
+                return validation_error_response(
+                    [str(e)],
+                    industry=detected_industry,
+                    hints=["Check industry spelling", "See /industries/{} for parameters".format(detected_industry)]
+                )
+            
+            # Generate deterministic job ID
+            job_id = generate_job_id(spec_data, csv_content)
+            logger.info(f"[{request_id}] Generated job ID: {job_id}")
+        else:
+            # No valid format detected
+            from core.errors import validation_error_response
+            return validation_error_response(
+                ["Invalid specification format"],
+                hints=[
+                    "Use legacy format with 'spec' field or v2 format with 'industry' field",
+                    "Check API_V2_ENABLED flag for v2 support",
+                    "See /examples for working configurations"
+                ]
+            )
         
         # Thread-safe storage operations
         with storage_lock:
@@ -1827,7 +1963,8 @@ async def industry_page(request: Request, industry: str) -> HTMLResponse:
         "concrete": "industries/concrete.html",
         "cold-chain": "industries/cold-chain.html",
         "eto": "industries/eto.html",
-        "haccp": "industries/haccp.html"
+        "haccp": "industries/haccp.html",
+        "sterile": "industries/sterile.html"
     }
     
     if industry not in valid_industries:
@@ -2028,7 +2165,7 @@ async def sterile_page(request: Request) -> HTMLResponse:
     sterile_preset_json = json.dumps(presets.get("sterile", {}), indent=2) if "sterile" in presets else get_default_spec("sterile")
     
     return templates.TemplateResponse(
-        "industry/sterile.html",
+        "industries/sterile.html",
         {
             "request": request,
             "industry": "sterile",
@@ -2749,6 +2886,10 @@ async def approve_job_page(request: Request, job_id: str) -> HTMLResponse:
     Returns:
         HTMLResponse: Approval page with job details
     """
+    # Bypass if QA not required by policy
+    if not is_human_qa_required():
+        raise HTTPException(status_code=404, detail="QA approval not required")
+    
     # Require QA role with redirect to login
     try:
         user = require_qa_redirect(request)
@@ -2806,6 +2947,10 @@ async def approve_job(request: Request, job_id: str) -> JSONResponse:
     Returns:
         JSONResponse: Success message
     """
+    # Bypass if QA not required by policy
+    if not is_human_qa_required():
+        return JSONResponse({"message": "QA approval not required - auto-approved"})
+    
     # Require QA role with redirect to login
     try:
         user = require_qa_redirect(request)
@@ -3195,7 +3340,10 @@ async def my_jobs_page(request: Request) -> HTMLResponse:
                     creator_email = ""
                 user_email_normalized = user.email.lower().strip()
                 
-                if (user.role == UserRole.OPERATOR and creator_email == user_email_normalized) or (user.role == UserRole.QA and not approved):
+                # Show jobs: OP sees their own, QA sees unapproved (unless QA bypassed)
+                show_for_op = user.role == UserRole.OPERATOR and creator_email == user_email_normalized
+                show_for_qa = user.role == UserRole.QA and not approved and is_human_qa_required()
+                if show_for_op or show_for_qa:
                     jobs.append({
                         "job_id": job_id,
                         "created_at": created_at,
@@ -3386,6 +3534,259 @@ async def billing_cancel_page(request: Request) -> HTMLResponse:
         logger.error(f"Error rendering billing cancel page: {e}")
         # Fallback to pricing page
         return RedirectResponse(url="/pricing", status_code=302)
+
+
+@app.get("/debug/compile", response_class=HTMLResponse, tags=["debug"])
+async def debug_compile_page(request: Request) -> HTMLResponse:
+    """
+    Display debug compile page with CSV upload and 4-tab view.
+    
+    Args:
+        request: FastAPI request object
+        
+    Returns:
+        HTML debug compile page
+    """
+    try:
+        current_user = get_current_user(request)
+        if not current_user:
+            return RedirectResponse(url="/auth/get-started", status_code=302)
+        
+        # Load industry presets for spec dropdown
+        preset_files = list((BASE_DIR / "core" / "spec_library").glob("*.json"))
+        presets = {}
+        for preset_file in preset_files:
+            try:
+                with open(preset_file, 'r') as f:
+                    preset_data = json.load(f)
+                    industry = preset_file.stem.replace('_v1', '')
+                    presets[industry] = preset_data
+            except Exception as e:
+                logger.warning(f"Failed to load preset {preset_file}: {e}")
+        
+        return templates.TemplateResponse(
+            "debug_compile.html",
+            {
+                "request": request,
+                "current_user": current_user,
+                "title": "Debug Compile - ProofKit",
+                "presets": presets
+            }
+        )
+    except Exception as e:
+        logger.error(f"Error rendering debug compile page: {e}")
+        return templates.TemplateResponse(
+            "error.html",
+            {
+                "request": request,
+                "error": {
+                    "title": "Debug Page Error",
+                    "message": f"Failed to load debug compile page: {str(e)}"
+                }
+            }
+        )
+
+
+@app.post("/debug/compile", response_class=HTMLResponse, tags=["debug"])
+@get_rate_limit_decorator()
+async def debug_compile_process(
+    request: Request,
+    csv_file: UploadFile = File(...),
+    spec_json: str = Form(...)
+) -> HTMLResponse:
+    """
+    Process CSV and spec for debug view with 4-tab analysis.
+    
+    Args:
+        request: FastAPI request object
+        csv_file: Uploaded CSV temperature log file
+        spec_json: JSON specification string
+        
+    Returns:
+        HTMLResponse: HTMX partial with debug analysis tabs
+    """
+    try:
+        current_user = get_current_user(request)
+        if not current_user:
+            return templates.TemplateResponse(
+                "error.html",
+                {
+                    "request": request,
+                    "error": {
+                        "title": "Authentication Required",
+                        "message": "Please sign in to use debug compilation"
+                    }
+                }
+            )
+        
+        # Parse and validate spec
+        try:
+            spec_dict = json.loads(spec_json)
+            spec = SpecV1(**spec_dict)
+        except json.JSONDecodeError as e:
+            return templates.TemplateResponse(
+                "debug_result.html",
+                {
+                    "request": request,
+                    "error": f"Invalid JSON specification: {str(e)}",
+                    "tab": "inputs"
+                }
+            )
+        except Exception as e:
+            return templates.TemplateResponse(
+                "debug_result.html",
+                {
+                    "request": request,
+                    "error": f"Invalid specification: {str(e)}",
+                    "tab": "inputs"
+                }
+            )
+        
+        # Read and validate CSV
+        try:
+            csv_content = await csv_file.read()
+            csv_string = csv_content.decode('utf-8')
+            df, metadata = load_csv_with_metadata(StringIO(csv_string))
+        except Exception as e:
+            return templates.TemplateResponse(
+                "debug_result.html",
+                {
+                    "request": request,
+                    "error": f"Failed to load CSV: {str(e)}",
+                    "tab": "inputs"
+                }
+            )
+        
+        # Normalize data
+        normalized_df = None
+        normalization_error = None
+        try:
+            normalized_df = normalize_temperature_data(
+                df,
+                target_step_s=spec.data_requirements.max_sample_period_s,
+                allowed_gaps_s=spec.data_requirements.allowed_gaps_s,
+                max_sample_period_s=spec.data_requirements.max_sample_period_s,
+                industry=spec.industry if hasattr(spec, 'industry') else None
+            )
+        except Exception as e:
+            normalization_error = str(e)
+        
+        # Make decision if normalization succeeded
+        decision_result = None
+        decision_error = None
+        if normalized_df is not None:
+            try:
+                decision_result = make_decision(normalized_df, spec)
+            except Exception as e:
+                decision_error = str(e)
+        
+        return templates.TemplateResponse(
+            "debug_result.html",
+            {
+                "request": request,
+                "spec": spec,
+                "spec_json": spec_json,
+                "csv_metadata": metadata,
+                "raw_df": df,
+                "normalized_df": normalized_df,
+                "normalization_error": normalization_error,
+                "decision_result": decision_result,
+                "decision_error": decision_error,
+                "tab": "inputs"
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Debug compile error: {e}", exc_info=True)
+        return templates.TemplateResponse(
+            "debug_result.html",
+            {
+                "request": request,
+                "error": f"Processing failed: {str(e)}",
+                "tab": "inputs"
+            }
+        )
+
+
+@app.get("/campaign", response_class=HTMLResponse, tags=["campaign"])
+async def campaign_page(request: Request) -> HTMLResponse:
+    """
+    Display campaign analysis page with confusion matrices per industry.
+    
+    Args:
+        request: FastAPI request object
+        
+    Returns:
+        HTML campaign analysis page
+    """
+    try:
+        current_user = get_current_user(request)
+        if not current_user or current_user.role != UserRole.QA:
+            return RedirectResponse(url="/auth/get-started", status_code=302)
+        
+        # Mock campaign data - in real implementation, this would come from database/filesystem
+        campaign_data = {
+            "powder": {
+                "total_tests": 150,
+                "confusion_matrix": {
+                    "true_positive": 85,
+                    "false_positive": 12,
+                    "true_negative": 40,
+                    "false_negative": 13
+                },
+                "disagreements": [
+                    {"dataset": "batch_027", "expected": "PASS", "actual": "FAIL", "reason": "Hold time insufficient"},
+                    {"dataset": "batch_089", "expected": "FAIL", "actual": "PASS", "reason": "Threshold calculation"}
+                ]
+            },
+            "autoclave": {
+                "total_tests": 89,
+                "confusion_matrix": {
+                    "true_positive": 45,
+                    "false_positive": 8,
+                    "true_negative": 30,
+                    "false_negative": 6
+                },
+                "disagreements": [
+                    {"dataset": "cycle_15", "expected": "PASS", "actual": "FAIL", "reason": "Pressure correlation"}
+                ]
+            },
+            "concrete": {
+                "total_tests": 200,
+                "confusion_matrix": {
+                    "true_positive": 120,
+                    "false_positive": 15,
+                    "true_negative": 55,
+                    "false_negative": 10
+                },
+                "disagreements": [
+                    {"dataset": "pour_203", "expected": "FAIL", "actual": "PASS", "reason": "Ambient temperature variance"},
+                    {"dataset": "pour_184", "expected": "PASS", "actual": "FAIL", "reason": "Curing rate calculation"}
+                ]
+            }
+        }
+        
+        return templates.TemplateResponse(
+            "campaign.html",
+            {
+                "request": request,
+                "current_user": current_user,
+                "title": "Campaign Analysis - ProofKit",
+                "campaign_data": campaign_data
+            }
+        )
+    except Exception as e:
+        logger.error(f"Error rendering campaign page: {e}")
+        return templates.TemplateResponse(
+            "error.html",
+            {
+                "request": request,
+                "error": {
+                    "title": "Campaign Page Error", 
+                    "message": f"Failed to load campaign analysis: {str(e)}"
+                }
+            }
+        )
 
 
 # Event handlers for background tasks
